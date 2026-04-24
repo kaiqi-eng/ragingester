@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: starter
     rootDir: .
-    buildCommand: npm ci && npm run build -w @ragingester/web
+    buildCommand: npm ci --include=dev && npm run build -w @ragingester/web
     startCommand: node apps/api/src/server.js
     healthCheckPath: /health
     envVars:
