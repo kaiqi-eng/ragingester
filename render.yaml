@@ -26,6 +26,20 @@ services:
         sync: false
       - key: SUPABASE_ANON_KEY
         sync: false
+      - key: GENIE_RSS_BASE_URL
+        value: https://genie-rss-5i00.onrender.com
+      - key: GENIE_RSS_API_KEY
+        sync: false
+      - key: BHARAG_BASE_URL
+        value: https://bharag.duckdns.org
+      - key: BHARAG_MASTER_API_KEY
+        sync: false
+      - key: BHARAG_OWNER_BUILDER_ID
+        sync: false
+      - key: BHARAG_OWNER_NAME
+        value: Ragingester RSS Owner
+      - key: BHARAG_OWNER_EMAIL
+        sync: false
       - key: VITE_SUPABASE_URL
         sync: false
       - key: VITE_SUPABASE_ANON_KEY
@@ -36,3 +50,5 @@ services:
         value: 1
       - key: SCHEDULER_POLL_MS
         value: 15000
+      - key: RSS_PREWARM_WINDOW_MS
+        value: 120000
