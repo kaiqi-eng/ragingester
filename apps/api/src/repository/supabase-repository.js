@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { RunOverlapError } from '../lib/errors.js';
 
 const defaultTables = {
   cards: 'cards',
@@ -51,7 +52,15 @@ export function createSupabaseRepository({ supabaseUrl, serviceRoleKey, tables =
     },
 
     async createRun(payload) {
-      return unwrap(await supabase.from(table.collectionRuns).insert(payload).select('*').single());
+      const result = await supabase.from(table.collectionRuns).insert(payload).select('*').single();
+      if (
+        result.error &&
+        result.error.code === '23505' &&
+        String(result.error.message || '').includes('one_active_run_per_card')
+      ) {
+        throw new RunOverlapError();
+      }
+      return unwrap(result);
     },
 
     async updateRun(runId, updates) {

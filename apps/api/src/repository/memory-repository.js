@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { RunOverlapError } from '../lib/errors.js';
 
 function sortDescByDate(items, key) {
   return [...items].sort((a, b) => new Date(b[key] || 0) - new Date(a[key] || 0));
@@ -60,6 +61,16 @@ export function createMemoryRepository() {
     },
 
     async createRun(payload) {
+      const isActiveStatus = payload.status === 'pending' || payload.status === 'running';
+      if (isActiveStatus) {
+        const existingActiveRun = [...store.runs.values()].find(
+          (run) => run.card_id === payload.card_id && (run.status === 'pending' || run.status === 'running')
+        );
+        if (existingActiveRun) {
+          throw new RunOverlapError();
+        }
+      }
+
       const run = {
         id: randomUUID(),
         created_at: new Date().toISOString(),

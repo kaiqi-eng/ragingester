@@ -37,7 +37,8 @@ export function createApp() {
   }
 
   app.use((error, _req, res, _next) => {
-    res.status(400).json({ error: error.message || 'unexpected error' });
+    const status = Number(error?.statusCode) || 400;
+    res.status(status).json({ error: error.message || 'unexpected error' });
   });
 
   return app;

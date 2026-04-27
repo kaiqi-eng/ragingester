@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { config } from '../config.js';
 import { getRepository } from '../repository/index.js';
 import { executeRun } from '../lib/run-engine.js';
+import { RunOverlapError } from '../lib/errors.js';
 
 export async function runSchedulerTick({
   repository = getRepository(),
@@ -21,14 +22,22 @@ export async function runSchedulerTick({
       continue;
     }
 
-    await executeRun({
-      repository,
-      card,
-      triggerMode: TRIGGER_MODE.SCHEDULED,
-      timeoutMs,
-      maxRetries
-    });
-    startedRuns += 1;
+    try {
+      await executeRun({
+        repository,
+        card,
+        triggerMode: TRIGGER_MODE.SCHEDULED,
+        timeoutMs,
+        maxRetries
+      });
+      startedRuns += 1;
+    } catch (error) {
+      if (error instanceof RunOverlapError) {
+        skippedCards += 1;
+        continue;
+      }
+      throw error;
+    }
   }
 
   return {
