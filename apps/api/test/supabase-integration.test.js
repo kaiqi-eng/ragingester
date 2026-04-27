@@ -78,13 +78,18 @@ test('supabase migration applies in isolated schema and cleans up', { skip: skip
   try {
     await client.query(`create schema "${schema}"`);
 
-    const migrationPath = new URL('../../../supabase/migrations/20260422_001_init_cards_runs.sql', import.meta.url);
-    let sql = await readFile(migrationPath, 'utf8');
+    const migrationPaths = [
+      new URL('../../../supabase/migrations/20260422_001_init_cards_runs.sql', import.meta.url),
+      new URL('../../../supabase/migrations/20260426_001_enforce_one_active_run_per_card.sql', import.meta.url),
+      new URL('../../../supabase/migrations/20260426_002_per_card_run_policy.sql', import.meta.url)
+    ];
 
-    sql = sql.replace(/create extension if not exists pgcrypto;\s*/i, '');
-    sql = sql.replaceAll('public.', `"${schema}".`);
-
-    await client.query(sql);
+    for (const migrationPath of migrationPaths) {
+      let sql = await readFile(migrationPath, 'utf8');
+      sql = sql.replace(/create extension if not exists pgcrypto;\s*/i, '');
+      sql = sql.replaceAll('public.', `"${schema}".`);
+      await client.query(sql);
+    }
 
     const exists = await client.query(
       `select to_regclass('"${schema}".cards') as cards, to_regclass('"${schema}".collection_runs') as runs, to_regclass('"${schema}".collected_data') as data`
@@ -120,6 +125,8 @@ test('cards CRUD API works against supabase temporary tables and cleans up', { s
         timezone text not null default 'America/Chicago',
         next_run_at timestamptz,
         last_run_at timestamptz,
+        run_timeout_ms integer,
+        run_max_retries integer,
         active boolean not null default true,
         created_at timestamptz not null default now(),
         updated_at timestamptz not null default now()
@@ -180,6 +187,8 @@ test('cards CRUD API works against supabase temporary tables and cleans up', { s
           schedule_enabled: true,
           cron_expression: '0 9 * * *',
           timezone: 'America/Chicago',
+          run_timeout_ms: 45000,
+          run_max_retries: 2,
           active: true
         })
       });
@@ -187,6 +196,8 @@ test('cards CRUD API works against supabase temporary tables and cleans up', { s
       assert.equal(createResponse.status, 201);
       const created = await createResponse.json();
       assert.equal(created.owner_id, 'user-a');
+      assert.equal(created.run_timeout_ms, 45000);
+      assert.equal(created.run_max_retries, 2);
 
       const listResponse = await fetch(`${baseUrl}/cards`, {
         headers: authHeaders('user-a')
@@ -203,12 +214,19 @@ test('cards CRUD API works against supabase temporary tables and cleans up', { s
       const updateResponse = await fetch(`${baseUrl}/cards/${created.id}`, {
         method: 'PATCH',
         headers: authHeaders('user-a'),
-        body: JSON.stringify({ source_input: 'sensor-supabase-updated', schedule_enabled: false })
+        body: JSON.stringify({
+          source_input: 'sensor-supabase-updated',
+          schedule_enabled: false,
+          run_timeout_ms: null,
+          run_max_retries: 0
+        })
       });
       assert.equal(updateResponse.status, 200);
       const updated = await updateResponse.json();
       assert.equal(updated.source_input, 'sensor-supabase-updated');
       assert.equal(updated.schedule_enabled, false);
+      assert.equal(updated.run_timeout_ms, null);
+      assert.equal(updated.run_max_retries, 0);
 
       const deleteResponse = await fetch(`${baseUrl}/cards/${created.id}`, {
         method: 'DELETE',

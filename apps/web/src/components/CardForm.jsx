@@ -17,7 +17,9 @@ const initialForm = {
   schedule_enabled: false,
   cron_expression: '0 9 * * *',
   timezone: 'America/Chicago',
-  active: true
+  active: true,
+  run_timeout_ms: '',
+  run_max_retries: ''
 };
 
 function formFromCard(card) {
@@ -34,8 +36,16 @@ function formFromCard(card) {
     schedule_enabled: Boolean(card.schedule_enabled),
     cron_expression: card.cron_expression || '0 9 * * *',
     timezone: card.timezone || 'America/Chicago',
-    active: Boolean(card.active)
+    active: Boolean(card.active),
+    run_timeout_ms: card.run_timeout_ms == null ? '' : String(card.run_timeout_ms),
+    run_max_retries: card.run_max_retries == null ? '' : String(card.run_max_retries)
   };
+}
+
+function parseOptionalIntegerInput(value) {
+  if (value === '') return null;
+  const parsed = Number(value);
+  return Number.isInteger(parsed) ? parsed : Number.NaN;
 }
 
 export function CardForm({ onSubmit, loading, mode = 'create', initialCard = null, onCancel }) {
@@ -64,6 +74,17 @@ export function CardForm({ onSubmit, loading, mode = 'create', initialCard = nul
       return;
     }
 
+    const parsedRunTimeoutMs = parseOptionalIntegerInput(form.run_timeout_ms);
+    const parsedRunMaxRetries = parseOptionalIntegerInput(form.run_max_retries);
+    if (Number.isNaN(parsedRunTimeoutMs)) {
+      setError('Run timeout must be an integer in milliseconds');
+      return;
+    }
+    if (Number.isNaN(parsedRunMaxRetries)) {
+      setError('Max retries must be an integer');
+      return;
+    }
+
     try {
       await onSubmit({
         source_type: form.source_type,
@@ -75,7 +96,9 @@ export function CardForm({ onSubmit, loading, mode = 'create', initialCard = nul
         schedule_enabled: form.schedule_enabled,
         cron_expression: form.schedule_enabled ? form.cron_expression : null,
         timezone: form.timezone,
-        active: form.active
+        active: form.active,
+        run_timeout_ms: parsedRunTimeoutMs,
+        run_max_retries: parsedRunMaxRetries
       });
       if (mode === 'create') {
         setForm(initialForm);
@@ -144,6 +167,28 @@ export function CardForm({ onSubmit, loading, mode = 'create', initialCard = nul
             <input value={form.timezone} onChange={(e) => setForm((f) => ({ ...f, timezone: e.target.value }))} />
           </>
         )}
+
+        <label>Run timeout (ms)</label>
+        <input
+          type="number"
+          min="1000"
+          max="300000"
+          step="1"
+          value={form.run_timeout_ms}
+          onChange={(e) => setForm((f) => ({ ...f, run_timeout_ms: e.target.value }))}
+          placeholder="Use system default"
+        />
+
+        <label>Max retries</label>
+        <input
+          type="number"
+          min="0"
+          max="5"
+          step="1"
+          value={form.run_max_retries}
+          onChange={(e) => setForm((f) => ({ ...f, run_max_retries: e.target.value }))}
+          placeholder="Use system default"
+        />
 
         {error && <div className="meta">Error: {error}</div>}
         <div className="row">

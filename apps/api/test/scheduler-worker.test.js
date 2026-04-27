@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { config } from '../src/config.js';
 import { createMemoryRepository } from '../src/repository/memory-repository.js';
 import { runSchedulerTick } from '../src/scheduler/worker.js';
 
@@ -81,4 +82,67 @@ test('scheduler tick skips due cards that already have an active run', async () 
   const runs = await repository.listRuns(card.id, 'user-a');
   assert.equal(runs.length, 1);
   assert.equal(runs[0].status, 'running');
+});
+
+test('scheduler tick uses per-card run_max_retries override', async () => {
+  const repository = createMemoryRepository();
+  const nowIso = new Date().toISOString();
+  const pastIso = isoMsOffset(nowIso, -120_000);
+
+  const card = await repository.createCard({
+    owner_id: 'user-a',
+    source_type: 'http_api',
+    source_input: 'not-a-valid-url',
+    params: {},
+    schedule_enabled: true,
+    cron_expression: '*/5 * * * *',
+    timezone: 'America/Chicago',
+    run_timeout_ms: 2000,
+    run_max_retries: 2,
+    next_run_at: pastIso,
+    last_run_at: null,
+    active: true
+  });
+
+  const result = await runSchedulerTick({ repository, nowIso, timeoutMs: 5000, maxRetries: 0 });
+  assert.equal(result.startedRuns, 1);
+
+  const runs = await repository.listRuns(card.id, 'user-a');
+  assert.equal(runs.length, 1);
+  assert.equal(runs[0].status, 'failed');
+  assert.equal(runs[0].attempts, 3);
+});
+
+test('scheduler tick falls back to global retries when per-card override is null', async () => {
+  const repository = createMemoryRepository();
+  const nowIso = new Date().toISOString();
+  const pastIso = isoMsOffset(nowIso, -120_000);
+
+  const card = await repository.createCard({
+    owner_id: 'user-a',
+    source_type: 'http_api',
+    source_input: 'not-a-valid-url',
+    params: {},
+    schedule_enabled: true,
+    cron_expression: '*/5 * * * *',
+    timezone: 'America/Chicago',
+    run_timeout_ms: null,
+    run_max_retries: null,
+    next_run_at: pastIso,
+    last_run_at: null,
+    active: true
+  });
+
+  const result = await runSchedulerTick({
+    repository,
+    nowIso,
+    timeoutMs: config.runTimeoutMs,
+    maxRetries: config.runMaxRetries
+  });
+  assert.equal(result.startedRuns, 1);
+
+  const runs = await repository.listRuns(card.id, 'user-a');
+  assert.equal(runs.length, 1);
+  assert.equal(runs[0].status, 'failed');
+  assert.equal(runs[0].attempts, config.runMaxRetries + 1);
 });

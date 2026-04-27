@@ -14,7 +14,19 @@ async function withTimeout(promise, timeoutMs) {
   }
 }
 
+function resolveRunPolicy(card, { defaultTimeoutMs, defaultMaxRetries }) {
+  return {
+    effectiveTimeoutMs: card.run_timeout_ms ?? defaultTimeoutMs,
+    effectiveMaxRetries: card.run_max_retries ?? defaultMaxRetries
+  };
+}
+
 export async function executeRun({ repository, card, triggerMode, timeoutMs, maxRetries }) {
+  const { effectiveTimeoutMs, effectiveMaxRetries } = resolveRunPolicy(card, {
+    defaultTimeoutMs: timeoutMs,
+    defaultMaxRetries: maxRetries
+  });
+
   const run = await repository.createRun({
     card_id: card.id,
     owner_id: card.owner_id,
@@ -28,7 +40,7 @@ export async function executeRun({ repository, card, triggerMode, timeoutMs, max
   });
 
   let attempts = 0;
-  while (attempts <= maxRetries) {
+  while (attempts <= effectiveMaxRetries) {
     attempts += 1;
     await repository.updateRun(run.id, {
       status: RUN_STATUS.RUNNING,
@@ -40,7 +52,7 @@ export async function executeRun({ repository, card, triggerMode, timeoutMs, max
       const collector = resolveCollector(card.source_type);
       const collected = await withTimeout(
         collector.collect({ source_input: card.source_input, params: card.params, context: { card, runId: run.id } }),
-        timeoutMs
+        effectiveTimeoutMs
       );
 
       await repository.createCollectedData({
@@ -78,7 +90,7 @@ export async function executeRun({ repository, card, triggerMode, timeoutMs, max
       };
       await repository.updateRun(run.id, failedState);
 
-      if (attempts > maxRetries) {
+      if (attempts > effectiveMaxRetries) {
         return repository.getRunById(run.id, card.owner_id);
       }
     }
