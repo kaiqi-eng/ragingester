@@ -53,6 +53,7 @@ function CardsWorkspace({ auth, userEmail, onSignOut }) {
   const [error, setError] = useState('');
   const [toast, setToast] = useState('');
   const [filters, setFilters] = useState({ jobType: 'all', jobName: '' });
+  const [viewMode, setViewMode] = useState('grid');
 
   async function refreshCards() {
     const nextCards = await api.listCards(auth);
@@ -169,7 +170,7 @@ function CardsWorkspace({ auth, userEmail, onSignOut }) {
           loading={loading}
         />
       )}
-      <CardFilters filters={filters} onChange={setFilters} />
+      <CardFilters filters={filters} onChange={setFilters} viewMode={viewMode} onViewModeChange={setViewMode} />
       <div className="content-grid">
         <CardList
           cards={filteredCards}
@@ -178,6 +179,7 @@ function CardsWorkspace({ auth, userEmail, onSignOut }) {
           onSelect={handleSelect}
           onEdit={setEditingCard}
           selectedId={selectedCardId}
+          viewMode={viewMode}
         />
         <RunList runs={runs} preview={preview} />
       </div>
