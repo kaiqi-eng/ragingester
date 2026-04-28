@@ -48,12 +48,18 @@ export async function runSchedulerTick({
 }
 
 export function startScheduler({ pollMs = config.schedulerPollMs } = {}) {
-  return setInterval(() => {
+  const runTick = () => {
     runSchedulerTick().catch((error) => {
       // eslint-disable-next-line no-console
       console.error('scheduler tick failed', error);
     });
-  }, pollMs);
+  };
+
+  // Catch up overdue runs immediately when the worker starts,
+  // instead of waiting for the first poll interval.
+  runTick();
+
+  return setInterval(runTick, pollMs);
 }
 
 const isMainModule = process.argv[1] && process.argv[1] === fileURLToPath(import.meta.url);

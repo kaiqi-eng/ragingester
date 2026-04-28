@@ -2,10 +2,20 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { config } from '../src/config.js';
 import { createMemoryRepository } from '../src/repository/memory-repository.js';
-import { runSchedulerTick } from '../src/scheduler/worker.js';
+import { resetRepositoryForTests, setRepositoryForTests } from '../src/repository/index.js';
+import { runSchedulerTick, startScheduler } from '../src/scheduler/worker.js';
 
 function isoMsOffset(baseIso, deltaMs) {
   return new Date(new Date(baseIso).getTime() + deltaMs).toISOString();
+}
+
+async function waitFor(predicate, { timeoutMs = 500, intervalMs = 20 } = {}) {
+  const start = Date.now();
+  while (Date.now() - start <= timeoutMs) {
+    if (await predicate()) return;
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+  }
+  throw new Error(`condition not met within ${timeoutMs}ms`);
 }
 
 test('scheduler tick executes due cards and recomputes next_run_at', async () => {
@@ -158,4 +168,41 @@ test('scheduler tick falls back to global retries when per-card override is null
   assert.ok(runs[0].error_payload);
   assert.equal(runs[0].error_payload.name, 'TypeError');
   assert.ok(Array.isArray(runs[0].logs));
+});
+
+test('startScheduler runs immediate catch-up tick for overdue cards', async () => {
+  const repository = createMemoryRepository();
+  setRepositoryForTests(repository);
+
+  const nowIso = new Date().toISOString();
+  const pastIso = isoMsOffset(nowIso, -300_000);
+
+  const card = await repository.createCard({
+    owner_id: 'user-a',
+    source_type: 'identifier_based',
+    source_input: 'scheduler-immediate-catchup',
+    params: {},
+    schedule_enabled: true,
+    cron_expression: '*/5 * * * *',
+    timezone: 'America/Chicago',
+    next_run_at: pastIso,
+    last_run_at: null,
+    active: true
+  });
+
+  const timer = startScheduler({ pollMs: 60_000 });
+
+  try {
+    await waitFor(async () => {
+      const runs = await repository.listRuns(card.id, 'user-a');
+      return runs.length === 1;
+    });
+
+    const runs = await repository.listRuns(card.id, 'user-a');
+    assert.equal(runs.length, 1);
+    assert.equal(runs[0].trigger_mode, 'scheduled');
+  } finally {
+    clearInterval(timer);
+    resetRepositoryForTests();
+  }
 });
