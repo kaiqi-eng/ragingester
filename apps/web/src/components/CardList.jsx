@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StatusPill } from './StatusPill';
+import { CardDetailsModal } from './CardDetailsModal';
 
-export function CardList({ cards, onRun, onDelete, onSelect, onEdit, selectedId }) {
+export function CardList({ cards, onRun, onDelete, onSelect, onEdit, selectedId, viewMode }) {
+  const [detailsCard, setDetailsCard] = useState(null);
   return (
     <div className="panel">
       <h2>Cards</h2>
@@ -21,18 +23,59 @@ export function CardList({ cards, onRun, onDelete, onSelect, onEdit, selectedId 
           <div>No cards yet.</div>
         </div>
       )}
-      {cards.map((card) => (
+      {viewMode === 'list' && cards.length > 0 && (
+        <div style={{ width: '100%', overflowX: 'auto', marginTop: '16px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '14px' }}>
+            <thead>
+              <tr>
+                <th style={{ padding: '12px 8px', borderBottom: '1px solid #333333', color: '#888888', fontWeight: 500 }}>Source Type</th>
+                <th style={{ padding: '12px 8px', borderBottom: '1px solid #333333', color: '#888888', fontWeight: 500 }}>Job Name</th>
+                <th style={{ padding: '12px 8px', borderBottom: '1px solid #333333', color: '#888888', fontWeight: 500 }}>Status</th>
+                <th style={{ padding: '12px 8px', borderBottom: '1px solid #333333', color: '#888888', fontWeight: 500, textAlign: 'right' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {cards.map((card) => (
+                <tr
+                  key={card.id}
+                  style={{ borderBottom: '1px solid #333333', transition: 'background-color 0.2s' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1c1c1c'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <td style={{ padding: '12px 8px' }}><strong>{card.source_type}</strong></td>
+                  <td style={{ padding: '12px 8px' }}>{card.params?.job_name || 'unnamed'}</td>
+                  <td style={{ padding: '12px 8px' }}><StatusPill active={card.schedule_enabled} label={card.schedule_enabled ? 'Active' : 'Inactive'} /></td>
+                  <td style={{ padding: '12px 8px', textAlign: 'right' }}>
+                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                      <button className="secondary" style={{ padding: '6px 12px', fontSize: '13px' }} type="button" onClick={() => setDetailsCard(card)}>View Details</button>
+                      <button type="button" style={{ padding: '6px 12px', fontSize: '13px' }} onClick={() => onRun(card.id)}>Run</button>
+                      <button className="secondary" style={{ padding: '6px 12px', fontSize: '13px' }} type="button" onClick={() => onEdit(card)}>Edit</button>
+                      <button className="secondary" style={{ padding: '6px 12px', fontSize: '13px' }} type="button" onClick={() => onSelect(card.id)}>{selectedId === card.id ? 'Selected' : 'Runs'}</button>
+                      <button className="secondary" style={{ padding: '6px 12px', fontSize: '13px' }} type="button" onClick={() => onDelete(card.id)}>Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {viewMode !== 'list' && cards.map((card) => (
         <div key={card.id} className="card-item">
-          <strong>{card.source_type}</strong>
-          <div><strong>job:</strong> {card.params?.job_name || 'unnamed'}</div>
-          <div>{card.source_input}</div>
-          <div className="meta" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            schedule: <StatusPill active={card.schedule_enabled} label={card.schedule_enabled ? 'Active' : 'Inactive'} />
-            {card.schedule_enabled && <span>{`${card.cron_expression} (${card.timezone})`}</span>}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <strong>{card.source_type}</strong>
+              <div><strong>job:</strong> {card.params?.job_name || 'unnamed'}</div>
+              <div className="meta" style={{ marginTop: '4px' }}>
+                <StatusPill active={card.schedule_enabled} label={card.schedule_enabled ? 'Active' : 'Inactive'} />
+              </div>
+            </div>
+            <button className="secondary" type="button" onClick={() => setDetailsCard(card)}>
+              View Details
+            </button>
           </div>
-          <div className="meta">next run: {card.next_run_at || 'n/a'}</div>
-          <div className="meta">last run: {card.last_run_at || 'n/a'}</div>
-          <div className="row">
+
+          <div className="row" style={{ marginTop: '16px' }}>
             <button type="button" onClick={() => onRun(card.id)}>Run now</button>
             <button className="secondary" type="button" onClick={() => onEdit(card)}>
               Edit
@@ -44,6 +87,7 @@ export function CardList({ cards, onRun, onDelete, onSelect, onEdit, selectedId 
           </div>
         </div>
       ))}
+      {detailsCard && <CardDetailsModal card={detailsCard} onClose={() => setDetailsCard(null)} />}
     </div>
   );
 }
