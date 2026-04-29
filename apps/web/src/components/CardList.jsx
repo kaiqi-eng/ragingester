@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { StatusPill } from './StatusPill';
 import { CardDetailsModal } from './CardDetailsModal';
 
-export function CardList({ cards, onRun, onDelete, onDeactivate, onSelect, onEdit, selectedId, viewMode }) {
+export function CardList({ cards, onRun, onDelete, onToggleActive, onSelect, onEdit, selectedId, viewMode }) {
   const [detailsCard, setDetailsCard] = useState(null);
   return (
     <div className="panel">
@@ -53,10 +53,9 @@ export function CardList({ cards, onRun, onDelete, onDeactivate, onSelect, onEdi
                         className="secondary"
                         style={{ padding: '6px 12px', fontSize: '13px' }}
                         type="button"
-                        onClick={() => onDeactivate(card.id)}
-                        disabled={!card.active}
+                        onClick={() => onToggleActive(card.id, !card.active)}
                       >
-                        Deactivate
+                        {card.active ? 'Deactivate' : 'Activate'}
                       </button>
                       <button className="secondary" style={{ padding: '6px 12px', fontSize: '13px' }} type="button" onClick={() => onEdit(card)}>Edit</button>
                       <button className="secondary" style={{ padding: '6px 12px', fontSize: '13px' }} type="button" onClick={() => onSelect(card.id)}>{selectedId === card.id ? 'Selected' : 'Runs'}</button>
@@ -86,8 +85,8 @@ export function CardList({ cards, onRun, onDelete, onDeactivate, onSelect, onEdi
 
           <div className="row" style={{ marginTop: '16px' }}>
             <button type="button" onClick={() => onRun(card.id)}>Run now</button>
-            <button className="secondary" type="button" onClick={() => onDeactivate(card.id)} disabled={!card.active}>
-              Deactivate
+            <button className="secondary" type="button" onClick={() => onToggleActive(card.id, !card.active)}>
+              {card.active ? 'Deactivate' : 'Activate'}
             </button>
             <button className="secondary" type="button" onClick={() => onEdit(card)}>
               Edit
