@@ -106,6 +106,17 @@ export function createMemoryRepository() {
       });
     },
 
+    async listPrewarmCards(fromIso, toIso) {
+      const from = new Date(fromIso || new Date().toISOString()).getTime();
+      const to = new Date(toIso || new Date().toISOString()).getTime();
+
+      return [...store.cards.values()].filter((card) => {
+        if (!card.active || !card.schedule_enabled || card.source_type !== 'rss_feed' || !card.next_run_at) return false;
+        const nextRunTs = new Date(card.next_run_at).getTime();
+        return nextRunTs >= from && nextRunTs <= to;
+      });
+    },
+
     async createCollectedData(payload) {
       const row = { id: randomUUID(), created_at: new Date().toISOString(), ...payload };
       store.collectedData.set(row.id, row);

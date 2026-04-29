@@ -99,6 +99,20 @@ export function createSupabaseRepository({ supabaseUrl, serviceRoleKey, tables =
       );
     },
 
+    async listPrewarmCards(fromIso, toIso) {
+      return unwrap(
+        await supabase
+          .from(table.cards)
+          .select('*')
+          .eq('active', true)
+          .eq('schedule_enabled', true)
+          .eq('source_type', 'rss_feed')
+          .not('next_run_at', 'is', null)
+          .gte('next_run_at', fromIso)
+          .lte('next_run_at', toIso)
+      );
+    },
+
     async createCollectedData(payload) {
       return unwrap(await supabase.from(table.collectedData).insert(payload).select('*').single());
     }

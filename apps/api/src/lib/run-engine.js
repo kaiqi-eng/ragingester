@@ -14,6 +14,24 @@ async function withTimeout(promise, timeoutMs) {
   }
 }
 
+function mergeLogs(existingLogs, nextLogs) {
+  const safeExisting = Array.isArray(existingLogs) ? existingLogs : [];
+  const safeNext = Array.isArray(nextLogs) ? nextLogs : [];
+  return [...safeExisting, ...safeNext];
+}
+
+function applyCardParamUpdates(card, collected) {
+  const nextParams = {
+    ...(card.params || {}),
+    ...((collected?.card_updates?.params && typeof collected.card_updates.params === 'object') ? collected.card_updates.params : {})
+  };
+
+  delete nextParams.rss_prewarm_for;
+  delete nextParams.rss_prewarmed_at;
+
+  return nextParams;
+}
+
 function resolveRunPolicy(card, { defaultTimeoutMs, defaultMaxRetries }) {
   return {
     effectiveTimeoutMs: card.run_timeout_ms ?? defaultTimeoutMs,
@@ -41,13 +59,14 @@ export async function executeRun({ repository, card, triggerMode, timeoutMs, max
     defaultTimeoutMs: timeoutMs,
     defaultMaxRetries: maxRetries
   });
+  const resolvedTriggerMode = triggerMode || TRIGGER_MODE.MANUAL;
   const logs = [];
 
   const run = await repository.createRun({
     card_id: card.id,
     owner_id: card.owner_id,
     status: RUN_STATUS.PENDING,
-    trigger_mode: triggerMode || TRIGGER_MODE.MANUAL,
+    trigger_mode: resolvedTriggerMode,
     attempts: 0,
     started_at: null,
     ended_at: null,
@@ -63,7 +82,7 @@ export async function executeRun({ repository, card, triggerMode, timeoutMs, max
       level: 'info',
       event: 'attempt_started',
       attempt: attempts,
-      trigger_mode: triggerMode || TRIGGER_MODE.MANUAL,
+      trigger_mode: resolvedTriggerMode,
       timeout_ms: effectiveTimeoutMs,
       max_retries: effectiveMaxRetries
     });
@@ -78,7 +97,11 @@ export async function executeRun({ repository, card, triggerMode, timeoutMs, max
     try {
       const collector = resolveCollector(card.source_type);
       const collected = await withTimeout(
-        collector.collect({ source_input: card.source_input, params: card.params, context: { card, runId: run.id } }),
+        collector.collect({
+          source_input: card.source_input,
+          params: card.params,
+          context: { card, runId: run.id, triggerMode: resolvedTriggerMode }
+        }),
         effectiveTimeoutMs
       );
 
@@ -95,7 +118,10 @@ export async function executeRun({ repository, card, triggerMode, timeoutMs, max
         ended_at: new Date().toISOString(),
         error: null,
         error_payload: null,
-        logs: [...logs, { level: 'info', event: 'run_completed', message: 'run completed', attempt: attempts }]
+        logs: mergeLogs(
+          [...logs, { level: 'info', event: 'run_completed', message: 'run completed', attempt: attempts }],
+          collected?.logs
+        )
       };
       await repository.updateRun(run.id, updates);
 
@@ -105,11 +131,13 @@ export async function executeRun({ repository, card, triggerMode, timeoutMs, max
 
       await repository.updateCard(card.id, {
         last_run_at: updates.ended_at,
-        next_run_at: nextRunAt
+        next_run_at: nextRunAt,
+        params: applyCardParamUpdates(card, collected)
       });
 
       return repository.getRunById(run.id, card.owner_id);
     } catch (error) {
+      const endedAt = new Date().toISOString();
       const errorPayload = serializeError(error);
       logs.push({
         level: 'error',
@@ -120,7 +148,7 @@ export async function executeRun({ repository, card, triggerMode, timeoutMs, max
 
       const failedState = {
         status: RUN_STATUS.FAILED,
-        ended_at: new Date().toISOString(),
+        ended_at: endedAt,
         error: errorPayload.message,
         error_payload: errorPayload,
         logs
@@ -128,6 +156,21 @@ export async function executeRun({ repository, card, triggerMode, timeoutMs, max
       await repository.updateRun(run.id, failedState);
 
       if (attempts > effectiveMaxRetries) {
+        const nextRunAt = card.schedule_enabled && card.cron_expression
+          ? computeNextRun(card.cron_expression, card.timezone, new Date())
+          : null;
+
+        const nextParams = {
+          ...(card.params || {})
+        };
+        delete nextParams.rss_prewarm_for;
+        delete nextParams.rss_prewarmed_at;
+
+        await repository.updateCard(card.id, {
+          last_run_at: endedAt,
+          next_run_at: nextRunAt,
+          params: nextParams
+        });
         return repository.getRunById(run.id, card.owner_id);
       }
     }

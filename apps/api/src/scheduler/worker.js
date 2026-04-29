@@ -1,9 +1,7 @@
-import { TRIGGER_MODE } from '@ragingester/shared';
 import { fileURLToPath } from 'node:url';
 import { config } from '../config.js';
 import { getRepository } from '../repository/index.js';
-import { executeRun } from '../lib/run-engine.js';
-import { RunOverlapError } from '../lib/errors.js';
+import { runSchedulerTick as runSchedulerTickCore } from '../lib/scheduler-tick.js';
 
 export async function runSchedulerTick({
   repository = getRepository(),
@@ -11,40 +9,12 @@ export async function runSchedulerTick({
   timeoutMs = config.runTimeoutMs,
   maxRetries = config.runMaxRetries
 } = {}) {
-  const dueCards = await repository.listDueCards(nowIso);
-  let startedRuns = 0;
-  let skippedCards = 0;
-
-  for (const card of dueCards) {
-    const activeRun = await repository.getActiveRunForCard(card.id);
-    if (activeRun) {
-      skippedCards += 1;
-      continue;
-    }
-
-    try {
-      await executeRun({
-        repository,
-        card,
-        triggerMode: TRIGGER_MODE.SCHEDULED,
-        timeoutMs,
-        maxRetries
-      });
-      startedRuns += 1;
-    } catch (error) {
-      if (error instanceof RunOverlapError) {
-        skippedCards += 1;
-        continue;
-      }
-      throw error;
-    }
-  }
-
-  return {
-    dueCards: dueCards.length,
-    startedRuns,
-    skippedCards
-  };
+  return runSchedulerTickCore({
+    repository,
+    now: new Date(nowIso),
+    timeoutMs,
+    maxRetries
+  });
 }
 
 export function startScheduler({ pollMs = config.schedulerPollMs } = {}) {

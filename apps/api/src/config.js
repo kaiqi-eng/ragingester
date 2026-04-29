@@ -6,9 +6,17 @@ export const config = {
   supabaseUrl: process.env.SUPABASE_URL || '',
   supabaseAnonKey: process.env.SUPABASE_ANON_KEY || '',
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+  genieRssBaseUrl: process.env.GENIE_RSS_BASE_URL || 'https://genie-rss-5i00.onrender.com',
+  genieRssApiKey: process.env.GENIE_RSS_API_KEY || '',
+  bharagBaseUrl: process.env.BHARAG_BASE_URL || 'https://bharag.duckdns.org',
+  bharagMasterApiKey: process.env.BHARAG_MASTER_API_KEY || '',
+  bharagOwnerBuilderId: process.env.BHARAG_OWNER_BUILDER_ID || '',
+  bharagOwnerName: process.env.BHARAG_OWNER_NAME || 'Ragingester RSS Owner',
+  bharagOwnerEmail: process.env.BHARAG_OWNER_EMAIL || '',
   devUserId: process.env.DEV_USER_ID || 'dev-user-1',
   defaultTimezone: process.env.DEFAULT_TIMEZONE || DEFAULT_TIMEZONE,
   schedulerPollMs: Number(process.env.SCHEDULER_POLL_MS || 15000),
+  rssPrewarmWindowMs: Number(process.env.RSS_PREWARM_WINDOW_MS || 120000),
   runTimeoutMs: Number(process.env.RUN_TIMEOUT_MS || 30000),
   runMaxRetries: Number(process.env.RUN_MAX_RETRIES || 1)
 };
