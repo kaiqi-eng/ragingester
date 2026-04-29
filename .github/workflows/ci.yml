@@ -32,11 +32,11 @@ jobs:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          GENIE_RSS_BASE_URL: ${{ vars.GENIE_RSS_BASE_URL }}
+          GENIE_RSS_BASE_URL: ${{ secrets.GENIE_RSS_BASE_URL }}
           GENIE_RSS_API_KEY: ${{ secrets.GENIE_RSS_API_KEY }}
-          BHARAG_BASE_URL: ${{ vars.BHARAG_BASE_URL }}
+          BHARAG_BASE_URL: ${{ secrets.BHARAG_BASE_URL }}
           BHARAG_MASTER_API_KEY: ${{ secrets.BHARAG_MASTER_API_KEY }}
-          RUN_RSS_E2E: ${{ vars.RUN_RSS_E2E }}
+          RUN_RSS_E2E: ${{ secrets.RUN_RSS_E2E }}
         run: npm run test -w @ragingester/api
 
       - name: Build Web
