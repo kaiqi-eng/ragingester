@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { StatusPill } from './StatusPill';
 import { CardDetailsModal } from './CardDetailsModal';
+import { getToggleActiveAction } from './card-active-toggle.js';
 
 export function CardList({ cards, onRun, onDelete, onToggleActive, onSelect, onEdit, selectedId, viewMode }) {
   const [detailsCard, setDetailsCard] = useState(null);
@@ -53,9 +54,9 @@ export function CardList({ cards, onRun, onDelete, onToggleActive, onSelect, onE
                         className="secondary"
                         style={{ padding: '6px 12px', fontSize: '13px' }}
                         type="button"
-                        onClick={() => onToggleActive(card.id, !card.active)}
+                        onClick={() => onToggleActive(card.id, getToggleActiveAction(card.active).nextActive)}
                       >
-                        {card.active ? 'Deactivate' : 'Activate'}
+                        {getToggleActiveAction(card.active).label}
                       </button>
                       <button className="secondary" style={{ padding: '6px 12px', fontSize: '13px' }} type="button" onClick={() => onEdit(card)}>Edit</button>
                       <button className="secondary" style={{ padding: '6px 12px', fontSize: '13px' }} type="button" onClick={() => onSelect(card.id)}>{selectedId === card.id ? 'Selected' : 'Runs'}</button>
@@ -85,8 +86,12 @@ export function CardList({ cards, onRun, onDelete, onToggleActive, onSelect, onE
 
           <div className="row" style={{ marginTop: '16px' }}>
             <button type="button" onClick={() => onRun(card.id)}>Run now</button>
-            <button className="secondary" type="button" onClick={() => onToggleActive(card.id, !card.active)}>
-              {card.active ? 'Deactivate' : 'Activate'}
+            <button
+              className="secondary"
+              type="button"
+              onClick={() => onToggleActive(card.id, getToggleActiveAction(card.active).nextActive)}
+            >
+              {getToggleActiveAction(card.active).label}
             </button>
             <button className="secondary" type="button" onClick={() => onEdit(card)}>
               Edit
