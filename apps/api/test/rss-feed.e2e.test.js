@@ -3,16 +3,12 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { rssFeedCollector } from '../src/collectors/rss-feed.js';
 
-const runFlag = (process.env.RUN_RSS_E2E || '').trim().toLowerCase();
-const shouldRun = ['1', 'true', 'yes', 'on'].includes(runFlag);
 const required = [
   'GENIE_RSS_API_KEY',
   'BHARAG_MASTER_API_KEY'
 ];
 const missing = required.filter((key) => !process.env[key]);
-const skipReason = !shouldRun
-  ? 'set RUN_RSS_E2E to 1/true/yes/on to run live rss e2e'
-  : (missing.length > 0 ? `missing required env vars: ${missing.join(', ')}` : null);
+const skipReason = missing.length > 0 ? `missing required env vars: ${missing.join(', ')}` : null;
 
 function trimTrailingSlash(value) {
   return value.endsWith('/') ? value.slice(0, -1) : value;
