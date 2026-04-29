@@ -8,7 +8,6 @@ const required = [
   'BHARAG_MASTER_API_KEY'
 ];
 const missing = required.filter((key) => !process.env[key]);
-const skipReason = missing.length > 0 ? `missing required env vars: ${missing.join(', ')}` : null;
 
 function trimTrailingSlash(value) {
   return value.endsWith('/') ? value.slice(0, -1) : value;
@@ -34,7 +33,8 @@ async function tryDelete(url, headers) {
   }
 }
 
-test('e2e: genie-rss -> ragingester -> bharag with temporary workspace owner and cleanup', { skip: skipReason }, async () => {
+test('e2e: genie-rss -> ragingester -> bharag with temporary workspace owner and cleanup', async () => {
+  assert.equal(missing.length, 0, `missing required env vars: ${missing.join(', ')}`);
   const genieBaseUrl = trimTrailingSlash(process.env.GENIE_RSS_BASE_URL || 'https://genie-rss-5i00.onrender.com');
   const bharagBaseUrl = trimTrailingSlash(process.env.BHARAG_BASE_URL || 'https://bharag.duckdns.org');
   const genieApiKey = process.env.GENIE_RSS_API_KEY;
