@@ -128,6 +128,19 @@ function CardsWorkspace({ auth, userEmail, onSignOut }) {
     }
   }
 
+  async function handleDeactivate(cardId) {
+    setError('');
+    try {
+      await api.updateCard(auth, cardId, { active: false });
+      await refreshCards();
+      if (selectedCardId === cardId) {
+        await refreshRuns(cardId);
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   async function handleSelect(cardId) {
     setSelectedCardId(cardId);
     try {
@@ -176,6 +189,7 @@ function CardsWorkspace({ auth, userEmail, onSignOut }) {
           cards={filteredCards}
           onRun={handleRun}
           onDelete={handleDelete}
+          onDeactivate={handleDeactivate}
           onSelect={handleSelect}
           onEdit={setEditingCard}
           selectedId={selectedCardId}

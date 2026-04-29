@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { StatusPill } from './StatusPill';
 import { CardDetailsModal } from './CardDetailsModal';
 
-export function CardList({ cards, onRun, onDelete, onSelect, onEdit, selectedId, viewMode }) {
+export function CardList({ cards, onRun, onDelete, onDeactivate, onSelect, onEdit, selectedId, viewMode }) {
   const [detailsCard, setDetailsCard] = useState(null);
   return (
     <div className="panel">
@@ -44,11 +44,20 @@ export function CardList({ cards, onRun, onDelete, onSelect, onEdit, selectedId,
                 >
                   <td style={{ padding: '12px 8px' }}><strong>{card.source_type}</strong></td>
                   <td style={{ padding: '12px 8px' }}>{card.params?.job_name || 'unnamed'}</td>
-                  <td style={{ padding: '12px 8px' }}><StatusPill active={card.schedule_enabled} label={card.schedule_enabled ? 'Active' : 'Inactive'} /></td>
+                  <td style={{ padding: '12px 8px' }}><StatusPill active={card.active} label={card.active ? 'Active' : 'Inactive'} /></td>
                   <td style={{ padding: '12px 8px', textAlign: 'right' }}>
                     <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                       <button className="secondary" style={{ padding: '6px 12px', fontSize: '13px' }} type="button" onClick={() => setDetailsCard(card)}>View Details</button>
                       <button type="button" style={{ padding: '6px 12px', fontSize: '13px' }} onClick={() => onRun(card.id)}>Run</button>
+                      <button
+                        className="secondary"
+                        style={{ padding: '6px 12px', fontSize: '13px' }}
+                        type="button"
+                        onClick={() => onDeactivate(card.id)}
+                        disabled={!card.active}
+                      >
+                        Deactivate
+                      </button>
                       <button className="secondary" style={{ padding: '6px 12px', fontSize: '13px' }} type="button" onClick={() => onEdit(card)}>Edit</button>
                       <button className="secondary" style={{ padding: '6px 12px', fontSize: '13px' }} type="button" onClick={() => onSelect(card.id)}>{selectedId === card.id ? 'Selected' : 'Runs'}</button>
                       <button className="secondary" style={{ padding: '6px 12px', fontSize: '13px' }} type="button" onClick={() => onDelete(card.id)}>Delete</button>
@@ -67,7 +76,7 @@ export function CardList({ cards, onRun, onDelete, onSelect, onEdit, selectedId,
               <strong>{card.source_type}</strong>
               <div><strong>job:</strong> {card.params?.job_name || 'unnamed'}</div>
               <div className="meta" style={{ marginTop: '4px' }}>
-                <StatusPill active={card.schedule_enabled} label={card.schedule_enabled ? 'Active' : 'Inactive'} />
+                <StatusPill active={card.active} label={card.active ? 'Active' : 'Inactive'} />
               </div>
             </div>
             <button className="secondary" type="button" onClick={() => setDetailsCard(card)}>
@@ -77,6 +86,9 @@ export function CardList({ cards, onRun, onDelete, onSelect, onEdit, selectedId,
 
           <div className="row" style={{ marginTop: '16px' }}>
             <button type="button" onClick={() => onRun(card.id)}>Run now</button>
+            <button className="secondary" type="button" onClick={() => onDeactivate(card.id)} disabled={!card.active}>
+              Deactivate
+            </button>
             <button className="secondary" type="button" onClick={() => onEdit(card)}>
               Edit
             </button>
