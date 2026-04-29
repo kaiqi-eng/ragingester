@@ -31,5 +31,7 @@ export const DEFAULT_TIMEZONE = 'America/Chicago';
  * @property {string} timezone
  * @property {string | null} next_run_at
  * @property {string | null} last_run_at
+ * @property {number | null} run_timeout_ms
+ * @property {number | null} run_max_retries
  * @property {boolean} active
  */

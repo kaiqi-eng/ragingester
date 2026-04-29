@@ -32,26 +32,66 @@ function applyCardParamUpdates(card, collected) {
   return nextParams;
 }
 
+function resolveRunPolicy(card, { defaultTimeoutMs, defaultMaxRetries }) {
+  return {
+    effectiveTimeoutMs: card.run_timeout_ms ?? defaultTimeoutMs,
+    effectiveMaxRetries: card.run_max_retries ?? defaultMaxRetries
+  };
+}
+
+function serializeError(error) {
+  if (error instanceof Error) {
+    return {
+      name: error.name,
+      message: error.message,
+      ...(error.code ? { code: String(error.code) } : {})
+    };
+  }
+
+  return {
+    name: 'Error',
+    message: String(error)
+  };
+}
+
 export async function executeRun({ repository, card, triggerMode, timeoutMs, maxRetries }) {
+  const { effectiveTimeoutMs, effectiveMaxRetries } = resolveRunPolicy(card, {
+    defaultTimeoutMs: timeoutMs,
+    defaultMaxRetries: maxRetries
+  });
+  const resolvedTriggerMode = triggerMode || TRIGGER_MODE.MANUAL;
+  const logs = [];
+
   const run = await repository.createRun({
     card_id: card.id,
     owner_id: card.owner_id,
     status: RUN_STATUS.PENDING,
-    trigger_mode: triggerMode || TRIGGER_MODE.MANUAL,
+    trigger_mode: resolvedTriggerMode,
     attempts: 0,
     started_at: null,
     ended_at: null,
     error: null,
+    error_payload: null,
     logs: []
   });
 
   let attempts = 0;
-  while (attempts <= maxRetries) {
+  while (attempts <= effectiveMaxRetries) {
     attempts += 1;
+    logs.push({
+      level: 'info',
+      event: 'attempt_started',
+      attempt: attempts,
+      trigger_mode: resolvedTriggerMode,
+      timeout_ms: effectiveTimeoutMs,
+      max_retries: effectiveMaxRetries
+    });
+
     await repository.updateRun(run.id, {
       status: RUN_STATUS.RUNNING,
       attempts,
-      started_at: new Date().toISOString()
+      started_at: new Date().toISOString(),
+      logs
     });
 
     try {
@@ -60,9 +100,9 @@ export async function executeRun({ repository, card, triggerMode, timeoutMs, max
         collector.collect({
           source_input: card.source_input,
           params: card.params,
-          context: { card, runId: run.id, triggerMode: triggerMode || TRIGGER_MODE.MANUAL }
+          context: { card, runId: run.id, triggerMode: resolvedTriggerMode }
         }),
-        timeoutMs
+        effectiveTimeoutMs
       );
 
       await repository.createCollectedData({
@@ -77,7 +117,11 @@ export async function executeRun({ repository, card, triggerMode, timeoutMs, max
         status: RUN_STATUS.SUCCESS,
         ended_at: new Date().toISOString(),
         error: null,
-        logs: mergeLogs([{ level: 'info', message: 'run completed' }], collected?.logs)
+        error_payload: null,
+        logs: mergeLogs(
+          [...logs, { level: 'info', event: 'run_completed', message: 'run completed', attempt: attempts }],
+          collected?.logs
+        )
       };
       await repository.updateRun(run.id, updates);
 
@@ -94,15 +138,24 @@ export async function executeRun({ repository, card, triggerMode, timeoutMs, max
       return repository.getRunById(run.id, card.owner_id);
     } catch (error) {
       const endedAt = new Date().toISOString();
+      const errorPayload = serializeError(error);
+      logs.push({
+        level: 'error',
+        event: 'attempt_failed',
+        attempt: attempts,
+        error: errorPayload
+      });
+
       const failedState = {
         status: RUN_STATUS.FAILED,
         ended_at: endedAt,
-        error: error instanceof Error ? error.message : String(error),
-        logs: [{ level: 'error', message: error instanceof Error ? error.message : String(error) }]
+        error: errorPayload.message,
+        error_payload: errorPayload,
+        logs
       };
       await repository.updateRun(run.id, failedState);
 
-      if (attempts > maxRetries) {
+      if (attempts > effectiveMaxRetries) {
         const nextRunAt = card.schedule_enabled && card.cron_expression
           ? computeNextRun(card.cron_expression, card.timezone, new Date())
           : null;

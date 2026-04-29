@@ -7,7 +7,22 @@ export function RunList({ runs, preview }) {
       {preview?.next_runs?.length > 0 && (
         <div className="meta">Next scheduled runs: {preview.next_runs.join(', ')}</div>
       )}
-      {runs.length === 0 && <div className="meta">No runs yet.</div>}
+      {runs.length === 0 && (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '40px',
+          color: '#888888',
+          border: '1px dashed #333333',
+          borderRadius: '6px',
+          marginTop: '16px'
+        }}>
+          <div style={{ fontSize: '24px', marginBottom: '8px', opacity: 0.6 }}>📊</div>
+          <div>No runs yet.</div>
+        </div>
+      )}
       {runs.map((run) => (
         <div key={run.id} className="card-item">
           <div><strong>{run.status}</strong> ({run.trigger_mode})</div>

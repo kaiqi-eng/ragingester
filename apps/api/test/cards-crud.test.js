@@ -41,6 +41,8 @@ test('cards CRUD and owner isolation', async () => {
         schedule_enabled: true,
         cron_expression: '0 9 * * *',
         timezone: 'America/Chicago',
+        run_timeout_ms: 45000,
+        run_max_retries: 2,
         active: true
       })
     });
@@ -51,6 +53,8 @@ test('cards CRUD and owner isolation', async () => {
     assert.equal(created.owner_id, 'user-a');
     assert.ok(created.id);
     assert.ok(created.next_run_at);
+    assert.equal(created.run_timeout_ms, 45000);
+    assert.equal(created.run_max_retries, 2);
 
     const listResponse = await fetch(`${baseUrl}/cards`, {
       headers: authHeaders('user-a')
@@ -73,6 +77,8 @@ test('cards CRUD and owner isolation', async () => {
       body: JSON.stringify({
         source_input: 'sensor-001-updated',
         schedule_enabled: false,
+        run_timeout_ms: null,
+        run_max_retries: 0,
         active: false
       })
     });
@@ -82,6 +88,8 @@ test('cards CRUD and owner isolation', async () => {
     assert.equal(updated.schedule_enabled, false);
     assert.equal(updated.cron_expression, null);
     assert.equal(updated.next_run_at, null);
+    assert.equal(updated.run_timeout_ms, null);
+    assert.equal(updated.run_max_retries, 0);
     assert.equal(updated.active, false);
 
     const unauthorizedGet = await fetch(`${baseUrl}/cards/${created.id}`, {

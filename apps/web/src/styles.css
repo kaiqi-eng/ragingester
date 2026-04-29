@@ -1,7 +1,7 @@
 :root {
   font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
-  color: #1f2937;
-  background: radial-gradient(circle at 20% 20%, #fff7ed 0%, #f8fafc 45%, #eef2ff 100%);
+  color: #ededed;
+  background: #111111;
 }
 
 * {
@@ -20,11 +20,10 @@ body {
 }
 
 .panel {
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid #e5e7eb;
-  border-radius: 14px;
+  background: #1c1c1c;
+  border: 1px solid #333333;
+  border-radius: 6px;
   padding: 16px;
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
 }
 
 h1 {
@@ -53,8 +52,10 @@ textarea,
 button {
   font: inherit;
   padding: 8px 10px;
-  border-radius: 10px;
-  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  border: 1px solid #333333;
+  background: #000000;
+  color: #ededed;
 }
 
 button {
@@ -65,8 +66,8 @@ button {
 }
 
 button.secondary {
-  background: white;
-  color: #1f2937;
+  background: #1c1c1c;
+  color: #ededed;
 }
 
 .grid-2 {
@@ -76,15 +77,15 @@ button.secondary {
 }
 
 .card-item {
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border: 1px solid #333333;
+  border-radius: 6px;
   padding: 12px;
   margin-bottom: 10px;
-  background: #fff;
+  background: #1c1c1c;
 }
 
 .meta {
-  color: #475569;
+  color: #888888;
   font-size: 12px;
 }
 

@@ -2,6 +2,7 @@ import { SOURCE_TYPES, TRIGGER_MODE } from '@ragingester/shared';
 import { config } from '../config.js';
 import { prewarmRssFeed } from '../collectors/rss-feed.js';
 import { executeRun } from './run-engine.js';
+import { RunOverlapError } from './errors.js';
 
 async function handlePrewarm({ repository, now, prewarmWindowMs }) {
   if (typeof repository.listPrewarmCards !== 'function') return;
@@ -42,17 +43,37 @@ export async function runSchedulerTick({
   await handlePrewarm({ repository, now, prewarmWindowMs });
 
   const dueCards = await repository.listDueCards(now.toISOString());
+  let startedRuns = 0;
+  let skippedCards = 0;
 
   for (const card of dueCards) {
     const activeRun = await repository.getActiveRunForCard(card.id);
-    if (activeRun) continue;
+    if (activeRun) {
+      skippedCards += 1;
+      continue;
+    }
 
-    await executeRun({
-      repository,
-      card,
-      triggerMode: TRIGGER_MODE.SCHEDULED,
-      timeoutMs,
-      maxRetries
-    });
+    try {
+      await executeRun({
+        repository,
+        card,
+        triggerMode: TRIGGER_MODE.SCHEDULED,
+        timeoutMs,
+        maxRetries
+      });
+      startedRuns += 1;
+    } catch (error) {
+      if (error instanceof RunOverlapError) {
+        skippedCards += 1;
+        continue;
+      }
+      throw error;
+    }
   }
+
+  return {
+    dueCards: dueCards.length,
+    startedRuns,
+    skippedCards
+  };
 }

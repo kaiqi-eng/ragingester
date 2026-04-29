@@ -3,12 +3,18 @@ import { SOURCE_TYPES } from '@ragingester/shared';
 
 const sourceOptions = Object.values(SOURCE_TYPES);
 
-export function CardFilters({ filters, onChange }) {
+export function CardFilters({ filters, onChange, viewMode, onViewModeChange }) {
   return (
     <div className="panel">
-      <h2>Filter Jobs</h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <h2 style={{ margin: 0 }}>Filter Jobs</h2>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <button className="secondary" type="button" onClick={() => onViewModeChange('grid')} style={{ padding: '4px 12px', opacity: viewMode === 'grid' ? 1 : 0.5 }}>Grid</button>
+          <button className="secondary" type="button" onClick={() => onViewModeChange('list')} style={{ padding: '4px 12px', opacity: viewMode === 'list' ? 1 : 0.5 }}>List</button>
+        </div>
+      </div>
       <div className="grid-2">
-        <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <label>Job type</label>
           <select value={filters.jobType} onChange={(e) => onChange({ ...filters, jobType: e.target.value })}>
             <option value="all">All</option>
@@ -17,7 +23,7 @@ export function CardFilters({ filters, onChange }) {
             ))}
           </select>
         </div>
-        <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <label>Job name</label>
           <input
             value={filters.jobName}

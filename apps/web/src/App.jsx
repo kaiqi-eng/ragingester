@@ -5,11 +5,13 @@ import { CardForm } from './components/CardForm.jsx';
 import { CardList } from './components/CardList.jsx';
 import { CardFilters } from './components/CardFilters.jsx';
 import { RunList } from './components/RunList.jsx';
+import { Toast } from './components/Toast.jsx';
 
 function AuthBarrier({ error }) {
   async function signInWithGoogle() {
     if (!supabase) return;
-    const redirectTo = window.location.origin;
+    const configuredRedirect = import.meta.env.VITE_SUPABASE_REDIRECT_URL;
+    const redirectTo = configuredRedirect || window.location.origin;
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo }
@@ -49,7 +51,9 @@ function CardsWorkspace({ auth, userEmail, onSignOut }) {
   const [editingCard, setEditingCard] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [toast, setToast] = useState('');
   const [filters, setFilters] = useState({ jobType: 'all', jobName: '' });
+  const [viewMode, setViewMode] = useState('grid');
 
   async function refreshCards() {
     const nextCards = await api.listCards(auth);
@@ -75,6 +79,7 @@ function CardsWorkspace({ auth, userEmail, onSignOut }) {
     try {
       await api.createCard(auth, payload);
       await refreshCards();
+      setToast('Card created successfully!');
     } finally {
       setLoading(false);
     }
@@ -123,6 +128,19 @@ function CardsWorkspace({ auth, userEmail, onSignOut }) {
     }
   }
 
+  async function handleDeactivate(cardId) {
+    setError('');
+    try {
+      await api.updateCard(auth, cardId, { active: false });
+      await refreshCards();
+      if (selectedCardId === cardId) {
+        await refreshRuns(cardId);
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   async function handleSelect(cardId) {
     setSelectedCardId(cardId);
     try {
@@ -165,18 +183,21 @@ function CardsWorkspace({ auth, userEmail, onSignOut }) {
           loading={loading}
         />
       )}
-      <CardFilters filters={filters} onChange={setFilters} />
+      <CardFilters filters={filters} onChange={setFilters} viewMode={viewMode} onViewModeChange={setViewMode} />
       <div className="content-grid">
         <CardList
           cards={filteredCards}
           onRun={handleRun}
           onDelete={handleDelete}
+          onDeactivate={handleDeactivate}
           onSelect={handleSelect}
           onEdit={setEditingCard}
           selectedId={selectedCardId}
+          viewMode={viewMode}
         />
         <RunList runs={runs} preview={preview} />
       </div>
+      <Toast message={toast} onHide={() => setToast('')} />
     </div>
   );
 }
