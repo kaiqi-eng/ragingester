@@ -27,6 +27,33 @@ jobs:
       - name: Install
         run: npm ci --include=dev
 
+      - name: Validate E2E secret wiring
+        env:
+          RUN_RSS_E2E: ${{ secrets.RUN_RSS_E2E }}
+          GENIE_RSS_API_KEY: ${{ secrets.GENIE_RSS_API_KEY }}
+          BHARAG_MASTER_API_KEY: ${{ secrets.BHARAG_MASTER_API_KEY }}
+        run: |
+          set -euo pipefail
+          run_flag="$(echo "${RUN_RSS_E2E:-}" | tr '[:upper:]' '[:lower:]' | xargs)"
+          if [ "$run_flag" = "1" ] || [ "$run_flag" = "true" ] || [ "$run_flag" = "yes" ] || [ "$run_flag" = "on" ]; then
+            missing=0
+            if [ -z "${GENIE_RSS_API_KEY:-}" ]; then
+              echo "::error::RUN_RSS_E2E is enabled, but missing secret GENIE_RSS_API_KEY"
+              missing=1
+            fi
+            if [ -z "${BHARAG_MASTER_API_KEY:-}" ]; then
+              echo "::error::RUN_RSS_E2E is enabled, but missing secret BHARAG_MASTER_API_KEY"
+              missing=1
+            fi
+            if [ "$missing" -ne 0 ]; then
+              echo "::error::E2E secret validation failed."
+              exit 1
+            fi
+            echo "E2E secret validation passed."
+          else
+            echo "RUN_RSS_E2E is disabled; skipping E2E secret validation."
+          fi
+
       - name: Test
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
