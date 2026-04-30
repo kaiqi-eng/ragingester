@@ -54,6 +54,11 @@ function serializeError(error) {
   };
 }
 
+function cloneParams(params) {
+  if (!params || typeof params !== 'object') return {};
+  return JSON.parse(JSON.stringify(params));
+}
+
 export async function executeRun({ repository, card, triggerMode, timeoutMs, maxRetries }) {
   const { effectiveTimeoutMs, effectiveMaxRetries } = resolveRunPolicy(card, {
     defaultTimeoutMs: timeoutMs,
@@ -62,6 +67,7 @@ export async function executeRun({ repository, card, triggerMode, timeoutMs, max
   const resolvedTriggerMode = triggerMode || TRIGGER_MODE.MANUAL;
   const isManualRssFeed = resolvedTriggerMode === TRIGGER_MODE.MANUAL && card.source_type === 'rss_feed';
   const timeoutMsForRun = isManualRssFeed ? Math.max(effectiveTimeoutMs, 10 * 60 * 1000) : effectiveTimeoutMs;
+  const initialParamsSnapshot = cloneParams(card.params);
   const logs = [];
 
   const run = await repository.createRun({
@@ -163,7 +169,7 @@ export async function executeRun({ repository, card, triggerMode, timeoutMs, max
           : null;
 
         const nextParams = {
-          ...(card.params || {})
+          ...initialParamsSnapshot
         };
         delete nextParams.rss_prewarm_for;
         delete nextParams.rss_prewarmed_at;

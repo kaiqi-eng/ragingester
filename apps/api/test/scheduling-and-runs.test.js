@@ -425,6 +425,48 @@ test('failed rss_feed run does not update rss_cursor_pub_date', async () => {
   }
 });
 
+test('failed scheduled rss_feed run does not update rss_cursor_pub_date', async () => {
+  const repository = createMemoryRepository();
+  const originalFetch = global.fetch;
+  global.fetch = async () => {
+    throw new Error('forced fetch failure');
+  };
+
+  try {
+    const initialCursor = '2026-04-30T00:07:15.000Z';
+    const card = await repository.createCard({
+      owner_id: 'user-a',
+      source_type: 'rss_feed',
+      source_input: 'https://techcrunch.com/feed/',
+      params: {
+        rss_cursor_pub_date: initialCursor
+      },
+      run_timeout_ms: 30000,
+      run_max_retries: 0,
+      schedule_enabled: true,
+      cron_expression: '*/15 * * * *',
+      timezone: 'America/Chicago',
+      next_run_at: null,
+      last_run_at: null,
+      active: true
+    });
+
+    const run = await executeRun({
+      repository,
+      card,
+      triggerMode: TRIGGER_MODE.SCHEDULED,
+      timeoutMs: config.runTimeoutMs,
+      maxRetries: config.runMaxRetries
+    });
+
+    assert.equal(run.status, 'failed');
+    const updatedCard = await repository.getCardById(card.id, card.owner_id);
+    assert.equal(updatedCard.params.rss_cursor_pub_date, initialCursor);
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
+
 test('clear run history deletes runs for selected card only', async () => {
   setRepositoryForTests(createMemoryRepository());
 
