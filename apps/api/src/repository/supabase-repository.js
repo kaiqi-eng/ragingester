@@ -69,6 +69,18 @@ export function createSupabaseRepository({ supabaseUrl, serviceRoleKey, tables =
       );
     },
 
+    async deleteRuns(cardId, ownerId) {
+      const data = unwrap(
+        await supabase
+          .from(table.collectionRuns)
+          .delete()
+          .eq('card_id', cardId)
+          .eq('owner_id', ownerId)
+          .select('id')
+      );
+      return data.length;
+    },
+
     async createRun(payload) {
       const result = await supabase.from(table.collectionRuns).insert(payload).select('*').single();
       if (

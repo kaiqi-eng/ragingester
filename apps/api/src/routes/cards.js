@@ -146,6 +146,17 @@ export function createCardsRouter() {
     }
   });
 
+  router.delete('/:id/runs', async (req, res, next) => {
+    try {
+      const card = await repository.getCardById(req.params.id, req.user.id);
+      if (!card) return res.status(404).json({ error: 'card not found' });
+      const deleted = await repository.deleteRuns(req.params.id, req.user.id);
+      res.status(200).json({ deleted });
+    } catch (error) {
+      next(error);
+    }
+  });
+
   router.get('/:id/schedule/preview', async (req, res, next) => {
     try {
       const card = await repository.getCardById(req.params.id, req.user.id);

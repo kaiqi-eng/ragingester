@@ -151,6 +151,18 @@ function CardsWorkspace({ auth, userEmail, onSignOut }) {
     }
   }
 
+  async function handleClearRunHistory() {
+    if (!selectedCardId) return;
+    setError('');
+    try {
+      await api.clearRuns(auth, selectedCardId);
+      setRuns([]);
+      setToast('Run history cleared.');
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   async function handleExportCsv() {
     setError('');
     try {
@@ -247,7 +259,12 @@ function CardsWorkspace({ auth, userEmail, onSignOut }) {
           selectedId={selectedCardId}
           viewMode={viewMode}
         />
-        <RunList runs={runs} preview={preview} />
+        <RunList
+          runs={runs}
+          preview={preview}
+          onClear={handleClearRunHistory}
+          clearDisabled={!selectedCardId}
+        />
       </div>
       <Toast message={toast} onHide={() => setToast('')} />
     </div>

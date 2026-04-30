@@ -1,9 +1,14 @@
 import React from 'react';
 
-export function RunList({ runs, preview }) {
+export function RunList({ runs, preview, onClear, clearDisabled }) {
   return (
     <div className="panel">
-      <h2>Run History</h2>
+      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+        <h2 style={{ marginBottom: 0 }}>Run History</h2>
+        <button className="secondary" type="button" onClick={onClear} disabled={clearDisabled}>
+          Clear run history
+        </button>
+      </div>
       {preview?.next_runs?.length > 0 && (
         <div className="meta">Next scheduled runs: {preview.next_runs.join(', ')}</div>
       )}

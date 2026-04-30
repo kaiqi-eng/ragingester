@@ -44,6 +44,10 @@ export const api = {
     return handle(await fetch(`${API_BASE}/cards/${cardId}/runs`, { headers: authHeaders(auth) }));
   },
 
+  async clearRuns(auth, cardId) {
+    return handle(await fetch(`${API_BASE}/cards/${cardId}/runs`, { method: 'DELETE', headers: authHeaders(auth) }));
+  },
+
   async schedulePreview(auth, cardId) {
     return handle(await fetch(`${API_BASE}/cards/${cardId}/schedule/preview`, { headers: authHeaders(auth) }));
   },

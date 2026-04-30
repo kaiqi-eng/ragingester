@@ -382,3 +382,60 @@ test('manual run returns 409 when an active run already exists for the card', as
 
   resetRepositoryForTests();
 });
+
+test('clear run history deletes runs for selected card only', async () => {
+  setRepositoryForTests(createMemoryRepository());
+
+  await withServer(async (baseUrl) => {
+    const createA = await fetch(`${baseUrl}/cards`, {
+      method: 'POST',
+      headers: authHeaders('user-a'),
+      body: JSON.stringify({
+        source_type: 'identifier_based',
+        source_input: 'sensor-clear-a',
+        params: {},
+        schedule_enabled: false,
+        active: true
+      })
+    });
+    assert.equal(createA.status, 201);
+    const cardA = await createA.json();
+
+    const createB = await fetch(`${baseUrl}/cards`, {
+      method: 'POST',
+      headers: authHeaders('user-a'),
+      body: JSON.stringify({
+        source_type: 'identifier_based',
+        source_input: 'sensor-clear-b',
+        params: {},
+        schedule_enabled: false,
+        active: true
+      })
+    });
+    assert.equal(createB.status, 201);
+    const cardB = await createB.json();
+
+    await fetch(`${baseUrl}/cards/${cardA.id}/run`, { method: 'POST', headers: authHeaders('user-a') });
+    await fetch(`${baseUrl}/cards/${cardB.id}/run`, { method: 'POST', headers: authHeaders('user-a') });
+
+    const clearResponse = await fetch(`${baseUrl}/cards/${cardA.id}/runs`, {
+      method: 'DELETE',
+      headers: authHeaders('user-a')
+    });
+    assert.equal(clearResponse.status, 200);
+    const clearBody = await clearResponse.json();
+    assert.equal(clearBody.deleted, 1);
+
+    const runsAResponse = await fetch(`${baseUrl}/cards/${cardA.id}/runs`, { headers: authHeaders('user-a') });
+    assert.equal(runsAResponse.status, 200);
+    const runsA = await runsAResponse.json();
+    assert.equal(runsA.length, 0);
+
+    const runsBResponse = await fetch(`${baseUrl}/cards/${cardB.id}/runs`, { headers: authHeaders('user-a') });
+    assert.equal(runsBResponse.status, 200);
+    const runsB = await runsBResponse.json();
+    assert.equal(runsB.length, 1);
+  });
+
+  resetRepositoryForTests();
+});

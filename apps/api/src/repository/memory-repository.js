@@ -69,6 +69,17 @@ export function createMemoryRepository() {
       return sortDescByDate(runs, 'created_at');
     },
 
+    async deleteRuns(cardId, ownerId) {
+      let deleted = 0;
+      for (const [runId, run] of store.runs.entries()) {
+        if (run.card_id === cardId && run.owner_id === ownerId) {
+          store.runs.delete(runId);
+          deleted += 1;
+        }
+      }
+      return deleted;
+    },
+
     async createRun(payload) {
       const isActiveStatus = payload.status === 'pending' || payload.status === 'running';
       if (isActiveStatus) {
