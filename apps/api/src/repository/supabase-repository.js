@@ -36,6 +36,19 @@ export function createSupabaseRepository({ supabaseUrl, serviceRoleKey, tables =
       return unwrap(await supabase.from(table.cards).insert(payload).select('*').single());
     },
 
+    async findCardBySource(ownerId, sourceType, sourceInput) {
+      return unwrap(
+        await supabase
+          .from(table.cards)
+          .select('*')
+          .eq('owner_id', ownerId)
+          .eq('source_type', sourceType)
+          .eq('source_input', String(sourceInput || '').trim())
+          .limit(1)
+          .maybeSingle()
+      );
+    },
+
     async updateCard(cardId, updates) {
       return unwrap(await supabase.from(table.cards).update(updates).eq('id', cardId).select('*').maybeSingle());
     },

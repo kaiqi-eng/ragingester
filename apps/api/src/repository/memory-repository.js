@@ -36,6 +36,15 @@ export function createMemoryRepository() {
       return card;
     },
 
+    async findCardBySource(ownerId, sourceType, sourceInput) {
+      const normalizedSourceInput = String(sourceInput || '').trim();
+      return [...store.cards.values()].find((card) => (
+        card.owner_id === ownerId
+        && card.source_type === sourceType
+        && String(card.source_input || '').trim() === normalizedSourceInput
+      )) || null;
+    },
+
     async updateCard(cardId, updates) {
       const existing = store.cards.get(cardId);
       if (!existing) return null;

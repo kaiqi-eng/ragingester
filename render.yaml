@@ -2,7 +2,7 @@ services:
   - type: web
     name: ragingester
     runtime: node
-    plan: free
+    plan: starter
     rootDir: .
     buildCommand: npm ci --include=dev && npm run build -w @ragingester/web
     startCommand: node apps/api/src/server.js

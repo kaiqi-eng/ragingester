@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from './api.js';
 import { supabase, isSupabaseConfigured } from './supabase.js';
 import { CardForm } from './components/CardForm.jsx';
@@ -54,6 +54,7 @@ function CardsWorkspace({ auth, userEmail, onSignOut }) {
   const [toast, setToast] = useState('');
   const [filters, setFilters] = useState({ jobType: 'all', jobName: '' });
   const [viewMode, setViewMode] = useState('grid');
+  const importInputRef = useRef(null);
 
   async function refreshCards() {
     const nextCards = await api.listCards(auth);
@@ -150,6 +151,46 @@ function CardsWorkspace({ auth, userEmail, onSignOut }) {
     }
   }
 
+  async function handleExportCsv() {
+    setError('');
+    try {
+      const csv = await api.exportCardsCsv(auth);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'cards-export.csv';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      setToast('Cards exported to CSV.');
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleImportCsvFile(event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    setLoading(true);
+    setError('');
+    try {
+      const csvText = await file.text();
+      const result = await api.importCardsCsv(auth, csvText);
+      await refreshCards();
+      const errorCount = Array.isArray(result.errors) ? result.errors.length : 0;
+      setToast(
+        `Import complete: created ${result.created}, skipped duplicates ${result.skipped_duplicates}, row errors ${errorCount}.`
+      );
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const filteredCards = useMemo(() => {
     const nameNeedle = filters.jobName.trim().toLowerCase();
     return cards.filter((card) => {
@@ -168,7 +209,18 @@ function CardsWorkspace({ auth, userEmail, onSignOut }) {
         <div className="meta">Card-based data collection with per-source cron schedules</div>
         <div className="row" style={{ marginTop: 12, justifyContent: 'space-between' }}>
           <div className="meta">Signed in as: {userEmail || auth.userId}</div>
-          <button className="secondary" type="button" onClick={onSignOut}>Sign out</button>
+          <div className="row">
+            <input
+              ref={importInputRef}
+              type="file"
+              accept=".csv,text/csv"
+              style={{ display: 'none' }}
+              onChange={handleImportCsvFile}
+            />
+            <button className="secondary" type="button" onClick={handleExportCsv}>Export CSV</button>
+            <button className="secondary" type="button" onClick={() => importInputRef.current?.click()}>Import CSV</button>
+            <button className="secondary" type="button" onClick={onSignOut}>Sign out</button>
+          </div>
         </div>
         {error && <div className="meta" style={{ marginTop: 8 }}>Error: {error}</div>}
       </div>

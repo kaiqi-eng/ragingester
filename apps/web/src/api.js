@@ -46,5 +46,25 @@ export const api = {
 
   async schedulePreview(auth, cardId) {
     return handle(await fetch(`${API_BASE}/cards/${cardId}/schedule/preview`, { headers: authHeaders(auth) }));
+  },
+
+  async exportCardsCsv(auth) {
+    const response = await fetch(`${API_BASE}/cards/export.csv`, { headers: authHeaders(auth) });
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      throw new Error(body.error || `request failed: ${response.status}`);
+    }
+    return response.text();
+  },
+
+  async importCardsCsv(auth, csvText) {
+    return handle(await fetch(`${API_BASE}/cards/import.csv`, {
+      method: 'POST',
+      headers: {
+        ...authHeaders(auth),
+        'Content-Type': 'text/csv'
+      },
+      body: csvText
+    }));
   }
 };

@@ -2,6 +2,8 @@ import { config } from '../config.js';
 
 const WORKSPACE_SLUG = 'rss-feed';
 const WORKSPACE_NAME = 'RSS Feed';
+const MANUAL_STARTUP_BUFFER_MS = 3 * 60 * 1000;
+const MANUAL_STARTUP_RETRY_MS = 10 * 1000;
 
 function trimTrailingSlash(value) {
   return value.endsWith('/') ? value.slice(0, -1) : value;
@@ -71,6 +73,15 @@ async function fetchJson(url, options = {}) {
   return body;
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isTooManyRequestsError(error) {
+  const message = error instanceof Error ? error.message : String(error);
+  return message.includes('(429)');
+}
+
 async function fetchRssFeed({ sourceInput, cfg, since }) {
   if (!cfg.genieRssApiKey) {
     throw new Error('GENIE_RSS_API_KEY is required for rss_feed ingestion');
@@ -87,6 +98,33 @@ async function fetchRssFeed({ sourceInput, cfg, since }) {
     },
     body: JSON.stringify(payload)
   });
+}
+
+async function fetchRssFeedWithManualStartupBuffer({ sourceInput, cfg, since, triggerMode }) {
+  const isManual = triggerMode === 'manual';
+  if (!isManual) {
+    return fetchRssFeed({ sourceInput, cfg, since });
+  }
+
+  const deadline = Date.now() + MANUAL_STARTUP_BUFFER_MS;
+  let lastError = null;
+
+  while (Date.now() <= deadline) {
+    try {
+      return await fetchRssFeed({ sourceInput, cfg, since });
+    } catch (error) {
+      if (!isTooManyRequestsError(error)) {
+        throw error;
+      }
+      lastError = error;
+      const remainingMs = deadline - Date.now();
+      if (remainingMs <= 0) break;
+      await sleep(Math.min(MANUAL_STARTUP_RETRY_MS, remainingMs));
+    }
+  }
+
+  if (lastError) throw lastError;
+  return fetchRssFeed({ sourceInput, cfg, since });
 }
 
 async function listBharagWorkspaces({ cfg, limit = 100, offset = 0 }) {
@@ -290,10 +328,11 @@ export const rssFeedCollector = {
     const previousRun = cfg.cursor;
     const runTimestamp = new Date().toISOString();
 
-    const feedResponse = await fetchRssFeed({
+    const feedResponse = await fetchRssFeedWithManualStartupBuffer({
       sourceInput: source_input,
       cfg,
-      since: previousRun
+      since: previousRun,
+      triggerMode: context.triggerMode || null
     });
 
     const parsedItems = parseFeedItems(feedResponse.feed);

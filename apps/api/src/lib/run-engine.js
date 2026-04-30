@@ -60,6 +60,8 @@ export async function executeRun({ repository, card, triggerMode, timeoutMs, max
     defaultMaxRetries: maxRetries
   });
   const resolvedTriggerMode = triggerMode || TRIGGER_MODE.MANUAL;
+  const isManualRssFeed = resolvedTriggerMode === TRIGGER_MODE.MANUAL && card.source_type === 'rss_feed';
+  const timeoutMsForRun = isManualRssFeed ? Math.max(effectiveTimeoutMs, 10 * 60 * 1000) : effectiveTimeoutMs;
   const logs = [];
 
   const run = await repository.createRun({
@@ -83,7 +85,7 @@ export async function executeRun({ repository, card, triggerMode, timeoutMs, max
       event: 'attempt_started',
       attempt: attempts,
       trigger_mode: resolvedTriggerMode,
-      timeout_ms: effectiveTimeoutMs,
+      timeout_ms: timeoutMsForRun,
       max_retries: effectiveMaxRetries
     });
 
@@ -102,7 +104,7 @@ export async function executeRun({ repository, card, triggerMode, timeoutMs, max
           params: card.params,
           context: { card, runId: run.id, triggerMode: resolvedTriggerMode }
         }),
-        effectiveTimeoutMs
+        timeoutMsForRun
       );
 
       await repository.createCollectedData({

@@ -4,6 +4,7 @@ import { config } from '../config.js';
 import { getRepository } from '../repository/index.js';
 import { validateCardPayload, validateSchedulePreview } from '../lib/validation.js';
 import { executeRun } from '../lib/run-engine.js';
+import { cardsToCsv, csvToCardInputs } from '../lib/cards-csv.js';
 
 export function createCardsRouter() {
   const router = express.Router();
@@ -13,16 +14,6 @@ export function createCardsRouter() {
     try {
       const cards = await repository.listCards(req.user.id);
       res.json(cards);
-    } catch (error) {
-      next(error);
-    }
-  });
-
-  router.get('/:id', async (req, res, next) => {
-    try {
-      const card = await repository.getCardById(req.params.id, req.user.id);
-      if (!card) return res.status(404).json({ error: 'card not found' });
-      res.json(card);
     } catch (error) {
       next(error);
     }
@@ -38,6 +29,55 @@ export function createCardsRouter() {
     }
   });
 
+  router.get('/export.csv', async (req, res, next) => {
+    try {
+      const cards = await repository.listCards(req.user.id);
+      const csv = cardsToCsv(cards);
+      res.setHeader('content-type', 'text/csv; charset=utf-8');
+      res.setHeader('content-disposition', 'attachment; filename="cards-export.csv"');
+      res.status(200).send(csv);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.post('/import.csv', express.text({ type: ['text/csv', 'text/plain'], limit: '2mb' }), async (req, res, next) => {
+    try {
+      const rows = csvToCardInputs(req.body);
+      let created = 0;
+      let skippedDuplicates = 0;
+      const errors = [];
+
+      for (let i = 0; i < rows.length; i += 1) {
+        const row = rows[i];
+        try {
+          const payload = validateCardPayload(row, config.defaultTimezone);
+          const existing = await repository.findCardBySource(req.user.id, payload.source_type, payload.source_input);
+          if (existing) {
+            skippedDuplicates += 1;
+            continue;
+          }
+          await repository.createCard({ ...payload, owner_id: req.user.id });
+          created += 1;
+        } catch (error) {
+          errors.push({
+            row: i + 2,
+            error: error instanceof Error ? error.message : String(error)
+          });
+        }
+      }
+
+      res.status(200).json({
+        total_rows: rows.length,
+        created,
+        skipped_duplicates: skippedDuplicates,
+        errors
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
   router.patch('/:id', async (req, res, next) => {
     try {
       const existing = await repository.getCardById(req.params.id, req.user.id);
@@ -47,6 +87,16 @@ export function createCardsRouter() {
       const updated = await repository.updateCard(req.params.id, payload);
       if (!updated) return res.status(404).json({ error: 'card not found' });
       res.json(updated);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.get('/:id', async (req, res, next) => {
+    try {
+      const card = await repository.getCardById(req.params.id, req.user.id);
+      if (!card) return res.status(404).json({ error: 'card not found' });
+      res.json(card);
     } catch (error) {
       next(error);
     }
