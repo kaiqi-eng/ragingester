@@ -13,7 +13,8 @@ const cardInputSchema = z.object({
     SOURCE_TYPES.HTTP_API,
     SOURCE_TYPES.WEBSITE_URL,
     SOURCE_TYPES.RSS_FEED,
-    SOURCE_TYPES.IDENTIFIER_BASED
+    SOURCE_TYPES.IDENTIFIER_BASED,
+    SOURCE_TYPES.YOUTUBE
   ]),
   source_input: z.string().min(1),
   params: z.record(z.any()).default({}),

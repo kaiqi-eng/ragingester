@@ -2,7 +2,8 @@ export const SOURCE_TYPES = {
   HTTP_API: 'http_api',
   WEBSITE_URL: 'website_url',
   RSS_FEED: 'rss_feed',
-  IDENTIFIER_BASED: 'identifier_based'
+  IDENTIFIER_BASED: 'identifier_based',
+  YOUTUBE: 'youtube'
 };
 
 export const RUN_STATUS = {

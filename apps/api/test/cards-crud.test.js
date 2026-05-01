@@ -111,3 +111,38 @@ test('cards CRUD and owner isolation', async () => {
 
   resetRepositoryForTests();
 });
+
+test('cards API accepts youtube source type create and update', async () => {
+  setRepositoryForTests(createMemoryRepository());
+
+  await withServer(async (baseUrl) => {
+    const createResponse = await fetch(`${baseUrl}/cards`, {
+      method: 'POST',
+      headers: authHeaders('user-a'),
+      body: JSON.stringify({
+        source_type: 'youtube',
+        source_input: 'UCqzK60-oUOEq36uU9B1MMUg',
+        params: {},
+        schedule_enabled: false,
+        active: true
+      })
+    });
+
+    assert.equal(createResponse.status, 201);
+    const created = await createResponse.json();
+    assert.equal(created.source_type, 'youtube');
+
+    const updateResponse = await fetch(`${baseUrl}/cards/${created.id}`, {
+      method: 'PATCH',
+      headers: authHeaders('user-a'),
+      body: JSON.stringify({
+        source_input: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCqzK60-oUOEq36uU9B1MMUg'
+      })
+    });
+    assert.equal(updateResponse.status, 200);
+    const updated = await updateResponse.json();
+    assert.equal(updated.source_input, 'https://www.youtube.com/feeds/videos.xml?channel_id=UCqzK60-oUOEq36uU9B1MMUg');
+  });
+
+  resetRepositoryForTests();
+});
