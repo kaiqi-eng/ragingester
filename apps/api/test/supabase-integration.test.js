@@ -81,8 +81,8 @@ test('supabase migration applies in isolated schema and cleans up', { skip: skip
     const migrationPaths = [
       new URL('../../../supabase/migrations/20260422_001_init_cards_runs.sql', import.meta.url),
       new URL('../../../supabase/migrations/20260426_001_enforce_one_active_run_per_card.sql', import.meta.url),
-      new URL('../../../supabase/migrations/20260426_002_per_card_run_policy.sql', import.meta.url),
-      new URL('../../../supabase/migrations/20260426_003_run_error_payload.sql', import.meta.url)
+      new URL('../../../supabase/migrations/20260427_001_per_card_run_policy.sql', import.meta.url),
+      new URL('../../../supabase/migrations/20260428_001_run_error_payload.sql', import.meta.url)
     ];
 
     for (const migrationPath of migrationPaths) {
