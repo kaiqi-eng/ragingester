@@ -5,7 +5,7 @@ services:
     plan: starter
     rootDir: .
     buildCommand: npm ci --include=dev && npm run build -w @ragingester/web
-    startCommand: node apps/api/src/server.js
+    startCommand: sh -c "node apps/api/src/server.js & node apps/api/src/scheduler/worker.js"
     healthCheckPath: /health
     envVars:
       - key: NODE_VERSION
