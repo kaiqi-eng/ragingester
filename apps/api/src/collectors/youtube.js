@@ -34,17 +34,24 @@ function normalizeYoutubeSourceInput(sourceInput) {
 
   try {
     const parsed = new URL(value);
-    const isYoutubeHost = parsed.hostname === 'www.youtube.com' || parsed.hostname === 'youtube.com';
+    const isYoutubeHost = ['www.youtube.com', 'youtube.com', 'm.youtube.com'].includes(parsed.hostname);
     const isFeedPath = parsed.pathname === '/feeds/videos.xml';
     const channelId = parsed.searchParams.get('channel_id');
     if (isYoutubeHost && isFeedPath && channelId && /^UC[\w-]{22}$/.test(channelId)) {
+      return parsed.toString();
+    }
+    const channelPathMatch = parsed.pathname.match(/^\/channel\/(UC[\w-]{22})\/?$/);
+    if (isYoutubeHost && parsed.protocol === 'https:' && channelPathMatch) {
+      return `https://www.youtube.com/feeds/videos.xml?channel_id=${channelPathMatch[1]}`;
+    }
+    if (isYoutubeHost && parsed.protocol === 'https:') {
       return parsed.toString();
     }
   } catch {
     // handled below
   }
 
-  throw new Error('youtube source_input must be a YouTube channel ID (UC...) or feeds/videos.xml?channel_id=... URL');
+  throw new Error('youtube source_input must be a YouTube channel ID (UC...), YouTube feed URL, or https:// YouTube link');
 }
 
 function resolveIntegrationConfig(params = {}) {

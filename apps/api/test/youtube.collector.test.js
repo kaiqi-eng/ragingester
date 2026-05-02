@@ -142,7 +142,7 @@ test('youtubeCollector normalizes channel ID and ingests only items beyond curso
   }
 });
 
-test('youtubeCollector accepts direct YouTube feed URL and rejects unsupported input', async () => {
+test('youtubeCollector accepts direct YouTube feed URL, channel links, and handle links', async () => {
   const originalFetch = global.fetch;
   const calls = [];
 
@@ -203,13 +203,31 @@ test('youtubeCollector accepts direct YouTube feed URL and rejects unsupported i
     const fetchPayload = JSON.parse(fetchCall.options.body);
     assert.equal(fetchPayload.url, 'https://www.youtube.com/feeds/videos.xml?channel_id=UCqzK60-oUOEq36uU9B1MMUg');
 
-    await assert.rejects(
-      youtubeCollector.collect({
-        source_input: 'https://www.youtube.com/@GoogleDevelopers',
-        params: { genie_rss_api_key: 'genie-key', bharag_master_api_key: 'bharag-key' }
-      }),
-      /youtube source_input must be a YouTube channel ID/
-    );
+    await youtubeCollector.collect({
+      source_input: 'https://www.youtube.com/channel/UCqzK60-oUOEq36uU9B1MMUg',
+      params: {
+        genie_rss_base_url: 'https://genie.example',
+        genie_rss_api_key: 'genie-key',
+        bharag_base_url: 'https://bharag.example',
+        bharag_master_api_key: 'bharag-key'
+      }
+    });
+
+    await youtubeCollector.collect({
+      source_input: 'https://www.youtube.com/@GoogleDevelopers',
+      params: {
+        genie_rss_base_url: 'https://genie.example',
+        genie_rss_api_key: 'genie-key',
+        bharag_base_url: 'https://bharag.example',
+        bharag_master_api_key: 'bharag-key'
+      }
+    });
+
+    const fetchPayloads = calls
+      .filter((call) => call.url.endsWith('/api/rss/fetch'))
+      .map((call) => JSON.parse(call.options.body));
+    assert.equal(fetchPayloads[1].url, 'https://www.youtube.com/feeds/videos.xml?channel_id=UCqzK60-oUOEq36uU9B1MMUg');
+    assert.equal(fetchPayloads[2].url, 'https://www.youtube.com/@GoogleDevelopers');
   } finally {
     global.fetch = originalFetch;
   }

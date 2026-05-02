@@ -130,7 +130,7 @@ export function CardForm({ onSubmit, loading, mode = 'create', initialCard = nul
         <input value={form.source_input} onChange={(e) => setForm((f) => ({ ...f, source_input: e.target.value }))} required />
         {form.source_type === SOURCE_TYPES.YOUTUBE && (
           <div className="meta">
-            YouTube source accepts either a channel ID (`UC...`) or a feed URL like
+            YouTube source accepts a channel ID (`UC...`), an HTTPS YouTube link, or a feed URL like
             {' '}`https://www.youtube.com/feeds/videos.xml?channel_id=...`.
           </div>
         )}
