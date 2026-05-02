@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { RUN_STATUS, TRIGGER_MODE } from '@ragingester/shared';
 import { RunOverlapError } from '../lib/errors.js';
 
 const defaultTables = {
@@ -91,6 +92,37 @@ export function createSupabaseRepository({ supabaseUrl, serviceRoleKey, tables =
         throw new RunOverlapError();
       }
       return unwrap(result);
+    },
+
+    async enqueueScheduledRun(card) {
+      const result = await supabase.from(table.collectionRuns).insert({
+        card_id: card.id,
+        owner_id: card.owner_id,
+        status: RUN_STATUS.PENDING,
+        trigger_mode: TRIGGER_MODE.SCHEDULED,
+        attempts: 0,
+        started_at: null,
+        ended_at: null,
+        error: null,
+        error_payload: null,
+        logs: []
+      }).select('*').single();
+
+      if (
+        result.error &&
+        result.error.code === '23505' &&
+        String(result.error.message || '').includes('one_active_run_per_card')
+      ) {
+        return { run: null, enqueued: false };
+      }
+
+      return { run: unwrap(result), enqueued: true };
+    },
+
+    async claimNextScheduledRun() {
+      const claimed = unwrap(await supabase.rpc('claim_next_scheduled_run'));
+      if (!claimed) return null;
+      return claimed;
     },
 
     async updateRun(runId, updates) {

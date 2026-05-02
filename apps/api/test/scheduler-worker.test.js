@@ -39,6 +39,7 @@ test('scheduler tick executes due cards and recomputes next_run_at', async () =>
   const result = await runSchedulerTick({ repository, nowIso, timeoutMs: 5000, maxRetries: 0 });
 
   assert.equal(result.dueCards, 1);
+  assert.equal(result.enqueuedRuns, 1);
   assert.equal(result.startedRuns, 1);
   assert.equal(result.skippedCards, 0);
 
@@ -90,6 +91,7 @@ test('scheduler tick skips due cards that already have an active run', async () 
   const result = await runSchedulerTick({ repository, nowIso, timeoutMs: 5000, maxRetries: 0 });
 
   assert.equal(result.dueCards, 1);
+  assert.equal(result.enqueuedRuns, 0);
   assert.equal(result.startedRuns, 0);
   assert.equal(result.skippedCards, 1);
 
@@ -119,6 +121,7 @@ test('scheduler tick uses per-card run_max_retries override', async () => {
   });
 
   const result = await runSchedulerTick({ repository, nowIso, timeoutMs: 5000, maxRetries: 0 });
+  assert.equal(result.enqueuedRuns, 1);
   assert.equal(result.startedRuns, 1);
 
   const runs = await repository.listRuns(card.id, 'user-a');
@@ -159,6 +162,7 @@ test('scheduler tick falls back to global retries when per-card override is null
     timeoutMs: config.runTimeoutMs,
     maxRetries: config.runMaxRetries
   });
+  assert.equal(result.enqueuedRuns, 1);
   assert.equal(result.startedRuns, 1);
 
   const runs = await repository.listRuns(card.id, 'user-a');
@@ -168,6 +172,112 @@ test('scheduler tick falls back to global retries when per-card override is null
   assert.ok(runs[0].error_payload);
   assert.equal(runs[0].error_payload.name, 'TypeError');
   assert.ok(Array.isArray(runs[0].logs));
+});
+
+test('scheduler tick queues multiple due cards but only executes one per tick', async () => {
+  const repository = createMemoryRepository();
+  const nowIso = new Date().toISOString();
+  const pastIso = isoMsOffset(nowIso, -120_000);
+
+  const firstCard = await repository.createCard({
+    owner_id: 'user-a',
+    source_type: 'identifier_based',
+    source_input: 'scheduler-queued-card-1',
+    params: {},
+    schedule_enabled: true,
+    cron_expression: '*/5 * * * *',
+    timezone: 'America/Chicago',
+    next_run_at: pastIso,
+    last_run_at: null,
+    active: true
+  });
+  const secondCard = await repository.createCard({
+    owner_id: 'user-a',
+    source_type: 'identifier_based',
+    source_input: 'scheduler-queued-card-2',
+    params: {},
+    schedule_enabled: true,
+    cron_expression: '*/5 * * * *',
+    timezone: 'America/Chicago',
+    next_run_at: pastIso,
+    last_run_at: null,
+    active: true
+  });
+
+  const firstTick = await runSchedulerTick({ repository, nowIso, timeoutMs: 5000, maxRetries: 0 });
+  assert.equal(firstTick.dueCards, 2);
+  assert.equal(firstTick.enqueuedRuns, 2);
+  assert.equal(firstTick.startedRuns, 1);
+  assert.equal(firstTick.skippedCards, 0);
+
+  const firstCardRunsAfterFirstTick = await repository.listRuns(firstCard.id, 'user-a');
+  const secondCardRunsAfterFirstTick = await repository.listRuns(secondCard.id, 'user-a');
+  const statusesAfterFirstTick = [
+    ...firstCardRunsAfterFirstTick,
+    ...secondCardRunsAfterFirstTick
+  ].map((run) => run.status);
+  assert.equal(statusesAfterFirstTick.filter((status) => status === 'success').length, 1);
+  assert.equal(statusesAfterFirstTick.filter((status) => status === 'pending').length, 1);
+
+  const secondTick = await runSchedulerTick({ repository, nowIso, timeoutMs: 5000, maxRetries: 0 });
+  assert.equal(secondTick.enqueuedRuns, 0);
+  assert.equal(secondTick.startedRuns, 1);
+  assert.equal(secondTick.skippedCards, 1);
+
+  const firstCardRunsAfterSecondTick = await repository.listRuns(firstCard.id, 'user-a');
+  const secondCardRunsAfterSecondTick = await repository.listRuns(secondCard.id, 'user-a');
+  const allRuns = [
+    ...firstCardRunsAfterSecondTick,
+    ...secondCardRunsAfterSecondTick
+  ];
+  assert.equal(allRuns.filter((run) => run.status === 'success').length, 2);
+  assert.equal(allRuns.filter((run) => run.status === 'pending').length, 0);
+});
+
+test('scheduled queue claim is blocked while another scheduled run is running', async () => {
+  const repository = createMemoryRepository();
+  const nowIso = new Date().toISOString();
+
+  const queuedCard = await repository.createCard({
+    owner_id: 'user-a',
+    source_type: 'identifier_based',
+    source_input: 'scheduler-claim-queued',
+    params: {},
+    schedule_enabled: true,
+    cron_expression: '*/5 * * * *',
+    timezone: 'America/Chicago',
+    next_run_at: nowIso,
+    last_run_at: null,
+    active: true
+  });
+  const runningCard = await repository.createCard({
+    owner_id: 'user-a',
+    source_type: 'identifier_based',
+    source_input: 'scheduler-claim-running',
+    params: {},
+    schedule_enabled: true,
+    cron_expression: '*/5 * * * *',
+    timezone: 'America/Chicago',
+    next_run_at: nowIso,
+    last_run_at: null,
+    active: true
+  });
+
+  await repository.enqueueScheduledRun(queuedCard);
+  await repository.createRun({
+    card_id: runningCard.id,
+    owner_id: runningCard.owner_id,
+    status: 'running',
+    trigger_mode: 'scheduled',
+    attempts: 1,
+    started_at: nowIso,
+    ended_at: null,
+    error: null,
+    logs: []
+  });
+
+  const claimed = await repository.claimNextScheduledRun();
+  assert.equal(claimed, null);
 });
 
 test('startScheduler runs immediate catch-up tick for overdue cards', async () => {

@@ -18,11 +18,20 @@ export async function runSchedulerTick({
 }
 
 export function startScheduler({ pollMs = config.schedulerPollMs } = {}) {
+  let tickInFlight = false;
+
   const runTick = () => {
-    runSchedulerTick().catch((error) => {
-      // eslint-disable-next-line no-console
-      console.error('scheduler tick failed', error);
-    });
+    if (tickInFlight) return;
+    tickInFlight = true;
+
+    runSchedulerTick()
+      .catch((error) => {
+        // eslint-disable-next-line no-console
+        console.error('scheduler tick failed', error);
+      })
+      .finally(() => {
+        tickInFlight = false;
+      });
   };
 
   // Catch up overdue runs immediately when the worker starts,

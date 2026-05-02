@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { RUN_STATUS, TRIGGER_MODE } from '@ragingester/shared';
 import { RunOverlapError } from '../lib/errors.js';
 
 function sortDescByDate(items, key) {
@@ -81,10 +82,10 @@ export function createMemoryRepository() {
     },
 
     async createRun(payload) {
-      const isActiveStatus = payload.status === 'pending' || payload.status === 'running';
+      const isActiveStatus = payload.status === RUN_STATUS.PENDING || payload.status === RUN_STATUS.RUNNING;
       if (isActiveStatus) {
         const existingActiveRun = [...store.runs.values()].find(
-          (run) => run.card_id === payload.card_id && (run.status === 'pending' || run.status === 'running')
+          (run) => run.card_id === payload.card_id && (run.status === RUN_STATUS.PENDING || run.status === RUN_STATUS.RUNNING)
         );
         if (existingActiveRun) {
           throw new RunOverlapError();
@@ -98,6 +99,55 @@ export function createMemoryRepository() {
       };
       store.runs.set(run.id, run);
       return run;
+    },
+
+    async enqueueScheduledRun(card) {
+      const existingActiveRun = [...store.runs.values()].find(
+        (run) => run.card_id === card.id && (run.status === RUN_STATUS.PENDING || run.status === RUN_STATUS.RUNNING)
+      );
+      if (existingActiveRun) {
+        return { run: existingActiveRun, enqueued: false };
+      }
+
+      const run = {
+        id: randomUUID(),
+        created_at: new Date().toISOString(),
+        card_id: card.id,
+        owner_id: card.owner_id,
+        status: RUN_STATUS.PENDING,
+        trigger_mode: TRIGGER_MODE.SCHEDULED,
+        attempts: 0,
+        started_at: null,
+        ended_at: null,
+        error: null,
+        error_payload: null,
+        logs: []
+      };
+      store.runs.set(run.id, run);
+      return { run, enqueued: true };
+    },
+
+    async claimNextScheduledRun() {
+      const runningScheduledRun = [...store.runs.values()].find(
+        (run) => run.status === RUN_STATUS.RUNNING && run.trigger_mode === TRIGGER_MODE.SCHEDULED
+      );
+      if (runningScheduledRun) return null;
+
+      const pendingScheduledRuns = [...store.runs.values()]
+        .filter((run) => run.status === RUN_STATUS.PENDING && run.trigger_mode === TRIGGER_MODE.SCHEDULED)
+        .sort((a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0));
+      const run = pendingScheduledRuns[0];
+      if (!run) return null;
+
+      const card = store.cards.get(run.card_id);
+      if (!card) return null;
+
+      const claimedRun = {
+        ...run,
+        status: RUN_STATUS.RUNNING
+      };
+      store.runs.set(run.id, claimedRun);
+      return { run: claimedRun, card };
     },
 
     async updateRun(runId, updates) {

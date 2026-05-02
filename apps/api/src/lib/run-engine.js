@@ -59,7 +59,7 @@ function cloneParams(params) {
   return JSON.parse(JSON.stringify(params));
 }
 
-export async function executeRun({ repository, card, triggerMode, timeoutMs, maxRetries }) {
+async function executeRunRecord({ repository, card, run, triggerMode, timeoutMs, maxRetries }) {
   const { effectiveTimeoutMs, effectiveMaxRetries } = resolveRunPolicy(card, {
     defaultTimeoutMs: timeoutMs,
     defaultMaxRetries: maxRetries
@@ -69,19 +69,6 @@ export async function executeRun({ repository, card, triggerMode, timeoutMs, max
   const timeoutMsForRun = isManualRssFeed ? Math.max(effectiveTimeoutMs, 10 * 60 * 1000) : effectiveTimeoutMs;
   const initialParamsSnapshot = cloneParams(card.params);
   const logs = [];
-
-  const run = await repository.createRun({
-    card_id: card.id,
-    owner_id: card.owner_id,
-    status: RUN_STATUS.PENDING,
-    trigger_mode: resolvedTriggerMode,
-    attempts: 0,
-    started_at: null,
-    ended_at: null,
-    error: null,
-    error_payload: null,
-    logs: []
-  });
 
   let attempts = 0;
   while (attempts <= effectiveMaxRetries) {
@@ -154,16 +141,17 @@ export async function executeRun({ repository, card, triggerMode, timeoutMs, max
         error: errorPayload
       });
 
+      const retriesExhausted = attempts > effectiveMaxRetries;
       const failedState = {
-        status: RUN_STATUS.FAILED,
-        ended_at: endedAt,
+        status: retriesExhausted ? RUN_STATUS.FAILED : RUN_STATUS.RUNNING,
+        ended_at: retriesExhausted ? endedAt : null,
         error: errorPayload.message,
         error_payload: errorPayload,
         logs
       };
       await repository.updateRun(run.id, failedState);
 
-      if (attempts > effectiveMaxRetries) {
+      if (retriesExhausted) {
         const nextRunAt = card.schedule_enabled && card.cron_expression
           ? computeNextRun(card.cron_expression, card.timezone, new Date())
           : null;
@@ -185,4 +173,40 @@ export async function executeRun({ repository, card, triggerMode, timeoutMs, max
   }
 
   return repository.getRunById(run.id, card.owner_id);
+}
+
+export async function executeRun({ repository, card, triggerMode, timeoutMs, maxRetries }) {
+  const resolvedTriggerMode = triggerMode || TRIGGER_MODE.MANUAL;
+  const run = await repository.createRun({
+    card_id: card.id,
+    owner_id: card.owner_id,
+    status: RUN_STATUS.PENDING,
+    trigger_mode: resolvedTriggerMode,
+    attempts: 0,
+    started_at: null,
+    ended_at: null,
+    error: null,
+    error_payload: null,
+    logs: []
+  });
+
+  return executeRunRecord({
+    repository,
+    card,
+    run,
+    triggerMode: resolvedTriggerMode,
+    timeoutMs,
+    maxRetries
+  });
+}
+
+export async function executeQueuedRun({ repository, card, run, timeoutMs, maxRetries }) {
+  return executeRunRecord({
+    repository,
+    card,
+    run,
+    triggerMode: run.trigger_mode || TRIGGER_MODE.SCHEDULED,
+    timeoutMs,
+    maxRetries
+  });
 }

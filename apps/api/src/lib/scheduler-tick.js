@@ -1,7 +1,7 @@
-import { SOURCE_TYPES, TRIGGER_MODE } from '@ragingester/shared';
+import { SOURCE_TYPES } from '@ragingester/shared';
 import { config } from '../config.js';
 import { prewarmRssFeed } from '../collectors/rss-feed.js';
-import { executeRun } from './run-engine.js';
+import { executeQueuedRun } from './run-engine.js';
 import { RunOverlapError } from './errors.js';
 
 async function handlePrewarm({ repository, now, prewarmWindowMs }) {
@@ -43,25 +43,18 @@ export async function runSchedulerTick({
   await handlePrewarm({ repository, now, prewarmWindowMs });
 
   const dueCards = await repository.listDueCards(now.toISOString());
+  let enqueuedRuns = 0;
   let startedRuns = 0;
   let skippedCards = 0;
 
   for (const card of dueCards) {
-    const activeRun = await repository.getActiveRunForCard(card.id);
-    if (activeRun) {
-      skippedCards += 1;
-      continue;
-    }
-
     try {
-      await executeRun({
-        repository,
-        card,
-        triggerMode: TRIGGER_MODE.SCHEDULED,
-        timeoutMs,
-        maxRetries
-      });
-      startedRuns += 1;
+      const result = await repository.enqueueScheduledRun(card);
+      if (result?.enqueued) {
+        enqueuedRuns += 1;
+      } else {
+        skippedCards += 1;
+      }
     } catch (error) {
       if (error instanceof RunOverlapError) {
         skippedCards += 1;
@@ -71,8 +64,21 @@ export async function runSchedulerTick({
     }
   }
 
+  const claimed = await repository.claimNextScheduledRun();
+  if (claimed) {
+    await executeQueuedRun({
+      repository,
+      card: claimed.card,
+      run: claimed.run,
+      timeoutMs,
+      maxRetries
+    });
+    startedRuns += 1;
+  }
+
   return {
     dueCards: dueCards.length,
+    enqueuedRuns,
     startedRuns,
     skippedCards
   };
