@@ -45,7 +45,7 @@ services:
       - key: VITE_SUPABASE_ANON_KEY
         sync: false
       - key: RUN_TIMEOUT_MS
-        value: 30000
+        value: 180000
       - key: RUN_MAX_RETRIES
         value: 1
       - key: SCHEDULER_POLL_MS

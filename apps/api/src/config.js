@@ -17,7 +17,7 @@ export const config = {
   defaultTimezone: process.env.DEFAULT_TIMEZONE || DEFAULT_TIMEZONE,
   schedulerPollMs: Number(process.env.SCHEDULER_POLL_MS || 15000),
   rssPrewarmWindowMs: Number(process.env.RSS_PREWARM_WINDOW_MS || 120000),
-  runTimeoutMs: Number(process.env.RUN_TIMEOUT_MS || 30000),
+  runTimeoutMs: Number(process.env.RUN_TIMEOUT_MS || 180000),
   runMaxRetries: Number(process.env.RUN_MAX_RETRIES || 1)
 };
 
