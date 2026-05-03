@@ -220,3 +220,101 @@ test('cards API schedules all cards for stress test and skips already queued car
 
   resetRepositoryForTests();
 });
+
+test('cards API bulk deactivates and deletes requested owner cards only', async () => {
+  setRepositoryForTests(createMemoryRepository());
+
+  await withServer(async (baseUrl) => {
+    const firstCreateResponse = await fetch(`${baseUrl}/cards`, {
+      method: 'POST',
+      headers: authHeaders('user-a'),
+      body: JSON.stringify({
+        source_type: 'identifier_based',
+        source_input: 'bulk-card-1',
+        params: {},
+        schedule_enabled: false,
+        active: true
+      })
+    });
+    assert.equal(firstCreateResponse.status, 201);
+    const firstCard = await firstCreateResponse.json();
+
+    const secondCreateResponse = await fetch(`${baseUrl}/cards`, {
+      method: 'POST',
+      headers: authHeaders('user-a'),
+      body: JSON.stringify({
+        source_type: 'identifier_based',
+        source_input: 'bulk-card-2',
+        params: {},
+        schedule_enabled: false,
+        active: true
+      })
+    });
+    assert.equal(secondCreateResponse.status, 201);
+    const secondCard = await secondCreateResponse.json();
+
+    const otherOwnerCreateResponse = await fetch(`${baseUrl}/cards`, {
+      method: 'POST',
+      headers: authHeaders('user-b'),
+      body: JSON.stringify({
+        source_type: 'identifier_based',
+        source_input: 'bulk-card-other-owner',
+        params: {},
+        schedule_enabled: false,
+        active: true
+      })
+    });
+    assert.equal(otherOwnerCreateResponse.status, 201);
+    const otherOwnerCard = await otherOwnerCreateResponse.json();
+
+    const deactivateResponse = await fetch(`${baseUrl}/cards/bulk/deactivate`, {
+      method: 'POST',
+      headers: authHeaders('user-a'),
+      body: JSON.stringify({ ids: [firstCard.id, otherOwnerCard.id] })
+    });
+    assert.equal(deactivateResponse.status, 200);
+    assert.deepEqual(await deactivateResponse.json(), {
+      requested: 2,
+      updated: 1,
+      skipped: 1
+    });
+
+    const updatedFirstResponse = await fetch(`${baseUrl}/cards/${firstCard.id}`, {
+      headers: authHeaders('user-a')
+    });
+    const updatedFirst = await updatedFirstResponse.json();
+    assert.equal(updatedFirst.active, false);
+
+    const otherOwnerResponse = await fetch(`${baseUrl}/cards/${otherOwnerCard.id}`, {
+      headers: authHeaders('user-b')
+    });
+    const otherOwner = await otherOwnerResponse.json();
+    assert.equal(otherOwner.active, true);
+
+    const deleteResponse = await fetch(`${baseUrl}/cards/bulk/delete`, {
+      method: 'POST',
+      headers: authHeaders('user-a'),
+      body: JSON.stringify({ ids: [firstCard.id, secondCard.id, otherOwnerCard.id] })
+    });
+    assert.equal(deleteResponse.status, 200);
+    assert.deepEqual(await deleteResponse.json(), {
+      requested: 3,
+      deleted: 2,
+      skipped: 1
+    });
+
+    const userAListResponse = await fetch(`${baseUrl}/cards`, {
+      headers: authHeaders('user-a')
+    });
+    assert.deepEqual(await userAListResponse.json(), []);
+
+    const userBListResponse = await fetch(`${baseUrl}/cards`, {
+      headers: authHeaders('user-b')
+    });
+    const userBCards = await userBListResponse.json();
+    assert.equal(userBCards.length, 1);
+    assert.equal(userBCards[0].id, otherOwnerCard.id);
+  });
+
+  resetRepositoryForTests();
+});

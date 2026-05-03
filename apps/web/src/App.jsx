@@ -151,6 +151,56 @@ function CardsWorkspace({ auth, userEmail, onSignOut }) {
     }
   }
 
+  async function handleBulkDeactivate() {
+    const ids = filteredCards.map((card) => card.id);
+    if (ids.length === 0) return;
+
+    const confirmed = window.confirm(`Deactivate ${ids.length} visible card${ids.length === 1 ? '' : 's'}?`);
+    if (!confirmed) return;
+
+    setLoading(true);
+    setError('');
+    try {
+      const result = await api.bulkDeactivateCards(auth, ids);
+      await refreshCards();
+      if (selectedCardId && ids.includes(selectedCardId)) {
+        await refreshRuns(selectedCardId);
+      }
+      setToast(`Bulk deactivate complete: ${result.updated} updated, ${result.skipped} skipped.`);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleBulkDelete() {
+    const ids = filteredCards.map((card) => card.id);
+    if (ids.length === 0) return;
+
+    const confirmed = window.confirm(
+      `Delete ${ids.length} visible card${ids.length === 1 ? '' : 's'}? This cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    setLoading(true);
+    setError('');
+    try {
+      const result = await api.bulkDeleteCards(auth, ids);
+      if (selectedCardId && ids.includes(selectedCardId)) {
+        setSelectedCardId('');
+        setRuns([]);
+        setPreview(null);
+      }
+      await refreshCards();
+      setToast(`Bulk delete complete: ${result.deleted} deleted, ${result.skipped} skipped.`);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleToggleActive(cardId, active) {
     setError('');
     try {
@@ -273,6 +323,20 @@ function CardsWorkspace({ auth, userEmail, onSignOut }) {
         />
       )}
       <CardFilters filters={filters} onChange={setFilters} viewMode={viewMode} onViewModeChange={setViewMode} />
+      <div className="panel">
+        <h2>Bulk Actions</h2>
+        <div className="meta">
+          Applies to the {filteredCards.length} currently visible card{filteredCards.length === 1 ? '' : 's'}.
+        </div>
+        <div className="row" style={{ marginTop: 12 }}>
+          <button className="secondary" type="button" onClick={handleBulkDeactivate} disabled={loading || filteredCards.length === 0}>
+            Deactivate Visible
+          </button>
+          <button className="secondary" type="button" onClick={handleBulkDelete} disabled={loading || filteredCards.length === 0}>
+            Delete Visible
+          </button>
+        </div>
+      </div>
       <div className="content-grid">
         <CardList
           cards={filteredCards}

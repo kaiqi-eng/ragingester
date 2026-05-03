@@ -36,6 +36,22 @@ export const api = {
     return handle(await fetch(`${API_BASE}/cards/${id}`, { method: 'DELETE', headers: authHeaders(auth) }));
   },
 
+  async bulkDeactivateCards(auth, ids) {
+    return handle(await fetch(`${API_BASE}/cards/bulk/deactivate`, {
+      method: 'POST',
+      headers: authHeaders(auth),
+      body: JSON.stringify({ ids })
+    }));
+  },
+
+  async bulkDeleteCards(auth, ids) {
+    return handle(await fetch(`${API_BASE}/cards/bulk/delete`, {
+      method: 'POST',
+      headers: authHeaders(auth),
+      body: JSON.stringify({ ids })
+    }));
+  },
+
   async runCard(auth, id) {
     return handle(await fetch(`${API_BASE}/cards/${id}/run`, { method: 'POST', headers: authHeaders(auth) }));
   },
