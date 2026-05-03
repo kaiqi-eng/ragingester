@@ -95,7 +95,7 @@ async function executeRunRecord({ repository, card, run, triggerMode, timeoutMs,
         collector.collect({
           source_input: card.source_input,
           params: card.params,
-          context: { card, runId: run.id, triggerMode: resolvedTriggerMode }
+          context: { card, runId: run.id, triggerMode: resolvedTriggerMode, timeoutMs: timeoutMsForRun }
         }),
         timeoutMsForRun
       );

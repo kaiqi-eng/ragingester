@@ -146,3 +146,77 @@ test('cards API accepts youtube source type create and update', async () => {
 
   resetRepositoryForTests();
 });
+
+test('cards API schedules all cards for stress test and skips already queued cards', async () => {
+  setRepositoryForTests(createMemoryRepository());
+
+  await withServer(async (baseUrl) => {
+    const firstCreateResponse = await fetch(`${baseUrl}/cards`, {
+      method: 'POST',
+      headers: authHeaders('user-a'),
+      body: JSON.stringify({
+        source_type: 'identifier_based',
+        source_input: 'stress-card-1',
+        params: {},
+        schedule_enabled: false,
+        active: true
+      })
+    });
+    assert.equal(firstCreateResponse.status, 201);
+    const firstCard = await firstCreateResponse.json();
+
+    const secondCreateResponse = await fetch(`${baseUrl}/cards`, {
+      method: 'POST',
+      headers: authHeaders('user-a'),
+      body: JSON.stringify({
+        source_type: 'identifier_based',
+        source_input: 'stress-card-2',
+        params: {},
+        schedule_enabled: false,
+        active: false
+      })
+    });
+    assert.equal(secondCreateResponse.status, 201);
+    const secondCard = await secondCreateResponse.json();
+
+    const stressResponse = await fetch(`${baseUrl}/cards/stress-test/schedule`, {
+      method: 'POST',
+      headers: authHeaders('user-a')
+    });
+    assert.equal(stressResponse.status, 202);
+    assert.deepEqual(await stressResponse.json(), {
+      total: 2,
+      enqueued: 2,
+      skipped: 0
+    });
+
+    const firstRunsResponse = await fetch(`${baseUrl}/cards/${firstCard.id}/runs`, {
+      headers: authHeaders('user-a')
+    });
+    assert.equal(firstRunsResponse.status, 200);
+    const firstRuns = await firstRunsResponse.json();
+    assert.equal(firstRuns.length, 1);
+    assert.equal(firstRuns[0].trigger_mode, 'scheduled');
+    assert.equal(firstRuns[0].status, 'pending');
+
+    const secondRunsResponse = await fetch(`${baseUrl}/cards/${secondCard.id}/runs`, {
+      headers: authHeaders('user-a')
+    });
+    assert.equal(secondRunsResponse.status, 200);
+    const secondRuns = await secondRunsResponse.json();
+    assert.equal(secondRuns.length, 1);
+
+    const repeatedStressResponse = await fetch(`${baseUrl}/cards/stress-test/schedule`, {
+      method: 'POST',
+      headers: authHeaders('user-a')
+    });
+    assert.equal(repeatedStressResponse.status, 202);
+    assert.deepEqual(await repeatedStressResponse.json(), {
+      total: 2,
+      enqueued: 0,
+      skipped: 2
+    });
+  });
+
+  resetRepositoryForTests();
+});

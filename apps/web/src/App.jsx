@@ -114,6 +114,28 @@ function CardsWorkspace({ auth, userEmail, onSignOut }) {
     }
   }
 
+  async function handleStressTestSchedule() {
+    const confirmed = window.confirm(
+      'Schedule every card for an immediate stress-test run? Cards that already have pending or running work will be skipped.'
+    );
+    if (!confirmed) return;
+
+    setLoading(true);
+    setError('');
+    try {
+      const result = await api.scheduleStressTest(auth);
+      await refreshCards();
+      if (selectedCardId) {
+        await refreshRuns(selectedCardId);
+      }
+      setToast(`Stress test queued: ${result.enqueued} enqueued, ${result.skipped} skipped, ${result.total} total.`);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleDelete(cardId) {
     setError('');
     try {
@@ -231,6 +253,9 @@ function CardsWorkspace({ auth, userEmail, onSignOut }) {
             />
             <button className="secondary" type="button" onClick={handleExportCsv}>Export CSV</button>
             <button className="secondary" type="button" onClick={() => importInputRef.current?.click()}>Import CSV</button>
+            <button type="button" onClick={handleStressTestSchedule} disabled={loading || cards.length === 0}>
+              Stress Test All Cards
+            </button>
             <button className="secondary" type="button" onClick={onSignOut}>Sign out</button>
           </div>
         </div>

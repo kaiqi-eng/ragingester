@@ -2,8 +2,19 @@ import { config } from '../config.js';
 
 const WORKSPACE_SLUG = 'rss-feed';
 const WORKSPACE_NAME = 'RSS Feed';
-const MANUAL_STARTUP_BUFFER_MS = 3 * 60 * 1000;
-const MANUAL_STARTUP_RETRY_MS = 10 * 1000;
+const GENIE_RSS_READY_WAIT_MS = 60 * 1000;
+const GENIE_RSS_READY_RETRY_MS = 5 * 1000;
+const RATE_LIMIT_INITIAL_RETRY_MS = 5 * 1000;
+const RATE_LIMIT_MAX_RETRY_MS = 30 * 1000;
+
+class RequestError extends Error {
+  constructor(message, { status, retryAfterMs }) {
+    super(message);
+    this.name = 'RequestError';
+    this.status = status;
+    this.retryAfterMs = retryAfterMs;
+  }
+}
 
 function trimTrailingSlash(value) {
   return value.endsWith('/') ? value.slice(0, -1) : value;
@@ -64,13 +75,33 @@ function buildDocumentContent({ runTimestamp, previousRun, item }) {
 async function fetchJson(url, options = {}) {
   const response = await fetch(url, options);
   const contentType = response.headers.get('content-type') || '';
+  const retryAfterMs = parseRetryAfterMs(response.headers.get('retry-after'));
   const body = contentType.includes('application/json') ? await response.json() : await response.text();
 
   if (!response.ok) {
-    throw new Error(`request failed (${response.status}) for ${url}: ${typeof body === 'string' ? body : JSON.stringify(body)}`);
+    throw new RequestError(`request failed (${response.status}) for ${url}: ${typeof body === 'string' ? body : JSON.stringify(body)}`, {
+      status: response.status,
+      retryAfterMs
+    });
   }
 
   return body;
+}
+
+function parseRetryAfterMs(value) {
+  if (!value) return null;
+
+  const seconds = Number(value);
+  if (Number.isFinite(seconds)) {
+    return Math.max(0, seconds * 1000);
+  }
+
+  const dateMs = new Date(value).getTime();
+  if (!Number.isNaN(dateMs)) {
+    return Math.max(0, dateMs - Date.now());
+  }
+
+  return null;
 }
 
 function sleep(ms) {
@@ -78,8 +109,7 @@ function sleep(ms) {
 }
 
 function isTooManyRequestsError(error) {
-  const message = error instanceof Error ? error.message : String(error);
-  return message.includes('(429)');
+  return error?.status === 429 || String(error instanceof Error ? error.message : error).includes('(429)');
 }
 
 async function fetchRssFeed({ sourceInput, cfg, since }) {
@@ -100,13 +130,24 @@ async function fetchRssFeed({ sourceInput, cfg, since }) {
   });
 }
 
-async function fetchRssFeedWithManualStartupBuffer({ sourceInput, cfg, since, triggerMode }) {
-  const isManual = triggerMode === 'manual';
-  if (!isManual) {
-    return fetchRssFeed({ sourceInput, cfg, since });
+function getRateLimitRetryMs(error, attempt, { initialRetryMs, maxRetryMs }) {
+  if (Number.isFinite(error?.retryAfterMs)) {
+    return error.retryAfterMs;
   }
 
-  const deadline = Date.now() + MANUAL_STARTUP_BUFFER_MS;
+  return Math.min(maxRetryMs, initialRetryMs * (2 ** Math.max(0, attempt - 1)));
+}
+
+async function fetchRssFeedWithRateLimitBackoff({
+  sourceInput,
+  cfg,
+  since,
+  timeoutMs,
+  initialRetryMs = RATE_LIMIT_INITIAL_RETRY_MS,
+  maxRetryMs = RATE_LIMIT_MAX_RETRY_MS
+}) {
+  const deadline = Date.now() + timeoutMs;
+  let attempt = 0;
   let lastError = null;
 
   while (Date.now() <= deadline) {
@@ -117,9 +158,11 @@ async function fetchRssFeedWithManualStartupBuffer({ sourceInput, cfg, since, tr
         throw error;
       }
       lastError = error;
+      attempt += 1;
       const remainingMs = deadline - Date.now();
       if (remainingMs <= 0) break;
-      await sleep(Math.min(MANUAL_STARTUP_RETRY_MS, remainingMs));
+      const retryMs = getRateLimitRetryMs(error, attempt, { initialRetryMs, maxRetryMs });
+      await sleep(Math.min(retryMs, remainingMs));
     }
   }
 
@@ -308,17 +351,36 @@ async function ingestDocument({ cfg, workspaceId, sourceInput, item, runTimestam
   });
 }
 
-export async function prewarmRssFeed({ params = {} }) {
+export async function prewarmRssFeed({
+  params = {},
+  waitMs = GENIE_RSS_READY_WAIT_MS,
+  retryMs = GENIE_RSS_READY_RETRY_MS
+} = {}) {
   const cfg = resolveIntegrationConfig(params);
   if (!cfg.genieRssApiKey) {
     throw new Error('GENIE_RSS_API_KEY is required for rss_feed prewarm');
   }
 
-  await fetchJson(`${cfg.genieRssBaseUrl}/health`, {
-    headers: {
-      'x-api-key': cfg.genieRssApiKey
+  const deadline = Date.now() + waitMs;
+  let lastError = null;
+
+  while (Date.now() <= deadline) {
+    try {
+      await fetchJson(`${cfg.genieRssBaseUrl}/health`, {
+        headers: {
+          'x-api-key': cfg.genieRssApiKey
+        }
+      });
+      return;
+    } catch (error) {
+      lastError = error;
+      const remainingMs = deadline - Date.now();
+      if (remainingMs <= 0) break;
+      await sleep(Math.min(retryMs, remainingMs));
     }
-  });
+  }
+
+  throw lastError || new Error('GENIE RSS service was not ready');
 }
 
 export const rssFeedCollector = {
@@ -328,11 +390,15 @@ export const rssFeedCollector = {
     const previousRun = cfg.cursor;
     const runTimestamp = new Date().toISOString();
 
-    const feedResponse = await fetchRssFeedWithManualStartupBuffer({
+    await prewarmRssFeed({ params });
+
+    const feedResponse = await fetchRssFeedWithRateLimitBackoff({
       sourceInput: source_input,
       cfg,
       since: previousRun,
-      triggerMode: context.triggerMode || null
+      timeoutMs: context.timeoutMs || config.runTimeoutMs,
+      initialRetryMs: context.rateLimitInitialRetryMs || RATE_LIMIT_INITIAL_RETRY_MS,
+      maxRetryMs: context.rateLimitMaxRetryMs || RATE_LIMIT_MAX_RETRY_MS
     });
 
     const parsedItems = parseFeedItems(feedResponse.feed);

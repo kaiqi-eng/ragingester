@@ -78,6 +78,31 @@ export function createCardsRouter() {
     }
   });
 
+  router.post('/stress-test/schedule', async (req, res, next) => {
+    try {
+      const cards = await repository.listCards(req.user.id);
+      let enqueued = 0;
+      let skipped = 0;
+
+      for (const card of cards) {
+        const result = await repository.enqueueScheduledRun(card);
+        if (result?.enqueued) {
+          enqueued += 1;
+        } else {
+          skipped += 1;
+        }
+      }
+
+      res.status(202).json({
+        total: cards.length,
+        enqueued,
+        skipped
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
   router.patch('/:id', async (req, res, next) => {
     try {
       const existing = await repository.getCardById(req.params.id, req.user.id);
