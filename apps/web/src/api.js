@@ -64,6 +64,10 @@ export const api = {
     return handle(await fetch(`${API_BASE}/cards/${cardId}/runs`, { headers: authHeaders(auth) }));
   },
 
+  async listAllRuns(auth) {
+    return handle(await fetch(`${API_BASE}/runs`, { headers: authHeaders(auth) }));
+  },
+
   async clearRuns(auth, cardId) {
     return handle(await fetch(`${API_BASE}/cards/${cardId}/runs`, { method: 'DELETE', headers: authHeaders(auth) }));
   },

@@ -70,6 +70,11 @@ export function createMemoryRepository() {
       return sortDescByDate(runs, 'created_at');
     },
 
+    async listAllRuns(ownerId) {
+      const runs = [...store.runs.values()].filter((run) => run.owner_id === ownerId);
+      return sortDescByDate(runs, 'created_at');
+    },
+
     async deleteRuns(cardId, ownerId) {
       let deleted = 0;
       for (const [runId, run] of store.runs.entries()) {

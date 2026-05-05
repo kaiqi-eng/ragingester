@@ -46,7 +46,9 @@ function AuthBarrier({ error }) {
 function CardsWorkspace({ auth, userEmail, onSignOut }) {
   const [cards, setCards] = useState([]);
   const [runs, setRuns] = useState([]);
+  const [allRuns, setAllRuns] = useState([]);
   const [preview, setPreview] = useState(null);
+  const [activeView, setActiveView] = useState('cards');
   const [selectedCardId, setSelectedCardId] = useState('');
   const [editingCard, setEditingCard] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -69,6 +71,11 @@ function CardsWorkspace({ auth, userEmail, onSignOut }) {
     ]);
     setRuns(runRows);
     setPreview(previewData);
+  }
+
+  async function refreshAllRuns() {
+    const runRows = await api.listAllRuns(auth);
+    setAllRuns(runRows);
   }
 
   useEffect(() => {
@@ -109,6 +116,9 @@ function CardsWorkspace({ auth, userEmail, onSignOut }) {
       if (selectedCardId === cardId) {
         await refreshRuns(cardId);
       }
+      if (activeView === 'runs') {
+        await refreshAllRuns();
+      }
     } catch (err) {
       setError(err.message);
     }
@@ -128,6 +138,9 @@ function CardsWorkspace({ auth, userEmail, onSignOut }) {
       if (selectedCardId) {
         await refreshRuns(selectedCardId);
       }
+      if (activeView === 'runs') {
+        await refreshAllRuns();
+      }
       setToast(`Stress test queued: ${result.enqueued} enqueued, ${result.skipped} skipped, ${result.total} total.`);
     } catch (err) {
       setError(err.message);
@@ -146,6 +159,9 @@ function CardsWorkspace({ auth, userEmail, onSignOut }) {
         setPreview(null);
       }
       await refreshCards();
+      if (activeView === 'runs') {
+        await refreshAllRuns();
+      }
     } catch (err) {
       setError(err.message);
     }
@@ -208,6 +224,9 @@ function CardsWorkspace({ auth, userEmail, onSignOut }) {
       await refreshCards();
       if (selectedCardId === cardId) {
         await refreshRuns(cardId);
+      }
+      if (activeView === 'runs') {
+        await refreshAllRuns();
       }
     } catch (err) {
       setError(err.message);
@@ -286,6 +305,25 @@ function CardsWorkspace({ auth, userEmail, onSignOut }) {
     });
   }, [cards, filters]);
 
+  const cardById = useMemo(() => {
+    const map = {};
+    for (const card of cards) {
+      map[card.id] = card.params?.job_name || card.source_input || card.id;
+    }
+    return map;
+  }, [cards]);
+
+  async function handleSwitchView(nextView) {
+    setActiveView(nextView);
+    if (nextView === 'runs') {
+      try {
+        await refreshAllRuns();
+      } catch (err) {
+        setError(err.message);
+      }
+    }
+  }
+
   return (
     <div className="container">
       <div className="panel">
@@ -294,6 +332,20 @@ function CardsWorkspace({ auth, userEmail, onSignOut }) {
         <div className="row" style={{ marginTop: 12, justifyContent: 'space-between' }}>
           <div className="meta">Signed in as: {userEmail || auth.userId}</div>
           <div className="row">
+            <button
+              className={activeView === 'cards' ? '' : 'secondary'}
+              type="button"
+              onClick={() => handleSwitchView('cards')}
+            >
+              Cards View
+            </button>
+            <button
+              className={activeView === 'runs' ? '' : 'secondary'}
+              type="button"
+              onClick={() => handleSwitchView('runs')}
+            >
+              All Run History
+            </button>
             <input
               ref={importInputRef}
               type="file"
@@ -312,49 +364,62 @@ function CardsWorkspace({ auth, userEmail, onSignOut }) {
         {error && <div className="meta" style={{ marginTop: 8 }}>Error: {error}</div>}
       </div>
 
-      <CardForm onSubmit={handleCreate} loading={loading} />
-      {editingCard && (
-        <CardForm
-          mode="edit"
-          initialCard={editingCard}
-          onSubmit={handleUpdate}
-          onCancel={() => setEditingCard(null)}
-          loading={loading}
+      {activeView === 'cards' && (
+        <>
+          <CardForm onSubmit={handleCreate} loading={loading} />
+          {editingCard && (
+            <CardForm
+              mode="edit"
+              initialCard={editingCard}
+              onSubmit={handleUpdate}
+              onCancel={() => setEditingCard(null)}
+              loading={loading}
+            />
+          )}
+          <CardFilters filters={filters} onChange={setFilters} viewMode={viewMode} onViewModeChange={setViewMode} />
+          <div className="panel">
+            <h2>Bulk Actions</h2>
+            <div className="meta">
+              Applies to the {filteredCards.length} currently visible card{filteredCards.length === 1 ? '' : 's'}.
+            </div>
+            <div className="row" style={{ marginTop: 12 }}>
+              <button className="secondary" type="button" onClick={handleBulkDeactivate} disabled={loading || filteredCards.length === 0}>
+                Deactivate Visible
+              </button>
+              <button className="secondary" type="button" onClick={handleBulkDelete} disabled={loading || filteredCards.length === 0}>
+                Delete Visible
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+      {activeView === 'cards' ? (
+        <div className="content-grid">
+          <CardList
+            cards={filteredCards}
+            onRun={handleRun}
+            onDelete={handleDelete}
+            onToggleActive={handleToggleActive}
+            onSelect={handleSelect}
+            onEdit={setEditingCard}
+            selectedId={selectedCardId}
+            viewMode={viewMode}
+          />
+          <RunList
+            runs={runs}
+            preview={preview}
+            onClear={handleClearRunHistory}
+            clearDisabled={!selectedCardId}
+          />
+        </div>
+      ) : (
+        <RunList
+          runs={allRuns}
+          title="All Run History"
+          showClear={false}
+          cardById={cardById}
         />
       )}
-      <CardFilters filters={filters} onChange={setFilters} viewMode={viewMode} onViewModeChange={setViewMode} />
-      <div className="panel">
-        <h2>Bulk Actions</h2>
-        <div className="meta">
-          Applies to the {filteredCards.length} currently visible card{filteredCards.length === 1 ? '' : 's'}.
-        </div>
-        <div className="row" style={{ marginTop: 12 }}>
-          <button className="secondary" type="button" onClick={handleBulkDeactivate} disabled={loading || filteredCards.length === 0}>
-            Deactivate Visible
-          </button>
-          <button className="secondary" type="button" onClick={handleBulkDelete} disabled={loading || filteredCards.length === 0}>
-            Delete Visible
-          </button>
-        </div>
-      </div>
-      <div className="content-grid">
-        <CardList
-          cards={filteredCards}
-          onRun={handleRun}
-          onDelete={handleDelete}
-          onToggleActive={handleToggleActive}
-          onSelect={handleSelect}
-          onEdit={setEditingCard}
-          selectedId={selectedCardId}
-          viewMode={viewMode}
-        />
-        <RunList
-          runs={runs}
-          preview={preview}
-          onClear={handleClearRunHistory}
-          clearDisabled={!selectedCardId}
-        />
-      </div>
       <Toast message={toast} onHide={() => setToast('')} />
     </div>
   );

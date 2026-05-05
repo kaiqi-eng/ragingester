@@ -70,6 +70,16 @@ export function createSupabaseRepository({ supabaseUrl, serviceRoleKey, tables =
       );
     },
 
+    async listAllRuns(ownerId) {
+      return unwrap(
+        await supabase
+          .from(table.collectionRuns)
+          .select('*')
+          .eq('owner_id', ownerId)
+          .order('created_at', { ascending: false })
+      );
+    },
+
     async deleteRuns(cardId, ownerId) {
       const data = unwrap(
         await supabase

@@ -551,6 +551,52 @@ test('failed scheduled youtube run does not update youtube_cursor_pub_date', asy
   }
 });
 
+test('list all runs returns only the requesting owner history', async () => {
+  setRepositoryForTests(createMemoryRepository());
+
+  await withServer(async (baseUrl) => {
+    const createA = await fetch(`${baseUrl}/cards`, {
+      method: 'POST',
+      headers: authHeaders('user-a'),
+      body: JSON.stringify({
+        source_type: 'identifier_based',
+        source_input: 'sensor-all-runs-a',
+        params: {},
+        schedule_enabled: false,
+        active: true
+      })
+    });
+    assert.equal(createA.status, 201);
+    const cardA = await createA.json();
+
+    const createB = await fetch(`${baseUrl}/cards`, {
+      method: 'POST',
+      headers: authHeaders('user-b'),
+      body: JSON.stringify({
+        source_type: 'identifier_based',
+        source_input: 'sensor-all-runs-b',
+        params: {},
+        schedule_enabled: false,
+        active: true
+      })
+    });
+    assert.equal(createB.status, 201);
+    const cardB = await createB.json();
+
+    await fetch(`${baseUrl}/cards/${cardA.id}/run`, { method: 'POST', headers: authHeaders('user-a') });
+    await fetch(`${baseUrl}/cards/${cardB.id}/run`, { method: 'POST', headers: authHeaders('user-b') });
+
+    const userARunsResponse = await fetch(`${baseUrl}/runs`, { headers: authHeaders('user-a') });
+    assert.equal(userARunsResponse.status, 200);
+    const userARuns = await userARunsResponse.json();
+    assert.equal(userARuns.length, 1);
+    assert.equal(userARuns[0].owner_id, 'user-a');
+    assert.equal(userARuns[0].card_id, cardA.id);
+  });
+
+  resetRepositoryForTests();
+});
+
 test('clear run history deletes runs for selected card only', async () => {
   setRepositoryForTests(createMemoryRepository());
 
