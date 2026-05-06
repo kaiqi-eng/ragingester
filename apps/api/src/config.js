@@ -8,6 +8,8 @@ export const config = {
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
   genieRssBaseUrl: process.env.GENIE_RSS_BASE_URL || 'https://genie-rss-5i00.onrender.com',
   genieRssApiKey: process.env.GENIE_RSS_API_KEY || '',
+  smartcursorBaseUrl: process.env.SMARTCURSOR_BASE_URL || '',
+  smartcursorApiKey: process.env.SMARTCURSOR_API_KEY || '',
   bharagBaseUrl: process.env.BHARAG_BASE_URL || 'https://bharag.duckdns.org',
   bharagMasterApiKey: process.env.BHARAG_MASTER_API_KEY || '',
   bharagOwnerBuilderId: process.env.BHARAG_OWNER_BUILDER_ID || '',

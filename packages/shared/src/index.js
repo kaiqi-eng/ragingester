@@ -3,7 +3,8 @@ export const SOURCE_TYPES = {
   WEBSITE_URL: 'website_url',
   RSS_FEED: 'rss_feed',
   IDENTIFIER_BASED: 'identifier_based',
-  YOUTUBE: 'youtube'
+  YOUTUBE: 'youtube',
+  SMARTCURSOR_LINK: 'smartcursor_link'
 };
 
 export const RUN_STATUS = {

@@ -30,6 +30,10 @@ services:
         value: https://genie-rss-5i00.onrender.com
       - key: GENIE_RSS_API_KEY
         sync: false
+      - key: SMARTCURSOR_BASE_URL
+        sync: false
+      - key: SMARTCURSOR_API_KEY
+        sync: false
       - key: BHARAG_BASE_URL
         value: https://bharag.duckdns.org
       - key: BHARAG_MASTER_API_KEY

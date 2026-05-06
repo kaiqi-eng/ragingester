@@ -134,6 +134,12 @@ export function CardForm({ onSubmit, loading, mode = 'create', initialCard = nul
             {' '}`https://www.youtube.com/feeds/videos.xml?channel_id=...`.
           </div>
         )}
+        {form.source_type === SOURCE_TYPES.SMARTCURSOR_LINK && (
+          <div className="meta">
+            SmartCursor link source supports login via `params.auth.login_fields` (array of `{`name, selector, value, secret?`}`),
+            and optional keys like `goal`, `max_steps`, and `extraction_schema`.
+          </div>
+        )}
 
         <label>Params (JSON)</label>
         <textarea rows={4} value={form.params} onChange={(e) => setForm((f) => ({ ...f, params: e.target.value }))} />

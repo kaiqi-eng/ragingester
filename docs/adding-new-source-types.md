@@ -94,6 +94,45 @@ Files to verify:
 
 If your source needs source-specific inputs, add conditional form fields and map them into `params`.
 
+### `smartcursor_link` params example (misc/login links)
+
+Use `source_type: "smartcursor_link"` with `source_input` set to the target URL, then place SmartCursor options in `params`:
+
+```json
+{
+  "smartcursor_base_url": "https://your-smartcursor-service.onrender.com",
+  "smartcursor_api_key": "your-smartcursor-api-key",
+  "goal": "Login and extract the latest updates from the dashboard feed.",
+  "max_steps": 20,
+  "auth": {
+    "login_fields": [
+      {
+        "name": "username",
+        "selector": "#username",
+        "value": "demo-user"
+      },
+      {
+        "name": "password",
+        "selector": "#password",
+        "value": "demo-password",
+        "secret": true
+      }
+    ]
+  },
+  "extraction_schema": {
+    "type": "object",
+    "properties": {
+      "headline": { "type": "string" },
+      "summary": { "type": "string" }
+    }
+  }
+}
+```
+
+Notes:
+- Prefer `SMARTCURSOR_BASE_URL` and `SMARTCURSOR_API_KEY` in env for production; use params for per-card overrides only.
+- Keep credentials in `params.auth.login_fields`; do not put secrets in `source_input`.
+
 ## 8) Add/Update Environment Variables
 
 If the source calls external systems:

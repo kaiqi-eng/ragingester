@@ -1,0 +1,2473 @@
+{
+  "scenario": "techcrunch_rss_live_ingestion",
+  "feed_url": "https://techcrunch.com/feed/",
+  "timestamp": "2026-04-25T00:58:58.623Z",
+  "local_api": {
+    "create_card": {
+      "status": 201,
+      "body": {
+        "id": "1e62ea35-61bc-480b-bc2d-6edbb16095c7",
+        "created_at": "2026-04-25T00:58:07.686Z",
+        "updated_at": "2026-04-25T00:58:07.686Z",
+        "source_type": "rss_feed",
+        "source_input": "https://techcrunch.com/feed/",
+        "params": {},
+        "schedule_enabled": false,
+        "cron_expression": null,
+        "timezone": "America/Chicago",
+        "active": true,
+        "next_run_at": null,
+        "owner_id": "dev-user-1"
+      }
+    },
+    "run_card": {
+      "status": 202,
+      "body": {
+        "id": "0023a902-09e0-4801-8e46-6d7dfb1b4e34",
+        "created_at": "2026-04-25T00:58:07.700Z",
+        "card_id": "1e62ea35-61bc-480b-bc2d-6edbb16095c7",
+        "owner_id": "dev-user-1",
+        "status": "failed",
+        "trigger_mode": "manual",
+        "attempts": 2,
+        "started_at": "2026-04-25T00:58:37.712Z",
+        "ended_at": "2026-04-25T00:58:58.616Z",
+        "error": "failed to ingest RSS items: request failed (500) for https://bharag.duckdns.org/api/v1/ingest: {\"error\":{\"message\":\"Workspace has no owner configured\",\"code\":\"NO_WORKSPACE_OWNER\",\"requestId\":\"req_1777078723662_90318ry\"}}",
+        "logs": [
+          {
+            "level": "error",
+            "message": "failed to ingest RSS items: request failed (500) for https://bharag.duckdns.org/api/v1/ingest: {\"error\":{\"message\":\"Workspace has no owner configured\",\"code\":\"NO_WORKSPACE_OWNER\",\"requestId\":\"req_1777078723662_90318ry\"}}"
+          }
+        ]
+      }
+    },
+    "list_runs": {
+      "status": 200,
+      "body": [
+        {
+          "id": "0023a902-09e0-4801-8e46-6d7dfb1b4e34",
+          "created_at": "2026-04-25T00:58:07.700Z",
+          "card_id": "1e62ea35-61bc-480b-bc2d-6edbb16095c7",
+          "owner_id": "dev-user-1",
+          "status": "failed",
+          "trigger_mode": "manual",
+          "attempts": 2,
+          "started_at": "2026-04-25T00:58:37.712Z",
+          "ended_at": "2026-04-25T00:58:58.616Z",
+          "error": "failed to ingest RSS items: request failed (500) for https://bharag.duckdns.org/api/v1/ingest: {\"error\":{\"message\":\"Workspace has no owner configured\",\"code\":\"NO_WORKSPACE_OWNER\",\"requestId\":\"req_1777078723662_90318ry\"}}",
+          "logs": [
+            {
+              "level": "error",
+              "message": "failed to ingest RSS items: request failed (500) for https://bharag.duckdns.org/api/v1/ingest: {\"error\":{\"message\":\"Workspace has no owner configured\",\"code\":\"NO_WORKSPACE_OWNER\",\"requestId\":\"req_1777078723662_90318ry\"}}"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "outbound_payloads": [
+    {
+      "started_at": "2026-04-25T00:58:07.637Z",
+      "url": "http://127.0.0.1:62391/cards",
+      "method": "POST",
+      "request_headers": {
+        "content-type": "application/json",
+        "x-user-id": "dev-user-1"
+      },
+      "request_body_raw": "{\"source_type\":\"rss_feed\",\"source_input\":\"https://techcrunch.com/feed/\",\"params\":{},\"schedule_enabled\":false,\"cron_expression\":null,\"timezone\":\"America/Chicago\",\"active\":true}",
+      "request_body_json": {
+        "source_type": "rss_feed",
+        "source_input": "https://techcrunch.com/feed/",
+        "params": {},
+        "schedule_enabled": false,
+        "cron_expression": null,
+        "timezone": "America/Chicago",
+        "active": true
+      },
+      "response_status": 201,
+      "response_headers": {
+        "access-control-allow-origin": "http://localhost:5173",
+        "connection": "keep-alive",
+        "content-length": "342",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Sat, 25 Apr 2026 00:58:07 GMT",
+        "etag": "W/\"156-Lf7izh82vZMse0C31JFTizGZIsU\"",
+        "keep-alive": "timeout=5",
+        "vary": "Origin",
+        "x-powered-by": "Express"
+      },
+      "response_body_raw": "{\"id\":\"1e62ea35-61bc-480b-bc2d-6edbb16095c7\",\"created_at\":\"2026-04-25T00:58:07.686Z\",\"updated_at\":\"2026-04-25T00:58:07.686Z\",\"source_type\":\"rss_feed\",\"source_input\":\"https://techcrunch.com/feed/\",\"params\":{},\"schedule_enabled\":false,\"cron_expression\":null,\"timezone\":\"America/Chicago\",\"active\":true,\"next_run_at\":null,\"owner_id\":\"dev-user-1\"}",
+      "response_body_json": {
+        "id": "1e62ea35-61bc-480b-bc2d-6edbb16095c7",
+        "created_at": "2026-04-25T00:58:07.686Z",
+        "updated_at": "2026-04-25T00:58:07.686Z",
+        "source_type": "rss_feed",
+        "source_input": "https://techcrunch.com/feed/",
+        "params": {},
+        "schedule_enabled": false,
+        "cron_expression": null,
+        "timezone": "America/Chicago",
+        "active": true,
+        "next_run_at": null,
+        "owner_id": "dev-user-1"
+      }
+    },
+    {
+      "started_at": "2026-04-25T00:58:07.701Z",
+      "url": "https://genie-rss-5i00.onrender.com/api/rss/fetch",
+      "method": "POST",
+      "request_headers": {
+        "content-type": "application/json",
+        "x-api-key": "testing"
+      },
+      "request_body_raw": "{\"url\":\"https://techcrunch.com/feed/\"}",
+      "request_body_json": {
+        "url": "https://techcrunch.com/feed/"
+      },
+      "response_status": 200,
+      "response_headers": {
+        "access-control-allow-origin": "*",
+        "alt-svc": "h3=\":443\"; ma=86400",
+        "cf-cache-status": "DYNAMIC",
+        "cf-ray": "9f1965c6fdff686c-DFW",
+        "connection": "keep-alive",
+        "content-encoding": "br",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Sat, 25 Apr 2026 00:58:39 GMT",
+        "etag": "W/\"3cf5-fdRo3SwVF9iyE2+0RWMROJWgjvo\"",
+        "rndr-id": "6183e442-9017-4f5d",
+        "server": "cloudflare",
+        "transfer-encoding": "chunked",
+        "vary": "Accept-Encoding",
+        "x-powered-by": "Express",
+        "x-render-origin-server": "Render",
+        "x-request-id": "3c75eb44-5573-40ef-9d24-cc85e4407700"
+      },
+      "response_body_raw": "{\"source\":\"discovered\",\"feedUrl\":\"https://techcrunch.com/feed/\",\"feed\":{\"title\":\"TechCrunch\",\"description\":\"Startup and Technology News\",\"link\":\"https://techcrunch.com/\",\"language\":\"en-US\",\"lastBuildDate\":\"Fri, 24 Apr 2026 23:58:58 +0000\",\"items\":[{\"title\":\"Steve Ballmer blasts founder he backed who pleaded guilty to fraud: ‘I was duped and feel silly’\",\"link\":\"https://techcrunch.com/2026/04/24/steve-ballmer-blasts-founder-he-backed-who-pleaded-guilty-to-fraud-i-was-duped-and-feel-silly/\",\"pubDate\":\"Fri, 24 Apr 2026 23:32:11 +0000\",\"creator\":\"Julie Bort\",\"content\":\"Steve Ballmer wrote a fiery letter in the sentencing of disgraced founder Joseph Sanberg documenting all the harm that's befalling him as an investor.\",\"contentSnippet\":\"Steve Ballmer wrote a fiery letter in the sentencing of disgraced founder Joseph Sanberg documenting all the harm that's befalling him as an investor.\",\"categories\":[\"Climate\",\"Fintech\",\"TC\",\"Venture\",\"Aspiration\",\"fraud\",\"Steve Ballmer\"],\"guid\":\"https://techcrunch.com/?p=3116240\",\"thumbnail\":null},{\"title\":\"Palantir is reportedly helping the IRS investigate financial crimes\",\"link\":\"https://techcrunch.com/2026/04/24/palantir-is-reportedly-helping-the-irs-investigate-financial-crimes/\",\"pubDate\":\"Fri, 24 Apr 2026 21:53:44 +0000\",\"creator\":\"Lucas Ropek\",\"content\":\"The IRS has used Palantir's software since at least 2018, The Intercept reports. \",\"contentSnippet\":\"The IRS has used Palantir's software since at least 2018, The Intercept reports.\",\"categories\":[\"Government & Policy\",\"In Brief\",\"irs\",\"Palantir\",\"Trump Administration\"],\"guid\":\"https://techcrunch.com/?p=3116276\",\"thumbnail\":null},{\"title\":\"Cohere acquires, merges with Germany-based startup to create a ‘transatlantic AI powerhouse’\",\"link\":\"https://techcrunch.com/2026/04/24/cohere-acquires-merges-with-german-based-startup-to-create-a-transatlantic-ai-powerhouse/\",\"pubDate\":\"Fri, 24 Apr 2026 21:35:30 +0000\",\"creator\":\"Dominic-Madori Davis\",\"content\":\"Cohere, the Canada-based AI company that makes AI tools for businesses in regulated industries, announced Friday it would merge with Aleph Alpha, a German company that also builds AI systems for businesses and governments. \",\"contentSnippet\":\"Cohere, the Canada-based AI company that makes AI tools for businesses in regulated industries, announced Friday it would merge with Aleph Alpha, a German company that also builds AI systems for businesses and governments.\",\"categories\":[\"Startups\",\"AI\",\"Aleph Alpha\",\"Cohere\",\"In Brief\",\"Mergers and Acquisitions\"],\"guid\":\"https://techcrunch.com/?p=3116339\",\"thumbnail\":null},{\"title\":\"Two college kids raise a $5.1 million pre-seed to build an AI social network in iMessage\",\"link\":\"https://techcrunch.com/2026/04/24/two-college-kids-raise-a-5-1-million-pre-seed-to-build-an-ai-social-network-in-imessage/\",\"pubDate\":\"Fri, 24 Apr 2026 21:05:59 +0000\",\"creator\":\"Dominic-Madori Davis\",\"content\":\"Series, a social networking app that's grown popular on college campuses, announced a $5.1 million pre-seed round from some big names in tech.\",\"contentSnippet\":\"Series, a social networking app that's grown popular on college campuses, announced a $5.1 million pre-seed round from some big names in tech.\",\"categories\":[\"Apps\",\"Startups\",\"Exclusive\",\"series\",\"social networking app\"],\"guid\":\"https://techcrunch.com/?p=3116124\",\"thumbnail\":null},{\"title\":\"Meta’s loss is Thinking Machines’ gain\",\"link\":\"https://techcrunch.com/2026/04/24/metas-loss-is-thinking-machines-gain/\",\"pubDate\":\"Fri, 24 Apr 2026 20:52:07 +0000\",\"creator\":\"Connie Loizos\",\"content\":\"Meta has been poaching talent from Thinking Machines Lab. But it's a two-way street.\",\"contentSnippet\":\"Meta has been poaching talent from Thinking Machines Lab. But it's a two-way street.\",\"categories\":[\"AI\",\"TC\"],\"guid\":\"https://techcrunch.com/?p=3116243\",\"thumbnail\":null},{\"title\":\"X-energy stock pops 27% on first day of trading following upsized IPO\",\"link\":\"https://techcrunch.com/2026/04/24/x-energy-stock-pops-27-on-first-day-of-trading-following-upsized-ipo/\",\"pubDate\":\"Fri, 24 Apr 2026 20:10:54 +0000\",\"creator\":\"Tim De Chant\",\"content\":\"Investors flocked to nuclear power startup X-energy in its first day of public trading on the Nasdaq.\",\"contentSnippet\":\"Investors flocked to nuclear power startup X-energy in its first day of public trading on the Nasdaq.\",\"categories\":[\"Climate\",\"Fundraising\",\"IPO\",\"nuclear fission\",\"nuclear power\",\"X-Energy\"],\"guid\":\"https://techcrunch.com/?p=3116263\",\"thumbnail\":null},{\"title\":\"ComfyUI hits $500M valuation as creators seek more control over AI-generated media\",\"link\":\"https://techcrunch.com/2026/04/24/comfyui-hits-500m-valuation-as-creators-seek-more-control-over-ai-generated-media/\",\"pubDate\":\"Fri, 24 Apr 2026 19:49:35 +0000\",\"creator\":\"Marina Temkin\",\"content\":\"ComfyUI, whose tools give creators more control over AI image, video, and audio generation, just raised $30 million.\",\"contentSnippet\":\"ComfyUI, whose tools give creators more control over AI image, video, and audio generation, just raised $30 million.\",\"categories\":[\"AI\",\"TC\",\"Venture\",\"comfyui\",\"Craft Ventures\",\"Creators\",\"Video\"],\"guid\":\"https://techcrunch.com/?p=3116246\",\"thumbnail\":null},{\"title\":\"X launches stand-alone XChat app on iOS\",\"link\":\"https://techcrunch.com/2026/04/24/x-launches-xchat-app-ios-messaging-iphone/\",\"pubDate\":\"Fri, 24 Apr 2026 19:46:58 +0000\",\"creator\":\"Sarah Perez\",\"content\":\"X's new app promises private chats, disappearing messages, audio and video calls, and more. \",\"contentSnippet\":\"X's new app promises private chats, disappearing messages, audio and video calls, and more.\",\"categories\":[\"Apps\",\"Social\",\"X\",\"xchat\"],\"guid\":\"https://techcrunch.com/?p=3116241\",\"thumbnail\":null},{\"title\":\"Google to invest up to $40B in Anthropic in cash and compute\",\"link\":\"https://techcrunch.com/2026/04/24/google-to-invest-up-to-40b-in-anthropic-in-cash-and-compute/\",\"pubDate\":\"Fri, 24 Apr 2026 18:00:03 +0000\",\"creator\":\"Rebecca Bellan\",\"content\":\"Google plans up to $40B investment in Anthropic as AI rivals race to secure massive compute capacity, following the limited release of its powerful, cybersecurity-focused Mythos model.\",\"contentSnippet\":\"Google plans up to $40B investment in Anthropic as AI rivals race to secure massive compute capacity, following the limited release of its powerful, cybersecurity-focused Mythos model.\",\"categories\":[\"AI\",\"Enterprise\",\"Anthropic\",\"anthropic investment\",\"chips\",\"compute\",\"Google\",\"google cloud\"],\"guid\":\"https://techcrunch.com/?p=3116207\",\"thumbnail\":null},{\"title\":\"Marked-up Mac minis flood eBay amid shortages driven by AI\",\"link\":\"https://techcrunch.com/2026/04/24/mac-mini-price-expensive-ebay-shortage-ai-memory/\",\"pubDate\":\"Fri, 24 Apr 2026 16:42:19 +0000\",\"creator\":\"Sarah Perez\",\"content\":\"Apple’s sold-out Mac mini is spawning marked-up eBay listings as demand surges for the compact desktop, now favored for running local AI models and tools.\",\"contentSnippet\":\"Apple’s sold-out Mac mini is spawning marked-up eBay listings as demand surges for the compact desktop, now favored for running local AI models and tools.\",\"categories\":[\"AI\",\"Hardware\",\"Apple\",\"local AI\",\"mac mini\",\"Mac Studio\",\"openclaw\"],\"guid\":\"https://techcrunch.com/?p=3116142\",\"thumbnail\":null},{\"title\":\"Nuclear startup X-energy raises $1B in data center-driven IPO\",\"link\":\"https://techcrunch.com/2026/04/24/nuclear-startup-x-energy-raises-1b-in-data-center-driven-ipo/\",\"pubDate\":\"Fri, 24 Apr 2026 15:06:00 +0000\",\"creator\":\"Tim De Chant\",\"content\":\"Amazon-backed X-energy was able to raise around 20% more money in its IPO as demand for nuclear power surges.\",\"contentSnippet\":\"Amazon-backed X-energy was able to raise around 20% more money in its IPO as demand for nuclear power surges.\",\"categories\":[\"Climate\",\"Fundraising\",\"Amazon\",\"In Brief\",\"IPO\",\"nuclear fission\",\"nuclear power\",\"X-Energy\"],\"guid\":\"https://techcrunch.com/?p=3116143\",\"thumbnail\":null},{\"title\":\"Another spyware maker caught distributing fake Android snooping apps\",\"link\":\"https://techcrunch.com/2026/04/24/another-spyware-maker-caught-distributing-fake-android-snooping-apps/\",\"pubDate\":\"Fri, 24 Apr 2026 14:17:55 +0000\",\"creator\":\"Lorenzo Franceschi-Bicchierai\",\"content\":\"Researchers have found a new case where government authorities used a fake Android app to plant spyware on a target’s phone. The company that allegedly developed the spyware was not previously known to sell this type of software. \",\"contentSnippet\":\"Researchers have found a new case where government authorities used a fake Android app to plant spyware on a target’s phone. The company that allegedly developed the spyware was not previously known to sell this type of software.\",\"categories\":[\"Security\",\"cybersecurity\",\"hackers\",\"hacking\",\"infosec\",\"ips\",\"Italy\",\"privacy\",\"Spyware\",\"surveillance\"],\"guid\":\"https://techcrunch.com/?p=3116012\",\"thumbnail\":null},{\"title\":\"Uber CTO Praveen Neppalli Naga joins stacked StrictlyVC SF lineup for April 30 event\",\"link\":\"https://techcrunch.com/2026/04/24/uber-cto-praveen-neppalli-naga-joins-stacked-strictlyvc-sf-lineup-for-april-30-event/\",\"pubDate\":\"Fri, 24 Apr 2026 14:00:00 +0000\",\"creator\":\"TechCrunch Events\",\"content\":\"Surprise! StrictlyVC San Francisco, which will kick off this year’s events lineup for TechCrunch on April 30 at the Sentro Filipino Cultural Center, is getting a new addition to its increasingly stacked lineup of speakers. Uber CTO Praveen Neppalli Naga will join the rest of the lineup to discuss operating at scale in the age of AI.\",\"contentSnippet\":\"Surprise! StrictlyVC San Francisco, which will kick off this year’s events lineup for TechCrunch on April 30 at the Sentro Filipino Cultural Center, is getting a new addition to its increasingly stacked lineup of speakers. Uber CTO Praveen Neppalli Naga will join the rest of the lineup to discuss operating at scale in the age of AI.\",\"categories\":[\"Startups\",\"Venture\",\"AI\",\"Fundraising\",\"Uber\",\"StrictlyVC\",\"StrictlyVC San Francisco\"],\"guid\":\"https://techcrunch.com/?p=3116078\",\"thumbnail\":null},{\"title\":\"Tim Cook is stepping down. What happens to Apple now?\",\"link\":\"https://techcrunch.com/video/tim-cook-is-stepping-down-what-happens-to-apple-now/\",\"pubDate\":\"Fri, 24 Apr 2026 14:00:00 +0000\",\"creator\":\"Theresa Loconsolo\",\"content\":\"Tim Cook plans to step down from his CEO role in September, handing the reins to hardware chief John Ternus.   Ternus may be inheriting one of the most durable businesses in tech, but&#160;he’s&#160;also stepping into&#160;a very different&#160;ecosystemthan the one Cook spent decades shaping. The App Store’s 30% cut is under pressure, the behind-the-scenes power Apple once [&#8230;]\",\"contentSnippet\":\"Tim Cook plans to step down from his CEO role in September, handing the reins to hardware chief John Ternus.   Ternus may be inheriting one of the most durable businesses in tech, but he’s also stepping into a very different ecosystemthan the one Cook spent decades shaping. The App Store’s 30% cut is under pressure, the behind-the-scenes power Apple once […]\",\"categories\":[\"AI\",\"Startups\",\"Venture\",\"Anthropic\",\"Apple\",\"Elon Musk\",\"Fintech\",\"IPO\",\"SpaceX\",\"Tim Cook\"],\"guid\":\"https://techcrunch.com/?post_type=tc_video&p=3116212\",\"thumbnail\":null},{\"title\":\"Nothing introduces an AI-powered dictation tool\",\"link\":\"https://techcrunch.com/2026/04/24/nothing-introduces-an-ai-powered-dictation-tool/\",\"pubDate\":\"Fri, 24 Apr 2026 13:41:42 +0000\",\"creator\":\"Ivan Mehta\",\"content\":\"Nothing's new on-device dictation tool supports over 100 languages.\",\"contentSnippet\":\"Nothing's new on-device dictation tool supports over 100 languages.\",\"categories\":[\"AI\",\"Apps\",\"ai dictation\",\"In Brief\",\"nothing\",\"Superwhisper\",\"Wispr flow\"],\"guid\":\"https://techcrunch.com/?p=3116112\",\"thumbnail\":null},{\"title\":\"DeepSeek previews new AI model that ‘closes the gap’ with frontier models\",\"link\":\"https://techcrunch.com/2026/04/24/deepseek-previews-new-ai-model-that-closes-the-gap-with-frontier-models/\",\"pubDate\":\"Fri, 24 Apr 2026 13:30:59 +0000\",\"creator\":\"Ram Iyer\",\"content\":\"DeepSeek says both models are more efficient and performant than DeepSeek V3.2 due to architectural improvements, and have almost \\\"closed the gap\\\" with current leading models, both open and closed, on reasoning benchmarks.\",\"contentSnippet\":\"DeepSeek says both models are more efficient and performant than DeepSeek V3.2 due to architectural improvements, and have almost \\\"closed the gap\\\" with current leading models, both open and closed, on reasoning benchmarks.\",\"categories\":[\"AI\",\"deepseek\",\"Deepseek V4\",\"open source ai\"],\"guid\":\"https://techcrunch.com/?p=3116123\",\"thumbnail\":null},{\"title\":\"In another wild turn for AI chips, Meta signs deal for millions of Amazon AI CPUs\",\"link\":\"https://techcrunch.com/2026/04/24/in-another-wild-turn-for-ai-chips-meta-signs-deal-for-millions-of-amazon-ai-cpus/\",\"pubDate\":\"Fri, 24 Apr 2026 12:00:00 +0000\",\"creator\":\"Julie Bort\",\"content\":\"Meta has commandeered a big chunk of Amazon's homegrown CPUs (not GPUs) for AI agentic workloads, signaling that a new kind of chip race has begun.\",\"contentSnippet\":\"Meta has commandeered a big chunk of Amazon's homegrown CPUs (not GPUs) for AI agentic workloads, signaling that a new kind of chip race has begun.\",\"categories\":[\"AI\",\"Enterprise\",\"Hardware\",\"TC\",\"Amazon\",\"AWS\",\"CPU\",\"GPU\",\"Graviton\",\"Meta\",\"trainium\"],\"guid\":\"https://techcrunch.com/?p=3115894\",\"thumbnail\":null},{\"title\":\"Porsche is adding an all-electric Cayenne coupe to its lineup\",\"link\":\"https://techcrunch.com/2026/04/23/porsche-is-adding-an-all-electric-cayenne-coupe-to-its-lineup/\",\"pubDate\":\"Fri, 24 Apr 2026 04:01:00 +0000\",\"creator\":\"Kirsten Korosec\",\"content\":\"Porsche will start selling the Cayenne Coupe Electric in late summer. \",\"contentSnippet\":\"Porsche will start selling the Cayenne Coupe Electric in late summer.\",\"categories\":[\"Transportation\",\"Cayenne EV\",\"electric vehicles\",\"EVs\",\"Porsche\",\"Porsche Taycan\"],\"guid\":\"https://techcrunch.com/?p=3116001\",\"thumbnail\":null},{\"title\":\"Bob Iger rejoins Thrive Capital as advisor after Disney exit\",\"link\":\"https://techcrunch.com/2026/04/23/bob-iger-rejoins-thrive-capital-as-advisor-after-disney-exit/\",\"pubDate\":\"Fri, 24 Apr 2026 00:11:25 +0000\",\"creator\":\"Marina Temkin\",\"content\":\"The former Disney CEO hold a stake in Thrive and has previously held the role of the venture partner at the firm.\",\"contentSnippet\":\"The former Disney CEO hold a stake in Thrive and has previously held the role of the venture partner at the firm.\",\"categories\":[\"Venture\",\"Bob Iger\",\"Disney\",\"In Brief\",\"Thrive Capital\"],\"guid\":\"https://techcrunch.com/?p=3116079\",\"thumbnail\":null},{\"title\":\"Authorities arrest special forces soldier who allegedly made $400K on Polymarket bet involving Maduro operation\",\"link\":\"https://techcrunch.com/2026/04/23/authorities-arrest-special-forces-soldier-who-allegedly-made-400k-on-polymarket-bet-involving-maduro-operation/\",\"pubDate\":\"Thu, 23 Apr 2026 23:32:33 +0000\",\"creator\":\"Lucas Ropek\",\"content\":\"The soldier is accused of using classified government information to inform a wager on the prediction market Polymarket. \",\"contentSnippet\":\"The soldier is accused of using classified government information to inform a wager on the prediction market Polymarket.\",\"categories\":[\"Government & Policy\",\"crime\",\"Polymarket\",\"Nicolas Maduro\",\"prediction sites\"],\"guid\":\"https://techcrunch.com/?p=3116048\",\"thumbnail\":null}],\"_fetchedAt\":\"2026-04-25T00:58:39.641Z\",\"_cache\":{\"hit\":false,\"key\":\"feed:https://techcrunch.com/feed/:since:none\",\"ttl\":1777082319641}}}",
+      "response_body_json": {
+        "source": "discovered",
+        "feedUrl": "https://techcrunch.com/feed/",
+        "feed": {
+          "title": "TechCrunch",
+          "description": "Startup and Technology News",
+          "link": "https://techcrunch.com/",
+          "language": "en-US",
+          "lastBuildDate": "Fri, 24 Apr 2026 23:58:58 +0000",
+          "items": [
+            {
+              "title": "Steve Ballmer blasts founder he backed who pleaded guilty to fraud: ‘I was duped and feel silly’",
+              "link": "https://techcrunch.com/2026/04/24/steve-ballmer-blasts-founder-he-backed-who-pleaded-guilty-to-fraud-i-was-duped-and-feel-silly/",
+              "pubDate": "Fri, 24 Apr 2026 23:32:11 +0000",
+              "creator": "Julie Bort",
+              "content": "Steve Ballmer wrote a fiery letter in the sentencing of disgraced founder Joseph Sanberg documenting all the harm that's befalling him as an investor.",
+              "contentSnippet": "Steve Ballmer wrote a fiery letter in the sentencing of disgraced founder Joseph Sanberg documenting all the harm that's befalling him as an investor.",
+              "categories": [
+                "Climate",
+                "Fintech",
+                "TC",
+                "Venture",
+                "Aspiration",
+                "fraud",
+                "Steve Ballmer"
+              ],
+              "guid": "https://techcrunch.com/?p=3116240",
+              "thumbnail": null
+            },
+            {
+              "title": "Palantir is reportedly helping the IRS investigate financial crimes",
+              "link": "https://techcrunch.com/2026/04/24/palantir-is-reportedly-helping-the-irs-investigate-financial-crimes/",
+              "pubDate": "Fri, 24 Apr 2026 21:53:44 +0000",
+              "creator": "Lucas Ropek",
+              "content": "The IRS has used Palantir's software since at least 2018, The Intercept reports. ",
+              "contentSnippet": "The IRS has used Palantir's software since at least 2018, The Intercept reports.",
+              "categories": [
+                "Government & Policy",
+                "In Brief",
+                "irs",
+                "Palantir",
+                "Trump Administration"
+              ],
+              "guid": "https://techcrunch.com/?p=3116276",
+              "thumbnail": null
+            },
+            {
+              "title": "Cohere acquires, merges with Germany-based startup to create a ‘transatlantic AI powerhouse’",
+              "link": "https://techcrunch.com/2026/04/24/cohere-acquires-merges-with-german-based-startup-to-create-a-transatlantic-ai-powerhouse/",
+              "pubDate": "Fri, 24 Apr 2026 21:35:30 +0000",
+              "creator": "Dominic-Madori Davis",
+              "content": "Cohere, the Canada-based AI company that makes AI tools for businesses in regulated industries, announced Friday it would merge with Aleph Alpha, a German company that also builds AI systems for businesses and governments. ",
+              "contentSnippet": "Cohere, the Canada-based AI company that makes AI tools for businesses in regulated industries, announced Friday it would merge with Aleph Alpha, a German company that also builds AI systems for businesses and governments.",
+              "categories": [
+                "Startups",
+                "AI",
+                "Aleph Alpha",
+                "Cohere",
+                "In Brief",
+                "Mergers and Acquisitions"
+              ],
+              "guid": "https://techcrunch.com/?p=3116339",
+              "thumbnail": null
+            },
+            {
+              "title": "Two college kids raise a $5.1 million pre-seed to build an AI social network in iMessage",
+              "link": "https://techcrunch.com/2026/04/24/two-college-kids-raise-a-5-1-million-pre-seed-to-build-an-ai-social-network-in-imessage/",
+              "pubDate": "Fri, 24 Apr 2026 21:05:59 +0000",
+              "creator": "Dominic-Madori Davis",
+              "content": "Series, a social networking app that's grown popular on college campuses, announced a $5.1 million pre-seed round from some big names in tech.",
+              "contentSnippet": "Series, a social networking app that's grown popular on college campuses, announced a $5.1 million pre-seed round from some big names in tech.",
+              "categories": [
+                "Apps",
+                "Startups",
+                "Exclusive",
+                "series",
+                "social networking app"
+              ],
+              "guid": "https://techcrunch.com/?p=3116124",
+              "thumbnail": null
+            },
+            {
+              "title": "Meta’s loss is Thinking Machines’ gain",
+              "link": "https://techcrunch.com/2026/04/24/metas-loss-is-thinking-machines-gain/",
+              "pubDate": "Fri, 24 Apr 2026 20:52:07 +0000",
+              "creator": "Connie Loizos",
+              "content": "Meta has been poaching talent from Thinking Machines Lab. But it's a two-way street.",
+              "contentSnippet": "Meta has been poaching talent from Thinking Machines Lab. But it's a two-way street.",
+              "categories": [
+                "AI",
+                "TC"
+              ],
+              "guid": "https://techcrunch.com/?p=3116243",
+              "thumbnail": null
+            },
+            {
+              "title": "X-energy stock pops 27% on first day of trading following upsized IPO",
+              "link": "https://techcrunch.com/2026/04/24/x-energy-stock-pops-27-on-first-day-of-trading-following-upsized-ipo/",
+              "pubDate": "Fri, 24 Apr 2026 20:10:54 +0000",
+              "creator": "Tim De Chant",
+              "content": "Investors flocked to nuclear power startup X-energy in its first day of public trading on the Nasdaq.",
+              "contentSnippet": "Investors flocked to nuclear power startup X-energy in its first day of public trading on the Nasdaq.",
+              "categories": [
+                "Climate",
+                "Fundraising",
+                "IPO",
+                "nuclear fission",
+                "nuclear power",
+                "X-Energy"
+              ],
+              "guid": "https://techcrunch.com/?p=3116263",
+              "thumbnail": null
+            },
+            {
+              "title": "ComfyUI hits $500M valuation as creators seek more control over AI-generated media",
+              "link": "https://techcrunch.com/2026/04/24/comfyui-hits-500m-valuation-as-creators-seek-more-control-over-ai-generated-media/",
+              "pubDate": "Fri, 24 Apr 2026 19:49:35 +0000",
+              "creator": "Marina Temkin",
+              "content": "ComfyUI, whose tools give creators more control over AI image, video, and audio generation, just raised $30 million.",
+              "contentSnippet": "ComfyUI, whose tools give creators more control over AI image, video, and audio generation, just raised $30 million.",
+              "categories": [
+                "AI",
+                "TC",
+                "Venture",
+                "comfyui",
+                "Craft Ventures",
+                "Creators",
+                "Video"
+              ],
+              "guid": "https://techcrunch.com/?p=3116246",
+              "thumbnail": null
+            },
+            {
+              "title": "X launches stand-alone XChat app on iOS",
+              "link": "https://techcrunch.com/2026/04/24/x-launches-xchat-app-ios-messaging-iphone/",
+              "pubDate": "Fri, 24 Apr 2026 19:46:58 +0000",
+              "creator": "Sarah Perez",
+              "content": "X's new app promises private chats, disappearing messages, audio and video calls, and more. ",
+              "contentSnippet": "X's new app promises private chats, disappearing messages, audio and video calls, and more.",
+              "categories": [
+                "Apps",
+                "Social",
+                "X",
+                "xchat"
+              ],
+              "guid": "https://techcrunch.com/?p=3116241",
+              "thumbnail": null
+            },
+            {
+              "title": "Google to invest up to $40B in Anthropic in cash and compute",
+              "link": "https://techcrunch.com/2026/04/24/google-to-invest-up-to-40b-in-anthropic-in-cash-and-compute/",
+              "pubDate": "Fri, 24 Apr 2026 18:00:03 +0000",
+              "creator": "Rebecca Bellan",
+              "content": "Google plans up to $40B investment in Anthropic as AI rivals race to secure massive compute capacity, following the limited release of its powerful, cybersecurity-focused Mythos model.",
+              "contentSnippet": "Google plans up to $40B investment in Anthropic as AI rivals race to secure massive compute capacity, following the limited release of its powerful, cybersecurity-focused Mythos model.",
+              "categories": [
+                "AI",
+                "Enterprise",
+                "Anthropic",
+                "anthropic investment",
+                "chips",
+                "compute",
+                "Google",
+                "google cloud"
+              ],
+              "guid": "https://techcrunch.com/?p=3116207",
+              "thumbnail": null
+            },
+            {
+              "title": "Marked-up Mac minis flood eBay amid shortages driven by AI",
+              "link": "https://techcrunch.com/2026/04/24/mac-mini-price-expensive-ebay-shortage-ai-memory/",
+              "pubDate": "Fri, 24 Apr 2026 16:42:19 +0000",
+              "creator": "Sarah Perez",
+              "content": "Apple’s sold-out Mac mini is spawning marked-up eBay listings as demand surges for the compact desktop, now favored for running local AI models and tools.",
+              "contentSnippet": "Apple’s sold-out Mac mini is spawning marked-up eBay listings as demand surges for the compact desktop, now favored for running local AI models and tools.",
+              "categories": [
+                "AI",
+                "Hardware",
+                "Apple",
+                "local AI",
+                "mac mini",
+                "Mac Studio",
+                "openclaw"
+              ],
+              "guid": "https://techcrunch.com/?p=3116142",
+              "thumbnail": null
+            },
+            {
+              "title": "Nuclear startup X-energy raises $1B in data center-driven IPO",
+              "link": "https://techcrunch.com/2026/04/24/nuclear-startup-x-energy-raises-1b-in-data-center-driven-ipo/",
+              "pubDate": "Fri, 24 Apr 2026 15:06:00 +0000",
+              "creator": "Tim De Chant",
+              "content": "Amazon-backed X-energy was able to raise around 20% more money in its IPO as demand for nuclear power surges.",
+              "contentSnippet": "Amazon-backed X-energy was able to raise around 20% more money in its IPO as demand for nuclear power surges.",
+              "categories": [
+                "Climate",
+                "Fundraising",
+                "Amazon",
+                "In Brief",
+                "IPO",
+                "nuclear fission",
+                "nuclear power",
+                "X-Energy"
+              ],
+              "guid": "https://techcrunch.com/?p=3116143",
+              "thumbnail": null
+            },
+            {
+              "title": "Another spyware maker caught distributing fake Android snooping apps",
+              "link": "https://techcrunch.com/2026/04/24/another-spyware-maker-caught-distributing-fake-android-snooping-apps/",
+              "pubDate": "Fri, 24 Apr 2026 14:17:55 +0000",
+              "creator": "Lorenzo Franceschi-Bicchierai",
+              "content": "Researchers have found a new case where government authorities used a fake Android app to plant spyware on a target’s phone. The company that allegedly developed the spyware was not previously known to sell this type of software. ",
+              "contentSnippet": "Researchers have found a new case where government authorities used a fake Android app to plant spyware on a target’s phone. The company that allegedly developed the spyware was not previously known to sell this type of software.",
+              "categories": [
+                "Security",
+                "cybersecurity",
+                "hackers",
+                "hacking",
+                "infosec",
+                "ips",
+                "Italy",
+                "privacy",
+                "Spyware",
+                "surveillance"
+              ],
+              "guid": "https://techcrunch.com/?p=3116012",
+              "thumbnail": null
+            },
+            {
+              "title": "Uber CTO Praveen Neppalli Naga joins stacked StrictlyVC SF lineup for April 30 event",
+              "link": "https://techcrunch.com/2026/04/24/uber-cto-praveen-neppalli-naga-joins-stacked-strictlyvc-sf-lineup-for-april-30-event/",
+              "pubDate": "Fri, 24 Apr 2026 14:00:00 +0000",
+              "creator": "TechCrunch Events",
+              "content": "Surprise! StrictlyVC San Francisco, which will kick off this year’s events lineup for TechCrunch on April 30 at the Sentro Filipino Cultural Center, is getting a new addition to its increasingly stacked lineup of speakers. Uber CTO Praveen Neppalli Naga will join the rest of the lineup to discuss operating at scale in the age of AI.",
+              "contentSnippet": "Surprise! StrictlyVC San Francisco, which will kick off this year’s events lineup for TechCrunch on April 30 at the Sentro Filipino Cultural Center, is getting a new addition to its increasingly stacked lineup of speakers. Uber CTO Praveen Neppalli Naga will join the rest of the lineup to discuss operating at scale in the age of AI.",
+              "categories": [
+                "Startups",
+                "Venture",
+                "AI",
+                "Fundraising",
+                "Uber",
+                "StrictlyVC",
+                "StrictlyVC San Francisco"
+              ],
+              "guid": "https://techcrunch.com/?p=3116078",
+              "thumbnail": null
+            },
+            {
+              "title": "Tim Cook is stepping down. What happens to Apple now?",
+              "link": "https://techcrunch.com/video/tim-cook-is-stepping-down-what-happens-to-apple-now/",
+              "pubDate": "Fri, 24 Apr 2026 14:00:00 +0000",
+              "creator": "Theresa Loconsolo",
+              "content": "Tim Cook plans to step down from his CEO role in September, handing the reins to hardware chief John Ternus.   Ternus may be inheriting one of the most durable businesses in tech, but&#160;he’s&#160;also stepping into&#160;a very different&#160;ecosystemthan the one Cook spent decades shaping. The App Store’s 30% cut is under pressure, the behind-the-scenes power Apple once [&#8230;]",
+              "contentSnippet": "Tim Cook plans to step down from his CEO role in September, handing the reins to hardware chief John Ternus.   Ternus may be inheriting one of the most durable businesses in tech, but he’s also stepping into a very different ecosystemthan the one Cook spent decades shaping. The App Store’s 30% cut is under pressure, the behind-the-scenes power Apple once […]",
+              "categories": [
+                "AI",
+                "Startups",
+                "Venture",
+                "Anthropic",
+                "Apple",
+                "Elon Musk",
+                "Fintech",
+                "IPO",
+                "SpaceX",
+                "Tim Cook"
+              ],
+              "guid": "https://techcrunch.com/?post_type=tc_video&p=3116212",
+              "thumbnail": null
+            },
+            {
+              "title": "Nothing introduces an AI-powered dictation tool",
+              "link": "https://techcrunch.com/2026/04/24/nothing-introduces-an-ai-powered-dictation-tool/",
+              "pubDate": "Fri, 24 Apr 2026 13:41:42 +0000",
+              "creator": "Ivan Mehta",
+              "content": "Nothing's new on-device dictation tool supports over 100 languages.",
+              "contentSnippet": "Nothing's new on-device dictation tool supports over 100 languages.",
+              "categories": [
+                "AI",
+                "Apps",
+                "ai dictation",
+                "In Brief",
+                "nothing",
+                "Superwhisper",
+                "Wispr flow"
+              ],
+              "guid": "https://techcrunch.com/?p=3116112",
+              "thumbnail": null
+            },
+            {
+              "title": "DeepSeek previews new AI model that ‘closes the gap’ with frontier models",
+              "link": "https://techcrunch.com/2026/04/24/deepseek-previews-new-ai-model-that-closes-the-gap-with-frontier-models/",
+              "pubDate": "Fri, 24 Apr 2026 13:30:59 +0000",
+              "creator": "Ram Iyer",
+              "content": "DeepSeek says both models are more efficient and performant than DeepSeek V3.2 due to architectural improvements, and have almost \"closed the gap\" with current leading models, both open and closed, on reasoning benchmarks.",
+              "contentSnippet": "DeepSeek says both models are more efficient and performant than DeepSeek V3.2 due to architectural improvements, and have almost \"closed the gap\" with current leading models, both open and closed, on reasoning benchmarks.",
+              "categories": [
+                "AI",
+                "deepseek",
+                "Deepseek V4",
+                "open source ai"
+              ],
+              "guid": "https://techcrunch.com/?p=3116123",
+              "thumbnail": null
+            },
+            {
+              "title": "In another wild turn for AI chips, Meta signs deal for millions of Amazon AI CPUs",
+              "link": "https://techcrunch.com/2026/04/24/in-another-wild-turn-for-ai-chips-meta-signs-deal-for-millions-of-amazon-ai-cpus/",
+              "pubDate": "Fri, 24 Apr 2026 12:00:00 +0000",
+              "creator": "Julie Bort",
+              "content": "Meta has commandeered a big chunk of Amazon's homegrown CPUs (not GPUs) for AI agentic workloads, signaling that a new kind of chip race has begun.",
+              "contentSnippet": "Meta has commandeered a big chunk of Amazon's homegrown CPUs (not GPUs) for AI agentic workloads, signaling that a new kind of chip race has begun.",
+              "categories": [
+                "AI",
+                "Enterprise",
+                "Hardware",
+                "TC",
+                "Amazon",
+                "AWS",
+                "CPU",
+                "GPU",
+                "Graviton",
+                "Meta",
+                "trainium"
+              ],
+              "guid": "https://techcrunch.com/?p=3115894",
+              "thumbnail": null
+            },
+            {
+              "title": "Porsche is adding an all-electric Cayenne coupe to its lineup",
+              "link": "https://techcrunch.com/2026/04/23/porsche-is-adding-an-all-electric-cayenne-coupe-to-its-lineup/",
+              "pubDate": "Fri, 24 Apr 2026 04:01:00 +0000",
+              "creator": "Kirsten Korosec",
+              "content": "Porsche will start selling the Cayenne Coupe Electric in late summer. ",
+              "contentSnippet": "Porsche will start selling the Cayenne Coupe Electric in late summer.",
+              "categories": [
+                "Transportation",
+                "Cayenne EV",
+                "electric vehicles",
+                "EVs",
+                "Porsche",
+                "Porsche Taycan"
+              ],
+              "guid": "https://techcrunch.com/?p=3116001",
+              "thumbnail": null
+            },
+            {
+              "title": "Bob Iger rejoins Thrive Capital as advisor after Disney exit",
+              "link": "https://techcrunch.com/2026/04/23/bob-iger-rejoins-thrive-capital-as-advisor-after-disney-exit/",
+              "pubDate": "Fri, 24 Apr 2026 00:11:25 +0000",
+              "creator": "Marina Temkin",
+              "content": "The former Disney CEO hold a stake in Thrive and has previously held the role of the venture partner at the firm.",
+              "contentSnippet": "The former Disney CEO hold a stake in Thrive and has previously held the role of the venture partner at the firm.",
+              "categories": [
+                "Venture",
+                "Bob Iger",
+                "Disney",
+                "In Brief",
+                "Thrive Capital"
+              ],
+              "guid": "https://techcrunch.com/?p=3116079",
+              "thumbnail": null
+            },
+            {
+              "title": "Authorities arrest special forces soldier who allegedly made $400K on Polymarket bet involving Maduro operation",
+              "link": "https://techcrunch.com/2026/04/23/authorities-arrest-special-forces-soldier-who-allegedly-made-400k-on-polymarket-bet-involving-maduro-operation/",
+              "pubDate": "Thu, 23 Apr 2026 23:32:33 +0000",
+              "creator": "Lucas Ropek",
+              "content": "The soldier is accused of using classified government information to inform a wager on the prediction market Polymarket. ",
+              "contentSnippet": "The soldier is accused of using classified government information to inform a wager on the prediction market Polymarket.",
+              "categories": [
+                "Government & Policy",
+                "crime",
+                "Polymarket",
+                "Nicolas Maduro",
+                "prediction sites"
+              ],
+              "guid": "https://techcrunch.com/?p=3116048",
+              "thumbnail": null
+            }
+          ],
+          "_fetchedAt": "2026-04-25T00:58:39.641Z",
+          "_cache": {
+            "hit": false,
+            "key": "feed:https://techcrunch.com/feed/:since:none",
+            "ttl": 1777082319641
+          }
+        }
+      }
+    },
+    {
+      "started_at": "2026-04-25T00:58:37.712Z",
+      "url": "https://genie-rss-5i00.onrender.com/api/rss/fetch",
+      "method": "POST",
+      "request_headers": {
+        "content-type": "application/json",
+        "x-api-key": "testing"
+      },
+      "request_body_raw": "{\"url\":\"https://techcrunch.com/feed/\"}",
+      "request_body_json": {
+        "url": "https://techcrunch.com/feed/"
+      },
+      "response_status": 200,
+      "response_headers": {
+        "access-control-allow-origin": "*",
+        "alt-svc": "h3=\":443\"; ma=86400",
+        "cf-cache-status": "DYNAMIC",
+        "cf-ray": "9f1966835d75478e-DFW",
+        "connection": "keep-alive",
+        "content-encoding": "br",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Sat, 25 Apr 2026 00:58:40 GMT",
+        "etag": "W/\"3cf5-H6H5DMsElWdlVMtUpvA2Kkj7PFA\"",
+        "rndr-id": "3d7cbde5-b231-4efe",
+        "server": "cloudflare",
+        "transfer-encoding": "chunked",
+        "vary": "Accept-Encoding",
+        "x-powered-by": "Express",
+        "x-render-origin-server": "Render",
+        "x-request-id": "6e8fc40d-ed71-459c-ab03-e5db74eb558f"
+      },
+      "response_body_raw": "{\"source\":\"discovered\",\"feedUrl\":\"https://techcrunch.com/feed/\",\"feed\":{\"title\":\"TechCrunch\",\"description\":\"Startup and Technology News\",\"link\":\"https://techcrunch.com/\",\"language\":\"en-US\",\"lastBuildDate\":\"Fri, 24 Apr 2026 23:58:58 +0000\",\"items\":[{\"title\":\"Steve Ballmer blasts founder he backed who pleaded guilty to fraud: ‘I was duped and feel silly’\",\"link\":\"https://techcrunch.com/2026/04/24/steve-ballmer-blasts-founder-he-backed-who-pleaded-guilty-to-fraud-i-was-duped-and-feel-silly/\",\"pubDate\":\"Fri, 24 Apr 2026 23:32:11 +0000\",\"creator\":\"Julie Bort\",\"content\":\"Steve Ballmer wrote a fiery letter in the sentencing of disgraced founder Joseph Sanberg documenting all the harm that's befalling him as an investor.\",\"contentSnippet\":\"Steve Ballmer wrote a fiery letter in the sentencing of disgraced founder Joseph Sanberg documenting all the harm that's befalling him as an investor.\",\"categories\":[\"Climate\",\"Fintech\",\"TC\",\"Venture\",\"Aspiration\",\"fraud\",\"Steve Ballmer\"],\"guid\":\"https://techcrunch.com/?p=3116240\",\"thumbnail\":null},{\"title\":\"Palantir is reportedly helping the IRS investigate financial crimes\",\"link\":\"https://techcrunch.com/2026/04/24/palantir-is-reportedly-helping-the-irs-investigate-financial-crimes/\",\"pubDate\":\"Fri, 24 Apr 2026 21:53:44 +0000\",\"creator\":\"Lucas Ropek\",\"content\":\"The IRS has used Palantir's software since at least 2018, The Intercept reports. \",\"contentSnippet\":\"The IRS has used Palantir's software since at least 2018, The Intercept reports.\",\"categories\":[\"Government & Policy\",\"In Brief\",\"irs\",\"Palantir\",\"Trump Administration\"],\"guid\":\"https://techcrunch.com/?p=3116276\",\"thumbnail\":null},{\"title\":\"Cohere acquires, merges with Germany-based startup to create a ‘transatlantic AI powerhouse’\",\"link\":\"https://techcrunch.com/2026/04/24/cohere-acquires-merges-with-german-based-startup-to-create-a-transatlantic-ai-powerhouse/\",\"pubDate\":\"Fri, 24 Apr 2026 21:35:30 +0000\",\"creator\":\"Dominic-Madori Davis\",\"content\":\"Cohere, the Canada-based AI company that makes AI tools for businesses in regulated industries, announced Friday it would merge with Aleph Alpha, a German company that also builds AI systems for businesses and governments. \",\"contentSnippet\":\"Cohere, the Canada-based AI company that makes AI tools for businesses in regulated industries, announced Friday it would merge with Aleph Alpha, a German company that also builds AI systems for businesses and governments.\",\"categories\":[\"Startups\",\"AI\",\"Aleph Alpha\",\"Cohere\",\"In Brief\",\"Mergers and Acquisitions\"],\"guid\":\"https://techcrunch.com/?p=3116339\",\"thumbnail\":null},{\"title\":\"Two college kids raise a $5.1 million pre-seed to build an AI social network in iMessage\",\"link\":\"https://techcrunch.com/2026/04/24/two-college-kids-raise-a-5-1-million-pre-seed-to-build-an-ai-social-network-in-imessage/\",\"pubDate\":\"Fri, 24 Apr 2026 21:05:59 +0000\",\"creator\":\"Dominic-Madori Davis\",\"content\":\"Series, a social networking app that's grown popular on college campuses, announced a $5.1 million pre-seed round from some big names in tech.\",\"contentSnippet\":\"Series, a social networking app that's grown popular on college campuses, announced a $5.1 million pre-seed round from some big names in tech.\",\"categories\":[\"Apps\",\"Startups\",\"Exclusive\",\"series\",\"social networking app\"],\"guid\":\"https://techcrunch.com/?p=3116124\",\"thumbnail\":null},{\"title\":\"Meta’s loss is Thinking Machines’ gain\",\"link\":\"https://techcrunch.com/2026/04/24/metas-loss-is-thinking-machines-gain/\",\"pubDate\":\"Fri, 24 Apr 2026 20:52:07 +0000\",\"creator\":\"Connie Loizos\",\"content\":\"Meta has been poaching talent from Thinking Machines Lab. But it's a two-way street.\",\"contentSnippet\":\"Meta has been poaching talent from Thinking Machines Lab. But it's a two-way street.\",\"categories\":[\"AI\",\"TC\"],\"guid\":\"https://techcrunch.com/?p=3116243\",\"thumbnail\":null},{\"title\":\"X-energy stock pops 27% on first day of trading following upsized IPO\",\"link\":\"https://techcrunch.com/2026/04/24/x-energy-stock-pops-27-on-first-day-of-trading-following-upsized-ipo/\",\"pubDate\":\"Fri, 24 Apr 2026 20:10:54 +0000\",\"creator\":\"Tim De Chant\",\"content\":\"Investors flocked to nuclear power startup X-energy in its first day of public trading on the Nasdaq.\",\"contentSnippet\":\"Investors flocked to nuclear power startup X-energy in its first day of public trading on the Nasdaq.\",\"categories\":[\"Climate\",\"Fundraising\",\"IPO\",\"nuclear fission\",\"nuclear power\",\"X-Energy\"],\"guid\":\"https://techcrunch.com/?p=3116263\",\"thumbnail\":null},{\"title\":\"ComfyUI hits $500M valuation as creators seek more control over AI-generated media\",\"link\":\"https://techcrunch.com/2026/04/24/comfyui-hits-500m-valuation-as-creators-seek-more-control-over-ai-generated-media/\",\"pubDate\":\"Fri, 24 Apr 2026 19:49:35 +0000\",\"creator\":\"Marina Temkin\",\"content\":\"ComfyUI, whose tools give creators more control over AI image, video, and audio generation, just raised $30 million.\",\"contentSnippet\":\"ComfyUI, whose tools give creators more control over AI image, video, and audio generation, just raised $30 million.\",\"categories\":[\"AI\",\"TC\",\"Venture\",\"comfyui\",\"Craft Ventures\",\"Creators\",\"Video\"],\"guid\":\"https://techcrunch.com/?p=3116246\",\"thumbnail\":null},{\"title\":\"X launches stand-alone XChat app on iOS\",\"link\":\"https://techcrunch.com/2026/04/24/x-launches-xchat-app-ios-messaging-iphone/\",\"pubDate\":\"Fri, 24 Apr 2026 19:46:58 +0000\",\"creator\":\"Sarah Perez\",\"content\":\"X's new app promises private chats, disappearing messages, audio and video calls, and more. \",\"contentSnippet\":\"X's new app promises private chats, disappearing messages, audio and video calls, and more.\",\"categories\":[\"Apps\",\"Social\",\"X\",\"xchat\"],\"guid\":\"https://techcrunch.com/?p=3116241\",\"thumbnail\":null},{\"title\":\"Google to invest up to $40B in Anthropic in cash and compute\",\"link\":\"https://techcrunch.com/2026/04/24/google-to-invest-up-to-40b-in-anthropic-in-cash-and-compute/\",\"pubDate\":\"Fri, 24 Apr 2026 18:00:03 +0000\",\"creator\":\"Rebecca Bellan\",\"content\":\"Google plans up to $40B investment in Anthropic as AI rivals race to secure massive compute capacity, following the limited release of its powerful, cybersecurity-focused Mythos model.\",\"contentSnippet\":\"Google plans up to $40B investment in Anthropic as AI rivals race to secure massive compute capacity, following the limited release of its powerful, cybersecurity-focused Mythos model.\",\"categories\":[\"AI\",\"Enterprise\",\"Anthropic\",\"anthropic investment\",\"chips\",\"compute\",\"Google\",\"google cloud\"],\"guid\":\"https://techcrunch.com/?p=3116207\",\"thumbnail\":null},{\"title\":\"Marked-up Mac minis flood eBay amid shortages driven by AI\",\"link\":\"https://techcrunch.com/2026/04/24/mac-mini-price-expensive-ebay-shortage-ai-memory/\",\"pubDate\":\"Fri, 24 Apr 2026 16:42:19 +0000\",\"creator\":\"Sarah Perez\",\"content\":\"Apple’s sold-out Mac mini is spawning marked-up eBay listings as demand surges for the compact desktop, now favored for running local AI models and tools.\",\"contentSnippet\":\"Apple’s sold-out Mac mini is spawning marked-up eBay listings as demand surges for the compact desktop, now favored for running local AI models and tools.\",\"categories\":[\"AI\",\"Hardware\",\"Apple\",\"local AI\",\"mac mini\",\"Mac Studio\",\"openclaw\"],\"guid\":\"https://techcrunch.com/?p=3116142\",\"thumbnail\":null},{\"title\":\"Nuclear startup X-energy raises $1B in data center-driven IPO\",\"link\":\"https://techcrunch.com/2026/04/24/nuclear-startup-x-energy-raises-1b-in-data-center-driven-ipo/\",\"pubDate\":\"Fri, 24 Apr 2026 15:06:00 +0000\",\"creator\":\"Tim De Chant\",\"content\":\"Amazon-backed X-energy was able to raise around 20% more money in its IPO as demand for nuclear power surges.\",\"contentSnippet\":\"Amazon-backed X-energy was able to raise around 20% more money in its IPO as demand for nuclear power surges.\",\"categories\":[\"Climate\",\"Fundraising\",\"Amazon\",\"In Brief\",\"IPO\",\"nuclear fission\",\"nuclear power\",\"X-Energy\"],\"guid\":\"https://techcrunch.com/?p=3116143\",\"thumbnail\":null},{\"title\":\"Another spyware maker caught distributing fake Android snooping apps\",\"link\":\"https://techcrunch.com/2026/04/24/another-spyware-maker-caught-distributing-fake-android-snooping-apps/\",\"pubDate\":\"Fri, 24 Apr 2026 14:17:55 +0000\",\"creator\":\"Lorenzo Franceschi-Bicchierai\",\"content\":\"Researchers have found a new case where government authorities used a fake Android app to plant spyware on a target’s phone. The company that allegedly developed the spyware was not previously known to sell this type of software. \",\"contentSnippet\":\"Researchers have found a new case where government authorities used a fake Android app to plant spyware on a target’s phone. The company that allegedly developed the spyware was not previously known to sell this type of software.\",\"categories\":[\"Security\",\"cybersecurity\",\"hackers\",\"hacking\",\"infosec\",\"ips\",\"Italy\",\"privacy\",\"Spyware\",\"surveillance\"],\"guid\":\"https://techcrunch.com/?p=3116012\",\"thumbnail\":null},{\"title\":\"Uber CTO Praveen Neppalli Naga joins stacked StrictlyVC SF lineup for April 30 event\",\"link\":\"https://techcrunch.com/2026/04/24/uber-cto-praveen-neppalli-naga-joins-stacked-strictlyvc-sf-lineup-for-april-30-event/\",\"pubDate\":\"Fri, 24 Apr 2026 14:00:00 +0000\",\"creator\":\"TechCrunch Events\",\"content\":\"Surprise! StrictlyVC San Francisco, which will kick off this year’s events lineup for TechCrunch on April 30 at the Sentro Filipino Cultural Center, is getting a new addition to its increasingly stacked lineup of speakers. Uber CTO Praveen Neppalli Naga will join the rest of the lineup to discuss operating at scale in the age of AI.\",\"contentSnippet\":\"Surprise! StrictlyVC San Francisco, which will kick off this year’s events lineup for TechCrunch on April 30 at the Sentro Filipino Cultural Center, is getting a new addition to its increasingly stacked lineup of speakers. Uber CTO Praveen Neppalli Naga will join the rest of the lineup to discuss operating at scale in the age of AI.\",\"categories\":[\"Startups\",\"Venture\",\"AI\",\"Fundraising\",\"Uber\",\"StrictlyVC\",\"StrictlyVC San Francisco\"],\"guid\":\"https://techcrunch.com/?p=3116078\",\"thumbnail\":null},{\"title\":\"Tim Cook is stepping down. What happens to Apple now?\",\"link\":\"https://techcrunch.com/video/tim-cook-is-stepping-down-what-happens-to-apple-now/\",\"pubDate\":\"Fri, 24 Apr 2026 14:00:00 +0000\",\"creator\":\"Theresa Loconsolo\",\"content\":\"Tim Cook plans to step down from his CEO role in September, handing the reins to hardware chief John Ternus.   Ternus may be inheriting one of the most durable businesses in tech, but&#160;he’s&#160;also stepping into&#160;a very different&#160;ecosystemthan the one Cook spent decades shaping. The App Store’s 30% cut is under pressure, the behind-the-scenes power Apple once [&#8230;]\",\"contentSnippet\":\"Tim Cook plans to step down from his CEO role in September, handing the reins to hardware chief John Ternus.   Ternus may be inheriting one of the most durable businesses in tech, but he’s also stepping into a very different ecosystemthan the one Cook spent decades shaping. The App Store’s 30% cut is under pressure, the behind-the-scenes power Apple once […]\",\"categories\":[\"AI\",\"Startups\",\"Venture\",\"Anthropic\",\"Apple\",\"Elon Musk\",\"Fintech\",\"IPO\",\"SpaceX\",\"Tim Cook\"],\"guid\":\"https://techcrunch.com/?post_type=tc_video&p=3116212\",\"thumbnail\":null},{\"title\":\"Nothing introduces an AI-powered dictation tool\",\"link\":\"https://techcrunch.com/2026/04/24/nothing-introduces-an-ai-powered-dictation-tool/\",\"pubDate\":\"Fri, 24 Apr 2026 13:41:42 +0000\",\"creator\":\"Ivan Mehta\",\"content\":\"Nothing's new on-device dictation tool supports over 100 languages.\",\"contentSnippet\":\"Nothing's new on-device dictation tool supports over 100 languages.\",\"categories\":[\"AI\",\"Apps\",\"ai dictation\",\"In Brief\",\"nothing\",\"Superwhisper\",\"Wispr flow\"],\"guid\":\"https://techcrunch.com/?p=3116112\",\"thumbnail\":null},{\"title\":\"DeepSeek previews new AI model that ‘closes the gap’ with frontier models\",\"link\":\"https://techcrunch.com/2026/04/24/deepseek-previews-new-ai-model-that-closes-the-gap-with-frontier-models/\",\"pubDate\":\"Fri, 24 Apr 2026 13:30:59 +0000\",\"creator\":\"Ram Iyer\",\"content\":\"DeepSeek says both models are more efficient and performant than DeepSeek V3.2 due to architectural improvements, and have almost \\\"closed the gap\\\" with current leading models, both open and closed, on reasoning benchmarks.\",\"contentSnippet\":\"DeepSeek says both models are more efficient and performant than DeepSeek V3.2 due to architectural improvements, and have almost \\\"closed the gap\\\" with current leading models, both open and closed, on reasoning benchmarks.\",\"categories\":[\"AI\",\"deepseek\",\"Deepseek V4\",\"open source ai\"],\"guid\":\"https://techcrunch.com/?p=3116123\",\"thumbnail\":null},{\"title\":\"In another wild turn for AI chips, Meta signs deal for millions of Amazon AI CPUs\",\"link\":\"https://techcrunch.com/2026/04/24/in-another-wild-turn-for-ai-chips-meta-signs-deal-for-millions-of-amazon-ai-cpus/\",\"pubDate\":\"Fri, 24 Apr 2026 12:00:00 +0000\",\"creator\":\"Julie Bort\",\"content\":\"Meta has commandeered a big chunk of Amazon's homegrown CPUs (not GPUs) for AI agentic workloads, signaling that a new kind of chip race has begun.\",\"contentSnippet\":\"Meta has commandeered a big chunk of Amazon's homegrown CPUs (not GPUs) for AI agentic workloads, signaling that a new kind of chip race has begun.\",\"categories\":[\"AI\",\"Enterprise\",\"Hardware\",\"TC\",\"Amazon\",\"AWS\",\"CPU\",\"GPU\",\"Graviton\",\"Meta\",\"trainium\"],\"guid\":\"https://techcrunch.com/?p=3115894\",\"thumbnail\":null},{\"title\":\"Porsche is adding an all-electric Cayenne coupe to its lineup\",\"link\":\"https://techcrunch.com/2026/04/23/porsche-is-adding-an-all-electric-cayenne-coupe-to-its-lineup/\",\"pubDate\":\"Fri, 24 Apr 2026 04:01:00 +0000\",\"creator\":\"Kirsten Korosec\",\"content\":\"Porsche will start selling the Cayenne Coupe Electric in late summer. \",\"contentSnippet\":\"Porsche will start selling the Cayenne Coupe Electric in late summer.\",\"categories\":[\"Transportation\",\"Cayenne EV\",\"electric vehicles\",\"EVs\",\"Porsche\",\"Porsche Taycan\"],\"guid\":\"https://techcrunch.com/?p=3116001\",\"thumbnail\":null},{\"title\":\"Bob Iger rejoins Thrive Capital as advisor after Disney exit\",\"link\":\"https://techcrunch.com/2026/04/23/bob-iger-rejoins-thrive-capital-as-advisor-after-disney-exit/\",\"pubDate\":\"Fri, 24 Apr 2026 00:11:25 +0000\",\"creator\":\"Marina Temkin\",\"content\":\"The former Disney CEO hold a stake in Thrive and has previously held the role of the venture partner at the firm.\",\"contentSnippet\":\"The former Disney CEO hold a stake in Thrive and has previously held the role of the venture partner at the firm.\",\"categories\":[\"Venture\",\"Bob Iger\",\"Disney\",\"In Brief\",\"Thrive Capital\"],\"guid\":\"https://techcrunch.com/?p=3116079\",\"thumbnail\":null},{\"title\":\"Authorities arrest special forces soldier who allegedly made $400K on Polymarket bet involving Maduro operation\",\"link\":\"https://techcrunch.com/2026/04/23/authorities-arrest-special-forces-soldier-who-allegedly-made-400k-on-polymarket-bet-involving-maduro-operation/\",\"pubDate\":\"Thu, 23 Apr 2026 23:32:33 +0000\",\"creator\":\"Lucas Ropek\",\"content\":\"The soldier is accused of using classified government information to inform a wager on the prediction market Polymarket. \",\"contentSnippet\":\"The soldier is accused of using classified government information to inform a wager on the prediction market Polymarket.\",\"categories\":[\"Government & Policy\",\"crime\",\"Polymarket\",\"Nicolas Maduro\",\"prediction sites\"],\"guid\":\"https://techcrunch.com/?p=3116048\",\"thumbnail\":null}],\"_fetchedAt\":\"2026-04-25T00:58:40.151Z\",\"_cache\":{\"hit\":false,\"key\":\"feed:https://techcrunch.com/feed/:since:none\",\"ttl\":1777082320241}}}",
+      "response_body_json": {
+        "source": "discovered",
+        "feedUrl": "https://techcrunch.com/feed/",
+        "feed": {
+          "title": "TechCrunch",
+          "description": "Startup and Technology News",
+          "link": "https://techcrunch.com/",
+          "language": "en-US",
+          "lastBuildDate": "Fri, 24 Apr 2026 23:58:58 +0000",
+          "items": [
+            {
+              "title": "Steve Ballmer blasts founder he backed who pleaded guilty to fraud: ‘I was duped and feel silly’",
+              "link": "https://techcrunch.com/2026/04/24/steve-ballmer-blasts-founder-he-backed-who-pleaded-guilty-to-fraud-i-was-duped-and-feel-silly/",
+              "pubDate": "Fri, 24 Apr 2026 23:32:11 +0000",
+              "creator": "Julie Bort",
+              "content": "Steve Ballmer wrote a fiery letter in the sentencing of disgraced founder Joseph Sanberg documenting all the harm that's befalling him as an investor.",
+              "contentSnippet": "Steve Ballmer wrote a fiery letter in the sentencing of disgraced founder Joseph Sanberg documenting all the harm that's befalling him as an investor.",
+              "categories": [
+                "Climate",
+                "Fintech",
+                "TC",
+                "Venture",
+                "Aspiration",
+                "fraud",
+                "Steve Ballmer"
+              ],
+              "guid": "https://techcrunch.com/?p=3116240",
+              "thumbnail": null
+            },
+            {
+              "title": "Palantir is reportedly helping the IRS investigate financial crimes",
+              "link": "https://techcrunch.com/2026/04/24/palantir-is-reportedly-helping-the-irs-investigate-financial-crimes/",
+              "pubDate": "Fri, 24 Apr 2026 21:53:44 +0000",
+              "creator": "Lucas Ropek",
+              "content": "The IRS has used Palantir's software since at least 2018, The Intercept reports. ",
+              "contentSnippet": "The IRS has used Palantir's software since at least 2018, The Intercept reports.",
+              "categories": [
+                "Government & Policy",
+                "In Brief",
+                "irs",
+                "Palantir",
+                "Trump Administration"
+              ],
+              "guid": "https://techcrunch.com/?p=3116276",
+              "thumbnail": null
+            },
+            {
+              "title": "Cohere acquires, merges with Germany-based startup to create a ‘transatlantic AI powerhouse’",
+              "link": "https://techcrunch.com/2026/04/24/cohere-acquires-merges-with-german-based-startup-to-create-a-transatlantic-ai-powerhouse/",
+              "pubDate": "Fri, 24 Apr 2026 21:35:30 +0000",
+              "creator": "Dominic-Madori Davis",
+              "content": "Cohere, the Canada-based AI company that makes AI tools for businesses in regulated industries, announced Friday it would merge with Aleph Alpha, a German company that also builds AI systems for businesses and governments. ",
+              "contentSnippet": "Cohere, the Canada-based AI company that makes AI tools for businesses in regulated industries, announced Friday it would merge with Aleph Alpha, a German company that also builds AI systems for businesses and governments.",
+              "categories": [
+                "Startups",
+                "AI",
+                "Aleph Alpha",
+                "Cohere",
+                "In Brief",
+                "Mergers and Acquisitions"
+              ],
+              "guid": "https://techcrunch.com/?p=3116339",
+              "thumbnail": null
+            },
+            {
+              "title": "Two college kids raise a $5.1 million pre-seed to build an AI social network in iMessage",
+              "link": "https://techcrunch.com/2026/04/24/two-college-kids-raise-a-5-1-million-pre-seed-to-build-an-ai-social-network-in-imessage/",
+              "pubDate": "Fri, 24 Apr 2026 21:05:59 +0000",
+              "creator": "Dominic-Madori Davis",
+              "content": "Series, a social networking app that's grown popular on college campuses, announced a $5.1 million pre-seed round from some big names in tech.",
+              "contentSnippet": "Series, a social networking app that's grown popular on college campuses, announced a $5.1 million pre-seed round from some big names in tech.",
+              "categories": [
+                "Apps",
+                "Startups",
+                "Exclusive",
+                "series",
+                "social networking app"
+              ],
+              "guid": "https://techcrunch.com/?p=3116124",
+              "thumbnail": null
+            },
+            {
+              "title": "Meta’s loss is Thinking Machines’ gain",
+              "link": "https://techcrunch.com/2026/04/24/metas-loss-is-thinking-machines-gain/",
+              "pubDate": "Fri, 24 Apr 2026 20:52:07 +0000",
+              "creator": "Connie Loizos",
+              "content": "Meta has been poaching talent from Thinking Machines Lab. But it's a two-way street.",
+              "contentSnippet": "Meta has been poaching talent from Thinking Machines Lab. But it's a two-way street.",
+              "categories": [
+                "AI",
+                "TC"
+              ],
+              "guid": "https://techcrunch.com/?p=3116243",
+              "thumbnail": null
+            },
+            {
+              "title": "X-energy stock pops 27% on first day of trading following upsized IPO",
+              "link": "https://techcrunch.com/2026/04/24/x-energy-stock-pops-27-on-first-day-of-trading-following-upsized-ipo/",
+              "pubDate": "Fri, 24 Apr 2026 20:10:54 +0000",
+              "creator": "Tim De Chant",
+              "content": "Investors flocked to nuclear power startup X-energy in its first day of public trading on the Nasdaq.",
+              "contentSnippet": "Investors flocked to nuclear power startup X-energy in its first day of public trading on the Nasdaq.",
+              "categories": [
+                "Climate",
+                "Fundraising",
+                "IPO",
+                "nuclear fission",
+                "nuclear power",
+                "X-Energy"
+              ],
+              "guid": "https://techcrunch.com/?p=3116263",
+              "thumbnail": null
+            },
+            {
+              "title": "ComfyUI hits $500M valuation as creators seek more control over AI-generated media",
+              "link": "https://techcrunch.com/2026/04/24/comfyui-hits-500m-valuation-as-creators-seek-more-control-over-ai-generated-media/",
+              "pubDate": "Fri, 24 Apr 2026 19:49:35 +0000",
+              "creator": "Marina Temkin",
+              "content": "ComfyUI, whose tools give creators more control over AI image, video, and audio generation, just raised $30 million.",
+              "contentSnippet": "ComfyUI, whose tools give creators more control over AI image, video, and audio generation, just raised $30 million.",
+              "categories": [
+                "AI",
+                "TC",
+                "Venture",
+                "comfyui",
+                "Craft Ventures",
+                "Creators",
+                "Video"
+              ],
+              "guid": "https://techcrunch.com/?p=3116246",
+              "thumbnail": null
+            },
+            {
+              "title": "X launches stand-alone XChat app on iOS",
+              "link": "https://techcrunch.com/2026/04/24/x-launches-xchat-app-ios-messaging-iphone/",
+              "pubDate": "Fri, 24 Apr 2026 19:46:58 +0000",
+              "creator": "Sarah Perez",
+              "content": "X's new app promises private chats, disappearing messages, audio and video calls, and more. ",
+              "contentSnippet": "X's new app promises private chats, disappearing messages, audio and video calls, and more.",
+              "categories": [
+                "Apps",
+                "Social",
+                "X",
+                "xchat"
+              ],
+              "guid": "https://techcrunch.com/?p=3116241",
+              "thumbnail": null
+            },
+            {
+              "title": "Google to invest up to $40B in Anthropic in cash and compute",
+              "link": "https://techcrunch.com/2026/04/24/google-to-invest-up-to-40b-in-anthropic-in-cash-and-compute/",
+              "pubDate": "Fri, 24 Apr 2026 18:00:03 +0000",
+              "creator": "Rebecca Bellan",
+              "content": "Google plans up to $40B investment in Anthropic as AI rivals race to secure massive compute capacity, following the limited release of its powerful, cybersecurity-focused Mythos model.",
+              "contentSnippet": "Google plans up to $40B investment in Anthropic as AI rivals race to secure massive compute capacity, following the limited release of its powerful, cybersecurity-focused Mythos model.",
+              "categories": [
+                "AI",
+                "Enterprise",
+                "Anthropic",
+                "anthropic investment",
+                "chips",
+                "compute",
+                "Google",
+                "google cloud"
+              ],
+              "guid": "https://techcrunch.com/?p=3116207",
+              "thumbnail": null
+            },
+            {
+              "title": "Marked-up Mac minis flood eBay amid shortages driven by AI",
+              "link": "https://techcrunch.com/2026/04/24/mac-mini-price-expensive-ebay-shortage-ai-memory/",
+              "pubDate": "Fri, 24 Apr 2026 16:42:19 +0000",
+              "creator": "Sarah Perez",
+              "content": "Apple’s sold-out Mac mini is spawning marked-up eBay listings as demand surges for the compact desktop, now favored for running local AI models and tools.",
+              "contentSnippet": "Apple’s sold-out Mac mini is spawning marked-up eBay listings as demand surges for the compact desktop, now favored for running local AI models and tools.",
+              "categories": [
+                "AI",
+                "Hardware",
+                "Apple",
+                "local AI",
+                "mac mini",
+                "Mac Studio",
+                "openclaw"
+              ],
+              "guid": "https://techcrunch.com/?p=3116142",
+              "thumbnail": null
+            },
+            {
+              "title": "Nuclear startup X-energy raises $1B in data center-driven IPO",
+              "link": "https://techcrunch.com/2026/04/24/nuclear-startup-x-energy-raises-1b-in-data-center-driven-ipo/",
+              "pubDate": "Fri, 24 Apr 2026 15:06:00 +0000",
+              "creator": "Tim De Chant",
+              "content": "Amazon-backed X-energy was able to raise around 20% more money in its IPO as demand for nuclear power surges.",
+              "contentSnippet": "Amazon-backed X-energy was able to raise around 20% more money in its IPO as demand for nuclear power surges.",
+              "categories": [
+                "Climate",
+                "Fundraising",
+                "Amazon",
+                "In Brief",
+                "IPO",
+                "nuclear fission",
+                "nuclear power",
+                "X-Energy"
+              ],
+              "guid": "https://techcrunch.com/?p=3116143",
+              "thumbnail": null
+            },
+            {
+              "title": "Another spyware maker caught distributing fake Android snooping apps",
+              "link": "https://techcrunch.com/2026/04/24/another-spyware-maker-caught-distributing-fake-android-snooping-apps/",
+              "pubDate": "Fri, 24 Apr 2026 14:17:55 +0000",
+              "creator": "Lorenzo Franceschi-Bicchierai",
+              "content": "Researchers have found a new case where government authorities used a fake Android app to plant spyware on a target’s phone. The company that allegedly developed the spyware was not previously known to sell this type of software. ",
+              "contentSnippet": "Researchers have found a new case where government authorities used a fake Android app to plant spyware on a target’s phone. The company that allegedly developed the spyware was not previously known to sell this type of software.",
+              "categories": [
+                "Security",
+                "cybersecurity",
+                "hackers",
+                "hacking",
+                "infosec",
+                "ips",
+                "Italy",
+                "privacy",
+                "Spyware",
+                "surveillance"
+              ],
+              "guid": "https://techcrunch.com/?p=3116012",
+              "thumbnail": null
+            },
+            {
+              "title": "Uber CTO Praveen Neppalli Naga joins stacked StrictlyVC SF lineup for April 30 event",
+              "link": "https://techcrunch.com/2026/04/24/uber-cto-praveen-neppalli-naga-joins-stacked-strictlyvc-sf-lineup-for-april-30-event/",
+              "pubDate": "Fri, 24 Apr 2026 14:00:00 +0000",
+              "creator": "TechCrunch Events",
+              "content": "Surprise! StrictlyVC San Francisco, which will kick off this year’s events lineup for TechCrunch on April 30 at the Sentro Filipino Cultural Center, is getting a new addition to its increasingly stacked lineup of speakers. Uber CTO Praveen Neppalli Naga will join the rest of the lineup to discuss operating at scale in the age of AI.",
+              "contentSnippet": "Surprise! StrictlyVC San Francisco, which will kick off this year’s events lineup for TechCrunch on April 30 at the Sentro Filipino Cultural Center, is getting a new addition to its increasingly stacked lineup of speakers. Uber CTO Praveen Neppalli Naga will join the rest of the lineup to discuss operating at scale in the age of AI.",
+              "categories": [
+                "Startups",
+                "Venture",
+                "AI",
+                "Fundraising",
+                "Uber",
+                "StrictlyVC",
+                "StrictlyVC San Francisco"
+              ],
+              "guid": "https://techcrunch.com/?p=3116078",
+              "thumbnail": null
+            },
+            {
+              "title": "Tim Cook is stepping down. What happens to Apple now?",
+              "link": "https://techcrunch.com/video/tim-cook-is-stepping-down-what-happens-to-apple-now/",
+              "pubDate": "Fri, 24 Apr 2026 14:00:00 +0000",
+              "creator": "Theresa Loconsolo",
+              "content": "Tim Cook plans to step down from his CEO role in September, handing the reins to hardware chief John Ternus.   Ternus may be inheriting one of the most durable businesses in tech, but&#160;he’s&#160;also stepping into&#160;a very different&#160;ecosystemthan the one Cook spent decades shaping. The App Store’s 30% cut is under pressure, the behind-the-scenes power Apple once [&#8230;]",
+              "contentSnippet": "Tim Cook plans to step down from his CEO role in September, handing the reins to hardware chief John Ternus.   Ternus may be inheriting one of the most durable businesses in tech, but he’s also stepping into a very different ecosystemthan the one Cook spent decades shaping. The App Store’s 30% cut is under pressure, the behind-the-scenes power Apple once […]",
+              "categories": [
+                "AI",
+                "Startups",
+                "Venture",
+                "Anthropic",
+                "Apple",
+                "Elon Musk",
+                "Fintech",
+                "IPO",
+                "SpaceX",
+                "Tim Cook"
+              ],
+              "guid": "https://techcrunch.com/?post_type=tc_video&p=3116212",
+              "thumbnail": null
+            },
+            {
+              "title": "Nothing introduces an AI-powered dictation tool",
+              "link": "https://techcrunch.com/2026/04/24/nothing-introduces-an-ai-powered-dictation-tool/",
+              "pubDate": "Fri, 24 Apr 2026 13:41:42 +0000",
+              "creator": "Ivan Mehta",
+              "content": "Nothing's new on-device dictation tool supports over 100 languages.",
+              "contentSnippet": "Nothing's new on-device dictation tool supports over 100 languages.",
+              "categories": [
+                "AI",
+                "Apps",
+                "ai dictation",
+                "In Brief",
+                "nothing",
+                "Superwhisper",
+                "Wispr flow"
+              ],
+              "guid": "https://techcrunch.com/?p=3116112",
+              "thumbnail": null
+            },
+            {
+              "title": "DeepSeek previews new AI model that ‘closes the gap’ with frontier models",
+              "link": "https://techcrunch.com/2026/04/24/deepseek-previews-new-ai-model-that-closes-the-gap-with-frontier-models/",
+              "pubDate": "Fri, 24 Apr 2026 13:30:59 +0000",
+              "creator": "Ram Iyer",
+              "content": "DeepSeek says both models are more efficient and performant than DeepSeek V3.2 due to architectural improvements, and have almost \"closed the gap\" with current leading models, both open and closed, on reasoning benchmarks.",
+              "contentSnippet": "DeepSeek says both models are more efficient and performant than DeepSeek V3.2 due to architectural improvements, and have almost \"closed the gap\" with current leading models, both open and closed, on reasoning benchmarks.",
+              "categories": [
+                "AI",
+                "deepseek",
+                "Deepseek V4",
+                "open source ai"
+              ],
+              "guid": "https://techcrunch.com/?p=3116123",
+              "thumbnail": null
+            },
+            {
+              "title": "In another wild turn for AI chips, Meta signs deal for millions of Amazon AI CPUs",
+              "link": "https://techcrunch.com/2026/04/24/in-another-wild-turn-for-ai-chips-meta-signs-deal-for-millions-of-amazon-ai-cpus/",
+              "pubDate": "Fri, 24 Apr 2026 12:00:00 +0000",
+              "creator": "Julie Bort",
+              "content": "Meta has commandeered a big chunk of Amazon's homegrown CPUs (not GPUs) for AI agentic workloads, signaling that a new kind of chip race has begun.",
+              "contentSnippet": "Meta has commandeered a big chunk of Amazon's homegrown CPUs (not GPUs) for AI agentic workloads, signaling that a new kind of chip race has begun.",
+              "categories": [
+                "AI",
+                "Enterprise",
+                "Hardware",
+                "TC",
+                "Amazon",
+                "AWS",
+                "CPU",
+                "GPU",
+                "Graviton",
+                "Meta",
+                "trainium"
+              ],
+              "guid": "https://techcrunch.com/?p=3115894",
+              "thumbnail": null
+            },
+            {
+              "title": "Porsche is adding an all-electric Cayenne coupe to its lineup",
+              "link": "https://techcrunch.com/2026/04/23/porsche-is-adding-an-all-electric-cayenne-coupe-to-its-lineup/",
+              "pubDate": "Fri, 24 Apr 2026 04:01:00 +0000",
+              "creator": "Kirsten Korosec",
+              "content": "Porsche will start selling the Cayenne Coupe Electric in late summer. ",
+              "contentSnippet": "Porsche will start selling the Cayenne Coupe Electric in late summer.",
+              "categories": [
+                "Transportation",
+                "Cayenne EV",
+                "electric vehicles",
+                "EVs",
+                "Porsche",
+                "Porsche Taycan"
+              ],
+              "guid": "https://techcrunch.com/?p=3116001",
+              "thumbnail": null
+            },
+            {
+              "title": "Bob Iger rejoins Thrive Capital as advisor after Disney exit",
+              "link": "https://techcrunch.com/2026/04/23/bob-iger-rejoins-thrive-capital-as-advisor-after-disney-exit/",
+              "pubDate": "Fri, 24 Apr 2026 00:11:25 +0000",
+              "creator": "Marina Temkin",
+              "content": "The former Disney CEO hold a stake in Thrive and has previously held the role of the venture partner at the firm.",
+              "contentSnippet": "The former Disney CEO hold a stake in Thrive and has previously held the role of the venture partner at the firm.",
+              "categories": [
+                "Venture",
+                "Bob Iger",
+                "Disney",
+                "In Brief",
+                "Thrive Capital"
+              ],
+              "guid": "https://techcrunch.com/?p=3116079",
+              "thumbnail": null
+            },
+            {
+              "title": "Authorities arrest special forces soldier who allegedly made $400K on Polymarket bet involving Maduro operation",
+              "link": "https://techcrunch.com/2026/04/23/authorities-arrest-special-forces-soldier-who-allegedly-made-400k-on-polymarket-bet-involving-maduro-operation/",
+              "pubDate": "Thu, 23 Apr 2026 23:32:33 +0000",
+              "creator": "Lucas Ropek",
+              "content": "The soldier is accused of using classified government information to inform a wager on the prediction market Polymarket. ",
+              "contentSnippet": "The soldier is accused of using classified government information to inform a wager on the prediction market Polymarket.",
+              "categories": [
+                "Government & Policy",
+                "crime",
+                "Polymarket",
+                "Nicolas Maduro",
+                "prediction sites"
+              ],
+              "guid": "https://techcrunch.com/?p=3116048",
+              "thumbnail": null
+            }
+          ],
+          "_fetchedAt": "2026-04-25T00:58:40.151Z",
+          "_cache": {
+            "hit": false,
+            "key": "feed:https://techcrunch.com/feed/:since:none",
+            "ttl": 1777082320241
+          }
+        }
+      }
+    },
+    {
+      "started_at": "2026-04-25T00:58:40.305Z",
+      "url": "https://bharag.duckdns.org/api/v1/workspaces?limit=100&offset=0",
+      "method": "GET",
+      "request_headers": {
+        "x-api-key": "lTuNmTHdGcwWP275xkxlVadkCwA"
+      },
+      "request_body_raw": null,
+      "request_body_json": null,
+      "response_status": 200,
+      "response_headers": {
+        "connection": "keep-alive",
+        "content-encoding": "gzip",
+        "content-type": "application/json; charset=utf-8",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "date": "Sat, 25 Apr 2026 00:58:42 GMT",
+        "etag": "W/\"666-/L50K8VTR7hr9ehCxtYzXcO/Y6I\"",
+        "origin-agent-cluster": "?1",
+        "referrer-policy": "no-referrer",
+        "server": "nginx/1.29.5",
+        "strict-transport-security": "max-age=31536000; includeSubDomains, max-age=31536000; includeSubDomains",
+        "transfer-encoding": "chunked",
+        "x-content-type-options": "nosniff, nosniff",
+        "x-dns-prefetch-control": "off",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN, DENY",
+        "x-permitted-cross-domain-policies": "none",
+        "x-request-id": "req_1777078720965_372m0ye",
+        "x-xss-protection": "0, 1; mode=block"
+      },
+      "response_body_raw": "{\"success\":true,\"workspaces\":[{\"id\":\"cff853b9-8ff5-4ee9-b9da-17ec3e840fc0\",\"name\":\"My Workspace\",\"slug\":\"my-workspace\",\"owner_id\":null,\"settings\":{},\"created_at\":\"2026-04-09T12:36:41.631304+00:00\",\"updated_at\":\"2026-04-09T12:36:41.631304+00:00\"},{\"id\":\"a3c37bbb-91c5-4981-afd9-c548dba6c3e6\",\"name\":\"Test Env Workspace\",\"slug\":\"test-env-workspace\",\"owner_id\":null,\"settings\":{},\"created_at\":\"2026-03-17T13:55:54.902732+00:00\",\"updated_at\":\"2026-03-18T17:50:10.110276+00:00\"},{\"id\":\"511641c8-2b54-4d67-87bf-6eb6f3122e19\",\"name\":\"worspace1\",\"slug\":\"my-test-workspace1\",\"owner_id\":null,\"settings\":{\"ragMaxChunks\":5,\"systemPrompt\":\"You are a helpful assistant.\",\"ragTemperature\":0.3,\"ragConfidenceThreshold\":0.5},\"created_at\":\"2026-03-10T11:43:10.543367+00:00\",\"updated_at\":\"2026-03-10T11:56:34.706399+00:00\"},{\"id\":\"3f8e21a9-6d0e-4829-b6ac-9f9cb9f8cb3a\",\"name\":\"My Test Workspace\",\"slug\":\"my-test-workspace\",\"owner_id\":null,\"settings\":{},\"created_at\":\"2026-03-06T12:47:04.043456+00:00\",\"updated_at\":\"2026-03-06T12:47:04.043456+00:00\"},{\"id\":\"88c0e9df-780a-4d48-8f8f-faa098fc4c6f\",\"name\":\"Software Engineering\",\"slug\":\"software-engineering\",\"owner_id\":null,\"settings\":{},\"created_at\":\"2026-03-04T17:07:49.27538+00:00\",\"updated_at\":\"2026-03-18T14:30:02.999224+00:00\"},{\"id\":\"d7e49f07-3b1d-4904-948c-a61b09e2c623\",\"name\":\"Default Workspace\",\"slug\":\"default\",\"owner_id\":null,\"settings\":{\"isDefault\":true,\"systemPrompt\":\"Test prompt\",\"ragTemperature\":0.4,\"ragConfidenceThreshold\":0.5},\"created_at\":\"2026-03-04T14:33:40.799119+00:00\",\"updated_at\":\"2026-03-09T18:32:16.682516+00:00\"}],\"pagination\":{\"limit\":100,\"offset\":0,\"count\":6,\"hasMore\":false}}",
+      "response_body_json": {
+        "success": true,
+        "workspaces": [
+          {
+            "id": "cff853b9-8ff5-4ee9-b9da-17ec3e840fc0",
+            "name": "My Workspace",
+            "slug": "my-workspace",
+            "owner_id": null,
+            "settings": {},
+            "created_at": "2026-04-09T12:36:41.631304+00:00",
+            "updated_at": "2026-04-09T12:36:41.631304+00:00"
+          },
+          {
+            "id": "a3c37bbb-91c5-4981-afd9-c548dba6c3e6",
+            "name": "Test Env Workspace",
+            "slug": "test-env-workspace",
+            "owner_id": null,
+            "settings": {},
+            "created_at": "2026-03-17T13:55:54.902732+00:00",
+            "updated_at": "2026-03-18T17:50:10.110276+00:00"
+          },
+          {
+            "id": "511641c8-2b54-4d67-87bf-6eb6f3122e19",
+            "name": "worspace1",
+            "slug": "my-test-workspace1",
+            "owner_id": null,
+            "settings": {
+              "ragMaxChunks": 5,
+              "systemPrompt": "You are a helpful assistant.",
+              "ragTemperature": 0.3,
+              "ragConfidenceThreshold": 0.5
+            },
+            "created_at": "2026-03-10T11:43:10.543367+00:00",
+            "updated_at": "2026-03-10T11:56:34.706399+00:00"
+          },
+          {
+            "id": "3f8e21a9-6d0e-4829-b6ac-9f9cb9f8cb3a",
+            "name": "My Test Workspace",
+            "slug": "my-test-workspace",
+            "owner_id": null,
+            "settings": {},
+            "created_at": "2026-03-06T12:47:04.043456+00:00",
+            "updated_at": "2026-03-06T12:47:04.043456+00:00"
+          },
+          {
+            "id": "88c0e9df-780a-4d48-8f8f-faa098fc4c6f",
+            "name": "Software Engineering",
+            "slug": "software-engineering",
+            "owner_id": null,
+            "settings": {},
+            "created_at": "2026-03-04T17:07:49.27538+00:00",
+            "updated_at": "2026-03-18T14:30:02.999224+00:00"
+          },
+          {
+            "id": "d7e49f07-3b1d-4904-948c-a61b09e2c623",
+            "name": "Default Workspace",
+            "slug": "default",
+            "owner_id": null,
+            "settings": {
+              "isDefault": true,
+              "systemPrompt": "Test prompt",
+              "ragTemperature": 0.4,
+              "ragConfidenceThreshold": 0.5
+            },
+            "created_at": "2026-03-04T14:33:40.799119+00:00",
+            "updated_at": "2026-03-09T18:32:16.682516+00:00"
+          }
+        ],
+        "pagination": {
+          "limit": 100,
+          "offset": 0,
+          "count": 6,
+          "hasMore": false
+        }
+      }
+    },
+    {
+      "started_at": "2026-04-25T00:58:39.879Z",
+      "url": "https://bharag.duckdns.org/api/v1/workspaces?limit=100&offset=0",
+      "method": "GET",
+      "request_headers": {
+        "x-api-key": "lTuNmTHdGcwWP275xkxlVadkCwA"
+      },
+      "request_body_raw": null,
+      "request_body_json": null,
+      "response_status": 200,
+      "response_headers": {
+        "connection": "keep-alive",
+        "content-encoding": "gzip",
+        "content-type": "application/json; charset=utf-8",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "date": "Sat, 25 Apr 2026 00:58:42 GMT",
+        "etag": "W/\"666-/L50K8VTR7hr9ehCxtYzXcO/Y6I\"",
+        "origin-agent-cluster": "?1",
+        "referrer-policy": "no-referrer",
+        "server": "nginx/1.29.5",
+        "strict-transport-security": "max-age=31536000; includeSubDomains, max-age=31536000; includeSubDomains",
+        "transfer-encoding": "chunked",
+        "x-content-type-options": "nosniff, nosniff",
+        "x-dns-prefetch-control": "off",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN, DENY",
+        "x-permitted-cross-domain-policies": "none",
+        "x-request-id": "req_1777078720614_306ir6l",
+        "x-xss-protection": "0, 1; mode=block"
+      },
+      "response_body_raw": "{\"success\":true,\"workspaces\":[{\"id\":\"cff853b9-8ff5-4ee9-b9da-17ec3e840fc0\",\"name\":\"My Workspace\",\"slug\":\"my-workspace\",\"owner_id\":null,\"settings\":{},\"created_at\":\"2026-04-09T12:36:41.631304+00:00\",\"updated_at\":\"2026-04-09T12:36:41.631304+00:00\"},{\"id\":\"a3c37bbb-91c5-4981-afd9-c548dba6c3e6\",\"name\":\"Test Env Workspace\",\"slug\":\"test-env-workspace\",\"owner_id\":null,\"settings\":{},\"created_at\":\"2026-03-17T13:55:54.902732+00:00\",\"updated_at\":\"2026-03-18T17:50:10.110276+00:00\"},{\"id\":\"511641c8-2b54-4d67-87bf-6eb6f3122e19\",\"name\":\"worspace1\",\"slug\":\"my-test-workspace1\",\"owner_id\":null,\"settings\":{\"ragMaxChunks\":5,\"systemPrompt\":\"You are a helpful assistant.\",\"ragTemperature\":0.3,\"ragConfidenceThreshold\":0.5},\"created_at\":\"2026-03-10T11:43:10.543367+00:00\",\"updated_at\":\"2026-03-10T11:56:34.706399+00:00\"},{\"id\":\"3f8e21a9-6d0e-4829-b6ac-9f9cb9f8cb3a\",\"name\":\"My Test Workspace\",\"slug\":\"my-test-workspace\",\"owner_id\":null,\"settings\":{},\"created_at\":\"2026-03-06T12:47:04.043456+00:00\",\"updated_at\":\"2026-03-06T12:47:04.043456+00:00\"},{\"id\":\"88c0e9df-780a-4d48-8f8f-faa098fc4c6f\",\"name\":\"Software Engineering\",\"slug\":\"software-engineering\",\"owner_id\":null,\"settings\":{},\"created_at\":\"2026-03-04T17:07:49.27538+00:00\",\"updated_at\":\"2026-03-18T14:30:02.999224+00:00\"},{\"id\":\"d7e49f07-3b1d-4904-948c-a61b09e2c623\",\"name\":\"Default Workspace\",\"slug\":\"default\",\"owner_id\":null,\"settings\":{\"isDefault\":true,\"systemPrompt\":\"Test prompt\",\"ragTemperature\":0.4,\"ragConfidenceThreshold\":0.5},\"created_at\":\"2026-03-04T14:33:40.799119+00:00\",\"updated_at\":\"2026-03-09T18:32:16.682516+00:00\"}],\"pagination\":{\"limit\":100,\"offset\":0,\"count\":6,\"hasMore\":false}}",
+      "response_body_json": {
+        "success": true,
+        "workspaces": [
+          {
+            "id": "cff853b9-8ff5-4ee9-b9da-17ec3e840fc0",
+            "name": "My Workspace",
+            "slug": "my-workspace",
+            "owner_id": null,
+            "settings": {},
+            "created_at": "2026-04-09T12:36:41.631304+00:00",
+            "updated_at": "2026-04-09T12:36:41.631304+00:00"
+          },
+          {
+            "id": "a3c37bbb-91c5-4981-afd9-c548dba6c3e6",
+            "name": "Test Env Workspace",
+            "slug": "test-env-workspace",
+            "owner_id": null,
+            "settings": {},
+            "created_at": "2026-03-17T13:55:54.902732+00:00",
+            "updated_at": "2026-03-18T17:50:10.110276+00:00"
+          },
+          {
+            "id": "511641c8-2b54-4d67-87bf-6eb6f3122e19",
+            "name": "worspace1",
+            "slug": "my-test-workspace1",
+            "owner_id": null,
+            "settings": {
+              "ragMaxChunks": 5,
+              "systemPrompt": "You are a helpful assistant.",
+              "ragTemperature": 0.3,
+              "ragConfidenceThreshold": 0.5
+            },
+            "created_at": "2026-03-10T11:43:10.543367+00:00",
+            "updated_at": "2026-03-10T11:56:34.706399+00:00"
+          },
+          {
+            "id": "3f8e21a9-6d0e-4829-b6ac-9f9cb9f8cb3a",
+            "name": "My Test Workspace",
+            "slug": "my-test-workspace",
+            "owner_id": null,
+            "settings": {},
+            "created_at": "2026-03-06T12:47:04.043456+00:00",
+            "updated_at": "2026-03-06T12:47:04.043456+00:00"
+          },
+          {
+            "id": "88c0e9df-780a-4d48-8f8f-faa098fc4c6f",
+            "name": "Software Engineering",
+            "slug": "software-engineering",
+            "owner_id": null,
+            "settings": {},
+            "created_at": "2026-03-04T17:07:49.27538+00:00",
+            "updated_at": "2026-03-18T14:30:02.999224+00:00"
+          },
+          {
+            "id": "d7e49f07-3b1d-4904-948c-a61b09e2c623",
+            "name": "Default Workspace",
+            "slug": "default",
+            "owner_id": null,
+            "settings": {
+              "isDefault": true,
+              "systemPrompt": "Test prompt",
+              "ragTemperature": 0.4,
+              "ragConfidenceThreshold": 0.5
+            },
+            "created_at": "2026-03-04T14:33:40.799119+00:00",
+            "updated_at": "2026-03-09T18:32:16.682516+00:00"
+          }
+        ],
+        "pagination": {
+          "limit": 100,
+          "offset": 0,
+          "count": 6,
+          "hasMore": false
+        }
+      }
+    },
+    {
+      "started_at": "2026-04-25T00:58:42.353Z",
+      "url": "https://bharag.duckdns.org/api/v1/workspaces",
+      "method": "POST",
+      "request_headers": {
+        "content-type": "application/json",
+        "x-api-key": "lTuNmTHdGcwWP275xkxlVadkCwA"
+      },
+      "request_body_raw": "{\"name\":\"RSS Feed\",\"slug\":\"rss-feed\"}",
+      "request_body_json": {
+        "name": "RSS Feed",
+        "slug": "rss-feed"
+      },
+      "response_status": 201,
+      "response_headers": {
+        "connection": "keep-alive",
+        "content-length": "232",
+        "content-type": "application/json; charset=utf-8",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "date": "Sat, 25 Apr 2026 00:58:42 GMT",
+        "etag": "W/\"e8-r7JlSJs/f6Cp/PohAPYV/BG3nJg\"",
+        "origin-agent-cluster": "?1",
+        "referrer-policy": "no-referrer",
+        "server": "nginx/1.29.5",
+        "strict-transport-security": "max-age=31536000; includeSubDomains, max-age=31536000; includeSubDomains",
+        "x-content-type-options": "nosniff, nosniff",
+        "x-dns-prefetch-control": "off",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN, DENY",
+        "x-permitted-cross-domain-policies": "none",
+        "x-request-id": "req_1777078722461_ewvwxz1",
+        "x-xss-protection": "0, 1; mode=block"
+      },
+      "response_body_raw": "{\"success\":true,\"workspace\":{\"id\":\"1687fd99-3ef1-4e18-89fe-730c4d2ee100\",\"name\":\"RSS Feed\",\"slug\":\"rss-feed\",\"owner_id\":null,\"settings\":{},\"created_at\":\"2026-04-25T00:58:42.7142+00:00\",\"updated_at\":\"2026-04-25T00:58:42.7142+00:00\"}}",
+      "response_body_json": {
+        "success": true,
+        "workspace": {
+          "id": "1687fd99-3ef1-4e18-89fe-730c4d2ee100",
+          "name": "RSS Feed",
+          "slug": "rss-feed",
+          "owner_id": null,
+          "settings": {},
+          "created_at": "2026-04-25T00:58:42.7142+00:00",
+          "updated_at": "2026-04-25T00:58:42.7142+00:00"
+        }
+      }
+    },
+    {
+      "started_at": "2026-04-25T00:58:42.357Z",
+      "url": "https://bharag.duckdns.org/api/v1/workspaces",
+      "method": "POST",
+      "request_headers": {
+        "content-type": "application/json",
+        "x-api-key": "lTuNmTHdGcwWP275xkxlVadkCwA"
+      },
+      "request_body_raw": "{\"name\":\"RSS Feed\",\"slug\":\"rss-feed\"}",
+      "request_body_json": {
+        "name": "RSS Feed",
+        "slug": "rss-feed"
+      },
+      "response_status": 409,
+      "response_headers": {
+        "connection": "keep-alive",
+        "content-length": "117",
+        "content-type": "application/json; charset=utf-8",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "date": "Sat, 25 Apr 2026 00:58:42 GMT",
+        "etag": "W/\"75-LAp8zmBPS3NhGnS+oAEPDAqF258\"",
+        "origin-agent-cluster": "?1",
+        "referrer-policy": "no-referrer",
+        "server": "nginx/1.29.5",
+        "strict-transport-security": "max-age=31536000; includeSubDomains, max-age=31536000; includeSubDomains",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "off",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN",
+        "x-permitted-cross-domain-policies": "none",
+        "x-request-id": "req_1777078722471_osuzakx",
+        "x-xss-protection": "0"
+      },
+      "response_body_raw": "{\"error\":{\"message\":\"Workspace slug already exists\",\"code\":\"DUPLICATE_SLUG\",\"requestId\":\"req_1777078722471_osuzakx\"}}",
+      "response_body_json": {
+        "error": {
+          "message": "Workspace slug already exists",
+          "code": "DUPLICATE_SLUG",
+          "requestId": "req_1777078722471_osuzakx"
+        }
+      }
+    },
+    {
+      "started_at": "2026-04-25T00:58:42.997Z",
+      "url": "https://bharag.duckdns.org/api/v1/ingest",
+      "method": "POST",
+      "request_headers": {
+        "content-type": "application/json",
+        "x-api-key": "lTuNmTHdGcwWP275xkxlVadkCwA",
+        "x-workspace-id": "1687fd99-3ef1-4e18-89fe-730c4d2ee100"
+      },
+      "request_body_raw": "{\"title\":\"Steve Ballmer blasts founder he backed who pleaded guilty to fraud: ‘I was duped and feel silly’\",\"content\":\"TAGs: [RSS]\\nTimestamp ran: 2026-04-25T00:58:37.712Z\\nPrevious run: none\\nPost timestamp: 2026-04-24T23:32:11.000Z\\nTitle: Steve Ballmer blasts founder he backed who pleaded guilty to fraud: ‘I was duped and feel silly’\\nContent: Steve Ballmer wrote a fiery letter in the sentencing of disgraced founder Joseph Sanberg documenting all the harm that's befalling him as an investor.\\nLink: https://techcrunch.com/2026/04/24/steve-ballmer-blasts-founder-he-backed-who-pleaded-guilty-to-fraud-i-was-duped-and-feel-silly/\",\"source_type\":\"manual\",\"content_type\":\"doc\",\"source_url\":\"https://techcrunch.com/2026/04/24/steve-ballmer-blasts-founder-he-backed-who-pleaded-guilty-to-fraud-i-was-duped-and-feel-silly/\",\"project_tags\":[\"rss\"],\"metadata\":{\"ingestion_type\":\"rss_feed\",\"feed_source\":\"https://techcrunch.com/feed/\",\"item_guid\":\"https://techcrunch.com/?p=3116240\",\"item_pub_date\":\"2026-04-24T23:32:11.000Z\"}}",
+      "request_body_json": {
+        "title": "Steve Ballmer blasts founder he backed who pleaded guilty to fraud: ‘I was duped and feel silly’",
+        "content": "TAGs: [RSS]\nTimestamp ran: 2026-04-25T00:58:37.712Z\nPrevious run: none\nPost timestamp: 2026-04-24T23:32:11.000Z\nTitle: Steve Ballmer blasts founder he backed who pleaded guilty to fraud: ‘I was duped and feel silly’\nContent: Steve Ballmer wrote a fiery letter in the sentencing of disgraced founder Joseph Sanberg documenting all the harm that's befalling him as an investor.\nLink: https://techcrunch.com/2026/04/24/steve-ballmer-blasts-founder-he-backed-who-pleaded-guilty-to-fraud-i-was-duped-and-feel-silly/",
+        "source_type": "manual",
+        "content_type": "doc",
+        "source_url": "https://techcrunch.com/2026/04/24/steve-ballmer-blasts-founder-he-backed-who-pleaded-guilty-to-fraud-i-was-duped-and-feel-silly/",
+        "project_tags": [
+          "rss"
+        ],
+        "metadata": {
+          "ingestion_type": "rss_feed",
+          "feed_source": "https://techcrunch.com/feed/",
+          "item_guid": "https://techcrunch.com/?p=3116240",
+          "item_pub_date": "2026-04-24T23:32:11.000Z"
+        }
+      },
+      "response_status": 500,
+      "response_headers": {
+        "connection": "keep-alive",
+        "content-length": "125",
+        "content-type": "application/json; charset=utf-8",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "date": "Sat, 25 Apr 2026 00:58:44 GMT",
+        "etag": "W/\"7d-n+veKq8SuJujUPsEoWT/R5F7PmA\"",
+        "origin-agent-cluster": "?1",
+        "referrer-policy": "no-referrer",
+        "server": "nginx/1.29.5",
+        "strict-transport-security": "max-age=31536000; includeSubDomains, max-age=31536000; includeSubDomains",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "off",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN",
+        "x-permitted-cross-domain-policies": "none",
+        "x-request-id": "req_1777078723662_90318ry",
+        "x-xss-protection": "0"
+      },
+      "response_body_raw": "{\"error\":{\"message\":\"Workspace has no owner configured\",\"code\":\"NO_WORKSPACE_OWNER\",\"requestId\":\"req_1777078723662_90318ry\"}}",
+      "response_body_json": {
+        "error": {
+          "message": "Workspace has no owner configured",
+          "code": "NO_WORKSPACE_OWNER",
+          "requestId": "req_1777078723662_90318ry"
+        }
+      }
+    },
+    {
+      "started_at": "2026-04-25T00:58:44.344Z",
+      "url": "https://bharag.duckdns.org/api/v1/ingest",
+      "method": "POST",
+      "request_headers": {
+        "content-type": "application/json",
+        "x-api-key": "lTuNmTHdGcwWP275xkxlVadkCwA",
+        "x-workspace-id": "1687fd99-3ef1-4e18-89fe-730c4d2ee100"
+      },
+      "request_body_raw": "{\"title\":\"Palantir is reportedly helping the IRS investigate financial crimes\",\"content\":\"TAGs: [RSS]\\nTimestamp ran: 2026-04-25T00:58:37.712Z\\nPrevious run: none\\nPost timestamp: 2026-04-24T21:53:44.000Z\\nTitle: Palantir is reportedly helping the IRS investigate financial crimes\\nContent: The IRS has used Palantir's software since at least 2018, The Intercept reports. \\nLink: https://techcrunch.com/2026/04/24/palantir-is-reportedly-helping-the-irs-investigate-financial-crimes/\",\"source_type\":\"manual\",\"content_type\":\"doc\",\"source_url\":\"https://techcrunch.com/2026/04/24/palantir-is-reportedly-helping-the-irs-investigate-financial-crimes/\",\"project_tags\":[\"rss\"],\"metadata\":{\"ingestion_type\":\"rss_feed\",\"feed_source\":\"https://techcrunch.com/feed/\",\"item_guid\":\"https://techcrunch.com/?p=3116276\",\"item_pub_date\":\"2026-04-24T21:53:44.000Z\"}}",
+      "request_body_json": {
+        "title": "Palantir is reportedly helping the IRS investigate financial crimes",
+        "content": "TAGs: [RSS]\nTimestamp ran: 2026-04-25T00:58:37.712Z\nPrevious run: none\nPost timestamp: 2026-04-24T21:53:44.000Z\nTitle: Palantir is reportedly helping the IRS investigate financial crimes\nContent: The IRS has used Palantir's software since at least 2018, The Intercept reports. \nLink: https://techcrunch.com/2026/04/24/palantir-is-reportedly-helping-the-irs-investigate-financial-crimes/",
+        "source_type": "manual",
+        "content_type": "doc",
+        "source_url": "https://techcrunch.com/2026/04/24/palantir-is-reportedly-helping-the-irs-investigate-financial-crimes/",
+        "project_tags": [
+          "rss"
+        ],
+        "metadata": {
+          "ingestion_type": "rss_feed",
+          "feed_source": "https://techcrunch.com/feed/",
+          "item_guid": "https://techcrunch.com/?p=3116276",
+          "item_pub_date": "2026-04-24T21:53:44.000Z"
+        }
+      },
+      "response_status": 500,
+      "response_headers": {
+        "connection": "keep-alive",
+        "content-length": "125",
+        "content-type": "application/json; charset=utf-8",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "date": "Sat, 25 Apr 2026 00:58:44 GMT",
+        "etag": "W/\"7d-sEe6Lj0MydG28Ip0h6ePBy1++0s\"",
+        "origin-agent-cluster": "?1",
+        "referrer-policy": "no-referrer",
+        "server": "nginx/1.29.5",
+        "strict-transport-security": "max-age=31536000; includeSubDomains, max-age=31536000; includeSubDomains",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "off",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN",
+        "x-permitted-cross-domain-policies": "none",
+        "x-request-id": "req_1777078724455_4gfdhkr",
+        "x-xss-protection": "0"
+      },
+      "response_body_raw": "{\"error\":{\"message\":\"Workspace has no owner configured\",\"code\":\"NO_WORKSPACE_OWNER\",\"requestId\":\"req_1777078724455_4gfdhkr\"}}",
+      "response_body_json": {
+        "error": {
+          "message": "Workspace has no owner configured",
+          "code": "NO_WORKSPACE_OWNER",
+          "requestId": "req_1777078724455_4gfdhkr"
+        }
+      }
+    },
+    {
+      "started_at": "2026-04-25T00:58:45.091Z",
+      "url": "https://bharag.duckdns.org/api/v1/ingest",
+      "method": "POST",
+      "request_headers": {
+        "content-type": "application/json",
+        "x-api-key": "lTuNmTHdGcwWP275xkxlVadkCwA",
+        "x-workspace-id": "1687fd99-3ef1-4e18-89fe-730c4d2ee100"
+      },
+      "request_body_raw": "{\"title\":\"Cohere acquires, merges with Germany-based startup to create a ‘transatlantic AI powerhouse’\",\"content\":\"TAGs: [RSS]\\nTimestamp ran: 2026-04-25T00:58:37.712Z\\nPrevious run: none\\nPost timestamp: 2026-04-24T21:35:30.000Z\\nTitle: Cohere acquires, merges with Germany-based startup to create a ‘transatlantic AI powerhouse’\\nContent: Cohere, the Canada-based AI company that makes AI tools for businesses in regulated industries, announced Friday it would merge with Aleph Alpha, a German company that also builds AI systems for businesses and governments. \\nLink: https://techcrunch.com/2026/04/24/cohere-acquires-merges-with-german-based-startup-to-create-a-transatlantic-ai-powerhouse/\",\"source_type\":\"manual\",\"content_type\":\"doc\",\"source_url\":\"https://techcrunch.com/2026/04/24/cohere-acquires-merges-with-german-based-startup-to-create-a-transatlantic-ai-powerhouse/\",\"project_tags\":[\"rss\"],\"metadata\":{\"ingestion_type\":\"rss_feed\",\"feed_source\":\"https://techcrunch.com/feed/\",\"item_guid\":\"https://techcrunch.com/?p=3116339\",\"item_pub_date\":\"2026-04-24T21:35:30.000Z\"}}",
+      "request_body_json": {
+        "title": "Cohere acquires, merges with Germany-based startup to create a ‘transatlantic AI powerhouse’",
+        "content": "TAGs: [RSS]\nTimestamp ran: 2026-04-25T00:58:37.712Z\nPrevious run: none\nPost timestamp: 2026-04-24T21:35:30.000Z\nTitle: Cohere acquires, merges with Germany-based startup to create a ‘transatlantic AI powerhouse’\nContent: Cohere, the Canada-based AI company that makes AI tools for businesses in regulated industries, announced Friday it would merge with Aleph Alpha, a German company that also builds AI systems for businesses and governments. \nLink: https://techcrunch.com/2026/04/24/cohere-acquires-merges-with-german-based-startup-to-create-a-transatlantic-ai-powerhouse/",
+        "source_type": "manual",
+        "content_type": "doc",
+        "source_url": "https://techcrunch.com/2026/04/24/cohere-acquires-merges-with-german-based-startup-to-create-a-transatlantic-ai-powerhouse/",
+        "project_tags": [
+          "rss"
+        ],
+        "metadata": {
+          "ingestion_type": "rss_feed",
+          "feed_source": "https://techcrunch.com/feed/",
+          "item_guid": "https://techcrunch.com/?p=3116339",
+          "item_pub_date": "2026-04-24T21:35:30.000Z"
+        }
+      },
+      "response_status": 500,
+      "response_headers": {
+        "connection": "keep-alive",
+        "content-length": "125",
+        "content-type": "application/json; charset=utf-8",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "date": "Sat, 25 Apr 2026 00:58:45 GMT",
+        "etag": "W/\"7d-SyUlrhx4QxKeupEe+HGdBDPNhhw\"",
+        "origin-agent-cluster": "?1",
+        "referrer-policy": "no-referrer",
+        "server": "nginx/1.29.5",
+        "strict-transport-security": "max-age=31536000; includeSubDomains, max-age=31536000; includeSubDomains",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "off",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN",
+        "x-permitted-cross-domain-policies": "none",
+        "x-request-id": "req_1777078725210_ysgqami",
+        "x-xss-protection": "0"
+      },
+      "response_body_raw": "{\"error\":{\"message\":\"Workspace has no owner configured\",\"code\":\"NO_WORKSPACE_OWNER\",\"requestId\":\"req_1777078725210_ysgqami\"}}",
+      "response_body_json": {
+        "error": {
+          "message": "Workspace has no owner configured",
+          "code": "NO_WORKSPACE_OWNER",
+          "requestId": "req_1777078725210_ysgqami"
+        }
+      }
+    },
+    {
+      "started_at": "2026-04-25T00:58:45.833Z",
+      "url": "https://bharag.duckdns.org/api/v1/ingest",
+      "method": "POST",
+      "request_headers": {
+        "content-type": "application/json",
+        "x-api-key": "lTuNmTHdGcwWP275xkxlVadkCwA",
+        "x-workspace-id": "1687fd99-3ef1-4e18-89fe-730c4d2ee100"
+      },
+      "request_body_raw": "{\"title\":\"Two college kids raise a $5.1 million pre-seed to build an AI social network in iMessage\",\"content\":\"TAGs: [RSS]\\nTimestamp ran: 2026-04-25T00:58:37.712Z\\nPrevious run: none\\nPost timestamp: 2026-04-24T21:05:59.000Z\\nTitle: Two college kids raise a $5.1 million pre-seed to build an AI social network in iMessage\\nContent: Series, a social networking app that's grown popular on college campuses, announced a $5.1 million pre-seed round from some big names in tech.\\nLink: https://techcrunch.com/2026/04/24/two-college-kids-raise-a-5-1-million-pre-seed-to-build-an-ai-social-network-in-imessage/\",\"source_type\":\"manual\",\"content_type\":\"doc\",\"source_url\":\"https://techcrunch.com/2026/04/24/two-college-kids-raise-a-5-1-million-pre-seed-to-build-an-ai-social-network-in-imessage/\",\"project_tags\":[\"rss\"],\"metadata\":{\"ingestion_type\":\"rss_feed\",\"feed_source\":\"https://techcrunch.com/feed/\",\"item_guid\":\"https://techcrunch.com/?p=3116124\",\"item_pub_date\":\"2026-04-24T21:05:59.000Z\"}}",
+      "request_body_json": {
+        "title": "Two college kids raise a $5.1 million pre-seed to build an AI social network in iMessage",
+        "content": "TAGs: [RSS]\nTimestamp ran: 2026-04-25T00:58:37.712Z\nPrevious run: none\nPost timestamp: 2026-04-24T21:05:59.000Z\nTitle: Two college kids raise a $5.1 million pre-seed to build an AI social network in iMessage\nContent: Series, a social networking app that's grown popular on college campuses, announced a $5.1 million pre-seed round from some big names in tech.\nLink: https://techcrunch.com/2026/04/24/two-college-kids-raise-a-5-1-million-pre-seed-to-build-an-ai-social-network-in-imessage/",
+        "source_type": "manual",
+        "content_type": "doc",
+        "source_url": "https://techcrunch.com/2026/04/24/two-college-kids-raise-a-5-1-million-pre-seed-to-build-an-ai-social-network-in-imessage/",
+        "project_tags": [
+          "rss"
+        ],
+        "metadata": {
+          "ingestion_type": "rss_feed",
+          "feed_source": "https://techcrunch.com/feed/",
+          "item_guid": "https://techcrunch.com/?p=3116124",
+          "item_pub_date": "2026-04-24T21:05:59.000Z"
+        }
+      },
+      "response_status": 500,
+      "response_headers": {
+        "connection": "keep-alive",
+        "content-length": "125",
+        "content-type": "application/json; charset=utf-8",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "date": "Sat, 25 Apr 2026 00:58:46 GMT",
+        "etag": "W/\"7d-ah2KEyeDv5bPb/SmK+HbY5W/CmY\"",
+        "origin-agent-cluster": "?1",
+        "referrer-policy": "no-referrer",
+        "server": "nginx/1.29.5",
+        "strict-transport-security": "max-age=31536000; includeSubDomains, max-age=31536000; includeSubDomains",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "off",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN",
+        "x-permitted-cross-domain-policies": "none",
+        "x-request-id": "req_1777078725939_62k6fg9",
+        "x-xss-protection": "0"
+      },
+      "response_body_raw": "{\"error\":{\"message\":\"Workspace has no owner configured\",\"code\":\"NO_WORKSPACE_OWNER\",\"requestId\":\"req_1777078725939_62k6fg9\"}}",
+      "response_body_json": {
+        "error": {
+          "message": "Workspace has no owner configured",
+          "code": "NO_WORKSPACE_OWNER",
+          "requestId": "req_1777078725939_62k6fg9"
+        }
+      }
+    },
+    {
+      "started_at": "2026-04-25T00:58:46.568Z",
+      "url": "https://bharag.duckdns.org/api/v1/ingest",
+      "method": "POST",
+      "request_headers": {
+        "content-type": "application/json",
+        "x-api-key": "lTuNmTHdGcwWP275xkxlVadkCwA",
+        "x-workspace-id": "1687fd99-3ef1-4e18-89fe-730c4d2ee100"
+      },
+      "request_body_raw": "{\"title\":\"Meta’s loss is Thinking Machines’ gain\",\"content\":\"TAGs: [RSS]\\nTimestamp ran: 2026-04-25T00:58:37.712Z\\nPrevious run: none\\nPost timestamp: 2026-04-24T20:52:07.000Z\\nTitle: Meta’s loss is Thinking Machines’ gain\\nContent: Meta has been poaching talent from Thinking Machines Lab. But it's a two-way street.\\nLink: https://techcrunch.com/2026/04/24/metas-loss-is-thinking-machines-gain/\",\"source_type\":\"manual\",\"content_type\":\"doc\",\"source_url\":\"https://techcrunch.com/2026/04/24/metas-loss-is-thinking-machines-gain/\",\"project_tags\":[\"rss\"],\"metadata\":{\"ingestion_type\":\"rss_feed\",\"feed_source\":\"https://techcrunch.com/feed/\",\"item_guid\":\"https://techcrunch.com/?p=3116243\",\"item_pub_date\":\"2026-04-24T20:52:07.000Z\"}}",
+      "request_body_json": {
+        "title": "Meta’s loss is Thinking Machines’ gain",
+        "content": "TAGs: [RSS]\nTimestamp ran: 2026-04-25T00:58:37.712Z\nPrevious run: none\nPost timestamp: 2026-04-24T20:52:07.000Z\nTitle: Meta’s loss is Thinking Machines’ gain\nContent: Meta has been poaching talent from Thinking Machines Lab. But it's a two-way street.\nLink: https://techcrunch.com/2026/04/24/metas-loss-is-thinking-machines-gain/",
+        "source_type": "manual",
+        "content_type": "doc",
+        "source_url": "https://techcrunch.com/2026/04/24/metas-loss-is-thinking-machines-gain/",
+        "project_tags": [
+          "rss"
+        ],
+        "metadata": {
+          "ingestion_type": "rss_feed",
+          "feed_source": "https://techcrunch.com/feed/",
+          "item_guid": "https://techcrunch.com/?p=3116243",
+          "item_pub_date": "2026-04-24T20:52:07.000Z"
+        }
+      },
+      "response_status": 500,
+      "response_headers": {
+        "connection": "keep-alive",
+        "content-length": "125",
+        "content-type": "application/json; charset=utf-8",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "date": "Sat, 25 Apr 2026 00:58:47 GMT",
+        "etag": "W/\"7d-Bhp/B+amFn4+OlJuDCs2sLlT9IQ\"",
+        "origin-agent-cluster": "?1",
+        "referrer-policy": "no-referrer",
+        "server": "nginx/1.29.5",
+        "strict-transport-security": "max-age=31536000; includeSubDomains, max-age=31536000; includeSubDomains",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "off",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN",
+        "x-permitted-cross-domain-policies": "none",
+        "x-request-id": "req_1777078726677_ctu9e34",
+        "x-xss-protection": "0"
+      },
+      "response_body_raw": "{\"error\":{\"message\":\"Workspace has no owner configured\",\"code\":\"NO_WORKSPACE_OWNER\",\"requestId\":\"req_1777078726677_ctu9e34\"}}",
+      "response_body_json": {
+        "error": {
+          "message": "Workspace has no owner configured",
+          "code": "NO_WORKSPACE_OWNER",
+          "requestId": "req_1777078726677_ctu9e34"
+        }
+      }
+    },
+    {
+      "started_at": "2026-04-25T00:58:47.301Z",
+      "url": "https://bharag.duckdns.org/api/v1/ingest",
+      "method": "POST",
+      "request_headers": {
+        "content-type": "application/json",
+        "x-api-key": "lTuNmTHdGcwWP275xkxlVadkCwA",
+        "x-workspace-id": "1687fd99-3ef1-4e18-89fe-730c4d2ee100"
+      },
+      "request_body_raw": "{\"title\":\"X-energy stock pops 27% on first day of trading following upsized IPO\",\"content\":\"TAGs: [RSS]\\nTimestamp ran: 2026-04-25T00:58:37.712Z\\nPrevious run: none\\nPost timestamp: 2026-04-24T20:10:54.000Z\\nTitle: X-energy stock pops 27% on first day of trading following upsized IPO\\nContent: Investors flocked to nuclear power startup X-energy in its first day of public trading on the Nasdaq.\\nLink: https://techcrunch.com/2026/04/24/x-energy-stock-pops-27-on-first-day-of-trading-following-upsized-ipo/\",\"source_type\":\"manual\",\"content_type\":\"doc\",\"source_url\":\"https://techcrunch.com/2026/04/24/x-energy-stock-pops-27-on-first-day-of-trading-following-upsized-ipo/\",\"project_tags\":[\"rss\"],\"metadata\":{\"ingestion_type\":\"rss_feed\",\"feed_source\":\"https://techcrunch.com/feed/\",\"item_guid\":\"https://techcrunch.com/?p=3116263\",\"item_pub_date\":\"2026-04-24T20:10:54.000Z\"}}",
+      "request_body_json": {
+        "title": "X-energy stock pops 27% on first day of trading following upsized IPO",
+        "content": "TAGs: [RSS]\nTimestamp ran: 2026-04-25T00:58:37.712Z\nPrevious run: none\nPost timestamp: 2026-04-24T20:10:54.000Z\nTitle: X-energy stock pops 27% on first day of trading following upsized IPO\nContent: Investors flocked to nuclear power startup X-energy in its first day of public trading on the Nasdaq.\nLink: https://techcrunch.com/2026/04/24/x-energy-stock-pops-27-on-first-day-of-trading-following-upsized-ipo/",
+        "source_type": "manual",
+        "content_type": "doc",
+        "source_url": "https://techcrunch.com/2026/04/24/x-energy-stock-pops-27-on-first-day-of-trading-following-upsized-ipo/",
+        "project_tags": [
+          "rss"
+        ],
+        "metadata": {
+          "ingestion_type": "rss_feed",
+          "feed_source": "https://techcrunch.com/feed/",
+          "item_guid": "https://techcrunch.com/?p=3116263",
+          "item_pub_date": "2026-04-24T20:10:54.000Z"
+        }
+      },
+      "response_status": 500,
+      "response_headers": {
+        "connection": "keep-alive",
+        "content-length": "125",
+        "content-type": "application/json; charset=utf-8",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "date": "Sat, 25 Apr 2026 00:58:47 GMT",
+        "etag": "W/\"7d-J4H6LlMobhSUAc4VCSnXqQqWD0g\"",
+        "origin-agent-cluster": "?1",
+        "referrer-policy": "no-referrer",
+        "server": "nginx/1.29.5",
+        "strict-transport-security": "max-age=31536000; includeSubDomains, max-age=31536000; includeSubDomains",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "off",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN",
+        "x-permitted-cross-domain-policies": "none",
+        "x-request-id": "req_1777078727410_04tfqaj",
+        "x-xss-protection": "0"
+      },
+      "response_body_raw": "{\"error\":{\"message\":\"Workspace has no owner configured\",\"code\":\"NO_WORKSPACE_OWNER\",\"requestId\":\"req_1777078727410_04tfqaj\"}}",
+      "response_body_json": {
+        "error": {
+          "message": "Workspace has no owner configured",
+          "code": "NO_WORKSPACE_OWNER",
+          "requestId": "req_1777078727410_04tfqaj"
+        }
+      }
+    },
+    {
+      "started_at": "2026-04-25T00:58:48.035Z",
+      "url": "https://bharag.duckdns.org/api/v1/ingest",
+      "method": "POST",
+      "request_headers": {
+        "content-type": "application/json",
+        "x-api-key": "lTuNmTHdGcwWP275xkxlVadkCwA",
+        "x-workspace-id": "1687fd99-3ef1-4e18-89fe-730c4d2ee100"
+      },
+      "request_body_raw": "{\"title\":\"ComfyUI hits $500M valuation as creators seek more control over AI-generated media\",\"content\":\"TAGs: [RSS]\\nTimestamp ran: 2026-04-25T00:58:37.712Z\\nPrevious run: none\\nPost timestamp: 2026-04-24T19:49:35.000Z\\nTitle: ComfyUI hits $500M valuation as creators seek more control over AI-generated media\\nContent: ComfyUI, whose tools give creators more control over AI image, video, and audio generation, just raised $30 million.\\nLink: https://techcrunch.com/2026/04/24/comfyui-hits-500m-valuation-as-creators-seek-more-control-over-ai-generated-media/\",\"source_type\":\"manual\",\"content_type\":\"doc\",\"source_url\":\"https://techcrunch.com/2026/04/24/comfyui-hits-500m-valuation-as-creators-seek-more-control-over-ai-generated-media/\",\"project_tags\":[\"rss\"],\"metadata\":{\"ingestion_type\":\"rss_feed\",\"feed_source\":\"https://techcrunch.com/feed/\",\"item_guid\":\"https://techcrunch.com/?p=3116246\",\"item_pub_date\":\"2026-04-24T19:49:35.000Z\"}}",
+      "request_body_json": {
+        "title": "ComfyUI hits $500M valuation as creators seek more control over AI-generated media",
+        "content": "TAGs: [RSS]\nTimestamp ran: 2026-04-25T00:58:37.712Z\nPrevious run: none\nPost timestamp: 2026-04-24T19:49:35.000Z\nTitle: ComfyUI hits $500M valuation as creators seek more control over AI-generated media\nContent: ComfyUI, whose tools give creators more control over AI image, video, and audio generation, just raised $30 million.\nLink: https://techcrunch.com/2026/04/24/comfyui-hits-500m-valuation-as-creators-seek-more-control-over-ai-generated-media/",
+        "source_type": "manual",
+        "content_type": "doc",
+        "source_url": "https://techcrunch.com/2026/04/24/comfyui-hits-500m-valuation-as-creators-seek-more-control-over-ai-generated-media/",
+        "project_tags": [
+          "rss"
+        ],
+        "metadata": {
+          "ingestion_type": "rss_feed",
+          "feed_source": "https://techcrunch.com/feed/",
+          "item_guid": "https://techcrunch.com/?p=3116246",
+          "item_pub_date": "2026-04-24T19:49:35.000Z"
+        }
+      },
+      "response_status": 500,
+      "response_headers": {
+        "connection": "keep-alive",
+        "content-length": "125",
+        "content-type": "application/json; charset=utf-8",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "date": "Sat, 25 Apr 2026 00:58:48 GMT",
+        "etag": "W/\"7d-x1mIPHqFzHMXa9RkO9mhYOsagtw\"",
+        "origin-agent-cluster": "?1",
+        "referrer-policy": "no-referrer",
+        "server": "nginx/1.29.5",
+        "strict-transport-security": "max-age=31536000; includeSubDomains, max-age=31536000; includeSubDomains",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "off",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN",
+        "x-permitted-cross-domain-policies": "none",
+        "x-request-id": "req_1777078728145_1py9mio",
+        "x-xss-protection": "0"
+      },
+      "response_body_raw": "{\"error\":{\"message\":\"Workspace has no owner configured\",\"code\":\"NO_WORKSPACE_OWNER\",\"requestId\":\"req_1777078728145_1py9mio\"}}",
+      "response_body_json": {
+        "error": {
+          "message": "Workspace has no owner configured",
+          "code": "NO_WORKSPACE_OWNER",
+          "requestId": "req_1777078728145_1py9mio"
+        }
+      }
+    },
+    {
+      "started_at": "2026-04-25T00:58:48.776Z",
+      "url": "https://bharag.duckdns.org/api/v1/ingest",
+      "method": "POST",
+      "request_headers": {
+        "content-type": "application/json",
+        "x-api-key": "lTuNmTHdGcwWP275xkxlVadkCwA",
+        "x-workspace-id": "1687fd99-3ef1-4e18-89fe-730c4d2ee100"
+      },
+      "request_body_raw": "{\"title\":\"X launches stand-alone XChat app on iOS\",\"content\":\"TAGs: [RSS]\\nTimestamp ran: 2026-04-25T00:58:37.712Z\\nPrevious run: none\\nPost timestamp: 2026-04-24T19:46:58.000Z\\nTitle: X launches stand-alone XChat app on iOS\\nContent: X's new app promises private chats, disappearing messages, audio and video calls, and more. \\nLink: https://techcrunch.com/2026/04/24/x-launches-xchat-app-ios-messaging-iphone/\",\"source_type\":\"manual\",\"content_type\":\"doc\",\"source_url\":\"https://techcrunch.com/2026/04/24/x-launches-xchat-app-ios-messaging-iphone/\",\"project_tags\":[\"rss\"],\"metadata\":{\"ingestion_type\":\"rss_feed\",\"feed_source\":\"https://techcrunch.com/feed/\",\"item_guid\":\"https://techcrunch.com/?p=3116241\",\"item_pub_date\":\"2026-04-24T19:46:58.000Z\"}}",
+      "request_body_json": {
+        "title": "X launches stand-alone XChat app on iOS",
+        "content": "TAGs: [RSS]\nTimestamp ran: 2026-04-25T00:58:37.712Z\nPrevious run: none\nPost timestamp: 2026-04-24T19:46:58.000Z\nTitle: X launches stand-alone XChat app on iOS\nContent: X's new app promises private chats, disappearing messages, audio and video calls, and more. \nLink: https://techcrunch.com/2026/04/24/x-launches-xchat-app-ios-messaging-iphone/",
+        "source_type": "manual",
+        "content_type": "doc",
+        "source_url": "https://techcrunch.com/2026/04/24/x-launches-xchat-app-ios-messaging-iphone/",
+        "project_tags": [
+          "rss"
+        ],
+        "metadata": {
+          "ingestion_type": "rss_feed",
+          "feed_source": "https://techcrunch.com/feed/",
+          "item_guid": "https://techcrunch.com/?p=3116241",
+          "item_pub_date": "2026-04-24T19:46:58.000Z"
+        }
+      },
+      "response_status": 500,
+      "response_headers": {
+        "connection": "keep-alive",
+        "content-length": "125",
+        "content-type": "application/json; charset=utf-8",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "date": "Sat, 25 Apr 2026 00:58:49 GMT",
+        "etag": "W/\"7d-wHzTUUMVcRAGyg8S62pQiKxKeGU\"",
+        "origin-agent-cluster": "?1",
+        "referrer-policy": "no-referrer",
+        "server": "nginx/1.29.5",
+        "strict-transport-security": "max-age=31536000; includeSubDomains, max-age=31536000; includeSubDomains",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "off",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN",
+        "x-permitted-cross-domain-policies": "none",
+        "x-request-id": "req_1777078728880_anwjtho",
+        "x-xss-protection": "0"
+      },
+      "response_body_raw": "{\"error\":{\"message\":\"Workspace has no owner configured\",\"code\":\"NO_WORKSPACE_OWNER\",\"requestId\":\"req_1777078728880_anwjtho\"}}",
+      "response_body_json": {
+        "error": {
+          "message": "Workspace has no owner configured",
+          "code": "NO_WORKSPACE_OWNER",
+          "requestId": "req_1777078728880_anwjtho"
+        }
+      }
+    },
+    {
+      "started_at": "2026-04-25T00:58:49.603Z",
+      "url": "https://bharag.duckdns.org/api/v1/ingest",
+      "method": "POST",
+      "request_headers": {
+        "content-type": "application/json",
+        "x-api-key": "lTuNmTHdGcwWP275xkxlVadkCwA",
+        "x-workspace-id": "1687fd99-3ef1-4e18-89fe-730c4d2ee100"
+      },
+      "request_body_raw": "{\"title\":\"Google to invest up to $40B in Anthropic in cash and compute\",\"content\":\"TAGs: [RSS]\\nTimestamp ran: 2026-04-25T00:58:37.712Z\\nPrevious run: none\\nPost timestamp: 2026-04-24T18:00:03.000Z\\nTitle: Google to invest up to $40B in Anthropic in cash and compute\\nContent: Google plans up to $40B investment in Anthropic as AI rivals race to secure massive compute capacity, following the limited release of its powerful, cybersecurity-focused Mythos model.\\nLink: https://techcrunch.com/2026/04/24/google-to-invest-up-to-40b-in-anthropic-in-cash-and-compute/\",\"source_type\":\"manual\",\"content_type\":\"doc\",\"source_url\":\"https://techcrunch.com/2026/04/24/google-to-invest-up-to-40b-in-anthropic-in-cash-and-compute/\",\"project_tags\":[\"rss\"],\"metadata\":{\"ingestion_type\":\"rss_feed\",\"feed_source\":\"https://techcrunch.com/feed/\",\"item_guid\":\"https://techcrunch.com/?p=3116207\",\"item_pub_date\":\"2026-04-24T18:00:03.000Z\"}}",
+      "request_body_json": {
+        "title": "Google to invest up to $40B in Anthropic in cash and compute",
+        "content": "TAGs: [RSS]\nTimestamp ran: 2026-04-25T00:58:37.712Z\nPrevious run: none\nPost timestamp: 2026-04-24T18:00:03.000Z\nTitle: Google to invest up to $40B in Anthropic in cash and compute\nContent: Google plans up to $40B investment in Anthropic as AI rivals race to secure massive compute capacity, following the limited release of its powerful, cybersecurity-focused Mythos model.\nLink: https://techcrunch.com/2026/04/24/google-to-invest-up-to-40b-in-anthropic-in-cash-and-compute/",
+        "source_type": "manual",
+        "content_type": "doc",
+        "source_url": "https://techcrunch.com/2026/04/24/google-to-invest-up-to-40b-in-anthropic-in-cash-and-compute/",
+        "project_tags": [
+          "rss"
+        ],
+        "metadata": {
+          "ingestion_type": "rss_feed",
+          "feed_source": "https://techcrunch.com/feed/",
+          "item_guid": "https://techcrunch.com/?p=3116207",
+          "item_pub_date": "2026-04-24T18:00:03.000Z"
+        }
+      },
+      "response_status": 500,
+      "response_headers": {
+        "connection": "keep-alive",
+        "content-length": "125",
+        "content-type": "application/json; charset=utf-8",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "date": "Sat, 25 Apr 2026 00:58:50 GMT",
+        "etag": "W/\"7d-+JhW8cbLb+8ABirzDP8fGsOq+t8\"",
+        "origin-agent-cluster": "?1",
+        "referrer-policy": "no-referrer",
+        "server": "nginx/1.29.5",
+        "strict-transport-security": "max-age=31536000; includeSubDomains, max-age=31536000; includeSubDomains",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "off",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN",
+        "x-permitted-cross-domain-policies": "none",
+        "x-request-id": "req_1777078729717_yc7y5qs",
+        "x-xss-protection": "0"
+      },
+      "response_body_raw": "{\"error\":{\"message\":\"Workspace has no owner configured\",\"code\":\"NO_WORKSPACE_OWNER\",\"requestId\":\"req_1777078729717_yc7y5qs\"}}",
+      "response_body_json": {
+        "error": {
+          "message": "Workspace has no owner configured",
+          "code": "NO_WORKSPACE_OWNER",
+          "requestId": "req_1777078729717_yc7y5qs"
+        }
+      }
+    },
+    {
+      "started_at": "2026-04-25T00:58:50.359Z",
+      "url": "https://bharag.duckdns.org/api/v1/ingest",
+      "method": "POST",
+      "request_headers": {
+        "content-type": "application/json",
+        "x-api-key": "lTuNmTHdGcwWP275xkxlVadkCwA",
+        "x-workspace-id": "1687fd99-3ef1-4e18-89fe-730c4d2ee100"
+      },
+      "request_body_raw": "{\"title\":\"Marked-up Mac minis flood eBay amid shortages driven by AI\",\"content\":\"TAGs: [RSS]\\nTimestamp ran: 2026-04-25T00:58:37.712Z\\nPrevious run: none\\nPost timestamp: 2026-04-24T16:42:19.000Z\\nTitle: Marked-up Mac minis flood eBay amid shortages driven by AI\\nContent: Apple’s sold-out Mac mini is spawning marked-up eBay listings as demand surges for the compact desktop, now favored for running local AI models and tools.\\nLink: https://techcrunch.com/2026/04/24/mac-mini-price-expensive-ebay-shortage-ai-memory/\",\"source_type\":\"manual\",\"content_type\":\"doc\",\"source_url\":\"https://techcrunch.com/2026/04/24/mac-mini-price-expensive-ebay-shortage-ai-memory/\",\"project_tags\":[\"rss\"],\"metadata\":{\"ingestion_type\":\"rss_feed\",\"feed_source\":\"https://techcrunch.com/feed/\",\"item_guid\":\"https://techcrunch.com/?p=3116142\",\"item_pub_date\":\"2026-04-24T16:42:19.000Z\"}}",
+      "request_body_json": {
+        "title": "Marked-up Mac minis flood eBay amid shortages driven by AI",
+        "content": "TAGs: [RSS]\nTimestamp ran: 2026-04-25T00:58:37.712Z\nPrevious run: none\nPost timestamp: 2026-04-24T16:42:19.000Z\nTitle: Marked-up Mac minis flood eBay amid shortages driven by AI\nContent: Apple’s sold-out Mac mini is spawning marked-up eBay listings as demand surges for the compact desktop, now favored for running local AI models and tools.\nLink: https://techcrunch.com/2026/04/24/mac-mini-price-expensive-ebay-shortage-ai-memory/",
+        "source_type": "manual",
+        "content_type": "doc",
+        "source_url": "https://techcrunch.com/2026/04/24/mac-mini-price-expensive-ebay-shortage-ai-memory/",
+        "project_tags": [
+          "rss"
+        ],
+        "metadata": {
+          "ingestion_type": "rss_feed",
+          "feed_source": "https://techcrunch.com/feed/",
+          "item_guid": "https://techcrunch.com/?p=3116142",
+          "item_pub_date": "2026-04-24T16:42:19.000Z"
+        }
+      },
+      "response_status": 500,
+      "response_headers": {
+        "connection": "keep-alive",
+        "content-length": "125",
+        "content-type": "application/json; charset=utf-8",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "date": "Sat, 25 Apr 2026 00:58:51 GMT",
+        "etag": "W/\"7d-KUxEzHrCRdmO6R5zuYZ+aGMeByQ\"",
+        "origin-agent-cluster": "?1",
+        "referrer-policy": "no-referrer",
+        "server": "nginx/1.29.5",
+        "strict-transport-security": "max-age=31536000; includeSubDomains, max-age=31536000; includeSubDomains",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "off",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN",
+        "x-permitted-cross-domain-policies": "none",
+        "x-request-id": "req_1777078730463_226cyq5",
+        "x-xss-protection": "0"
+      },
+      "response_body_raw": "{\"error\":{\"message\":\"Workspace has no owner configured\",\"code\":\"NO_WORKSPACE_OWNER\",\"requestId\":\"req_1777078730463_226cyq5\"}}",
+      "response_body_json": {
+        "error": {
+          "message": "Workspace has no owner configured",
+          "code": "NO_WORKSPACE_OWNER",
+          "requestId": "req_1777078730463_226cyq5"
+        }
+      }
+    },
+    {
+      "started_at": "2026-04-25T00:58:51.163Z",
+      "url": "https://bharag.duckdns.org/api/v1/ingest",
+      "method": "POST",
+      "request_headers": {
+        "content-type": "application/json",
+        "x-api-key": "lTuNmTHdGcwWP275xkxlVadkCwA",
+        "x-workspace-id": "1687fd99-3ef1-4e18-89fe-730c4d2ee100"
+      },
+      "request_body_raw": "{\"title\":\"Nuclear startup X-energy raises $1B in data center-driven IPO\",\"content\":\"TAGs: [RSS]\\nTimestamp ran: 2026-04-25T00:58:37.712Z\\nPrevious run: none\\nPost timestamp: 2026-04-24T15:06:00.000Z\\nTitle: Nuclear startup X-energy raises $1B in data center-driven IPO\\nContent: Amazon-backed X-energy was able to raise around 20% more money in its IPO as demand for nuclear power surges.\\nLink: https://techcrunch.com/2026/04/24/nuclear-startup-x-energy-raises-1b-in-data-center-driven-ipo/\",\"source_type\":\"manual\",\"content_type\":\"doc\",\"source_url\":\"https://techcrunch.com/2026/04/24/nuclear-startup-x-energy-raises-1b-in-data-center-driven-ipo/\",\"project_tags\":[\"rss\"],\"metadata\":{\"ingestion_type\":\"rss_feed\",\"feed_source\":\"https://techcrunch.com/feed/\",\"item_guid\":\"https://techcrunch.com/?p=3116143\",\"item_pub_date\":\"2026-04-24T15:06:00.000Z\"}}",
+      "request_body_json": {
+        "title": "Nuclear startup X-energy raises $1B in data center-driven IPO",
+        "content": "TAGs: [RSS]\nTimestamp ran: 2026-04-25T00:58:37.712Z\nPrevious run: none\nPost timestamp: 2026-04-24T15:06:00.000Z\nTitle: Nuclear startup X-energy raises $1B in data center-driven IPO\nContent: Amazon-backed X-energy was able to raise around 20% more money in its IPO as demand for nuclear power surges.\nLink: https://techcrunch.com/2026/04/24/nuclear-startup-x-energy-raises-1b-in-data-center-driven-ipo/",
+        "source_type": "manual",
+        "content_type": "doc",
+        "source_url": "https://techcrunch.com/2026/04/24/nuclear-startup-x-energy-raises-1b-in-data-center-driven-ipo/",
+        "project_tags": [
+          "rss"
+        ],
+        "metadata": {
+          "ingestion_type": "rss_feed",
+          "feed_source": "https://techcrunch.com/feed/",
+          "item_guid": "https://techcrunch.com/?p=3116143",
+          "item_pub_date": "2026-04-24T15:06:00.000Z"
+        }
+      },
+      "response_status": 500,
+      "response_headers": {
+        "connection": "keep-alive",
+        "content-length": "125",
+        "content-type": "application/json; charset=utf-8",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "date": "Sat, 25 Apr 2026 00:58:51 GMT",
+        "etag": "W/\"7d-4P/DyjefFe5j52Eq4J8IszNhdGg\"",
+        "origin-agent-cluster": "?1",
+        "referrer-policy": "no-referrer",
+        "server": "nginx/1.29.5",
+        "strict-transport-security": "max-age=31536000; includeSubDomains, max-age=31536000; includeSubDomains",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "off",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN",
+        "x-permitted-cross-domain-policies": "none",
+        "x-request-id": "req_1777078731273_bl5dhoa",
+        "x-xss-protection": "0"
+      },
+      "response_body_raw": "{\"error\":{\"message\":\"Workspace has no owner configured\",\"code\":\"NO_WORKSPACE_OWNER\",\"requestId\":\"req_1777078731273_bl5dhoa\"}}",
+      "response_body_json": {
+        "error": {
+          "message": "Workspace has no owner configured",
+          "code": "NO_WORKSPACE_OWNER",
+          "requestId": "req_1777078731273_bl5dhoa"
+        }
+      }
+    },
+    {
+      "started_at": "2026-04-25T00:58:51.920Z",
+      "url": "https://bharag.duckdns.org/api/v1/ingest",
+      "method": "POST",
+      "request_headers": {
+        "content-type": "application/json",
+        "x-api-key": "lTuNmTHdGcwWP275xkxlVadkCwA",
+        "x-workspace-id": "1687fd99-3ef1-4e18-89fe-730c4d2ee100"
+      },
+      "request_body_raw": "{\"title\":\"Another spyware maker caught distributing fake Android snooping apps\",\"content\":\"TAGs: [RSS]\\nTimestamp ran: 2026-04-25T00:58:37.712Z\\nPrevious run: none\\nPost timestamp: 2026-04-24T14:17:55.000Z\\nTitle: Another spyware maker caught distributing fake Android snooping apps\\nContent: Researchers have found a new case where government authorities used a fake Android app to plant spyware on a target’s phone. The company that allegedly developed the spyware was not previously known to sell this type of software. \\nLink: https://techcrunch.com/2026/04/24/another-spyware-maker-caught-distributing-fake-android-snooping-apps/\",\"source_type\":\"manual\",\"content_type\":\"doc\",\"source_url\":\"https://techcrunch.com/2026/04/24/another-spyware-maker-caught-distributing-fake-android-snooping-apps/\",\"project_tags\":[\"rss\"],\"metadata\":{\"ingestion_type\":\"rss_feed\",\"feed_source\":\"https://techcrunch.com/feed/\",\"item_guid\":\"https://techcrunch.com/?p=3116012\",\"item_pub_date\":\"2026-04-24T14:17:55.000Z\"}}",
+      "request_body_json": {
+        "title": "Another spyware maker caught distributing fake Android snooping apps",
+        "content": "TAGs: [RSS]\nTimestamp ran: 2026-04-25T00:58:37.712Z\nPrevious run: none\nPost timestamp: 2026-04-24T14:17:55.000Z\nTitle: Another spyware maker caught distributing fake Android snooping apps\nContent: Researchers have found a new case where government authorities used a fake Android app to plant spyware on a target’s phone. The company that allegedly developed the spyware was not previously known to sell this type of software. \nLink: https://techcrunch.com/2026/04/24/another-spyware-maker-caught-distributing-fake-android-snooping-apps/",
+        "source_type": "manual",
+        "content_type": "doc",
+        "source_url": "https://techcrunch.com/2026/04/24/another-spyware-maker-caught-distributing-fake-android-snooping-apps/",
+        "project_tags": [
+          "rss"
+        ],
+        "metadata": {
+          "ingestion_type": "rss_feed",
+          "feed_source": "https://techcrunch.com/feed/",
+          "item_guid": "https://techcrunch.com/?p=3116012",
+          "item_pub_date": "2026-04-24T14:17:55.000Z"
+        }
+      },
+      "response_status": 500,
+      "response_headers": {
+        "connection": "keep-alive",
+        "content-length": "125",
+        "content-type": "application/json; charset=utf-8",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "date": "Sat, 25 Apr 2026 00:58:52 GMT",
+        "etag": "W/\"7d-Q9/sMF5xcxPlx49Mr55lZvGK508\"",
+        "origin-agent-cluster": "?1",
+        "referrer-policy": "no-referrer",
+        "server": "nginx/1.29.5",
+        "strict-transport-security": "max-age=31536000; includeSubDomains, max-age=31536000; includeSubDomains",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "off",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN",
+        "x-permitted-cross-domain-policies": "none",
+        "x-request-id": "req_1777078732023_xzyqu8d",
+        "x-xss-protection": "0"
+      },
+      "response_body_raw": "{\"error\":{\"message\":\"Workspace has no owner configured\",\"code\":\"NO_WORKSPACE_OWNER\",\"requestId\":\"req_1777078732023_xzyqu8d\"}}",
+      "response_body_json": {
+        "error": {
+          "message": "Workspace has no owner configured",
+          "code": "NO_WORKSPACE_OWNER",
+          "requestId": "req_1777078732023_xzyqu8d"
+        }
+      }
+    },
+    {
+      "started_at": "2026-04-25T00:58:52.647Z",
+      "url": "https://bharag.duckdns.org/api/v1/ingest",
+      "method": "POST",
+      "request_headers": {
+        "content-type": "application/json",
+        "x-api-key": "lTuNmTHdGcwWP275xkxlVadkCwA",
+        "x-workspace-id": "1687fd99-3ef1-4e18-89fe-730c4d2ee100"
+      },
+      "request_body_raw": "{\"title\":\"Uber CTO Praveen Neppalli Naga joins stacked StrictlyVC SF lineup for April 30 event\",\"content\":\"TAGs: [RSS]\\nTimestamp ran: 2026-04-25T00:58:37.712Z\\nPrevious run: none\\nPost timestamp: 2026-04-24T14:00:00.000Z\\nTitle: Uber CTO Praveen Neppalli Naga joins stacked StrictlyVC SF lineup for April 30 event\\nContent: Surprise! StrictlyVC San Francisco, which will kick off this year’s events lineup for TechCrunch on April 30 at the Sentro Filipino Cultural Center, is getting a new addition to its increasingly stacked lineup of speakers. Uber CTO Praveen Neppalli Naga will join the rest of the lineup to discuss operating at scale in the age of AI.\\nLink: https://techcrunch.com/2026/04/24/uber-cto-praveen-neppalli-naga-joins-stacked-strictlyvc-sf-lineup-for-april-30-event/\",\"source_type\":\"manual\",\"content_type\":\"doc\",\"source_url\":\"https://techcrunch.com/2026/04/24/uber-cto-praveen-neppalli-naga-joins-stacked-strictlyvc-sf-lineup-for-april-30-event/\",\"project_tags\":[\"rss\"],\"metadata\":{\"ingestion_type\":\"rss_feed\",\"feed_source\":\"https://techcrunch.com/feed/\",\"item_guid\":\"https://techcrunch.com/?p=3116078\",\"item_pub_date\":\"2026-04-24T14:00:00.000Z\"}}",
+      "request_body_json": {
+        "title": "Uber CTO Praveen Neppalli Naga joins stacked StrictlyVC SF lineup for April 30 event",
+        "content": "TAGs: [RSS]\nTimestamp ran: 2026-04-25T00:58:37.712Z\nPrevious run: none\nPost timestamp: 2026-04-24T14:00:00.000Z\nTitle: Uber CTO Praveen Neppalli Naga joins stacked StrictlyVC SF lineup for April 30 event\nContent: Surprise! StrictlyVC San Francisco, which will kick off this year’s events lineup for TechCrunch on April 30 at the Sentro Filipino Cultural Center, is getting a new addition to its increasingly stacked lineup of speakers. Uber CTO Praveen Neppalli Naga will join the rest of the lineup to discuss operating at scale in the age of AI.\nLink: https://techcrunch.com/2026/04/24/uber-cto-praveen-neppalli-naga-joins-stacked-strictlyvc-sf-lineup-for-april-30-event/",
+        "source_type": "manual",
+        "content_type": "doc",
+        "source_url": "https://techcrunch.com/2026/04/24/uber-cto-praveen-neppalli-naga-joins-stacked-strictlyvc-sf-lineup-for-april-30-event/",
+        "project_tags": [
+          "rss"
+        ],
+        "metadata": {
+          "ingestion_type": "rss_feed",
+          "feed_source": "https://techcrunch.com/feed/",
+          "item_guid": "https://techcrunch.com/?p=3116078",
+          "item_pub_date": "2026-04-24T14:00:00.000Z"
+        }
+      },
+      "response_status": 500,
+      "response_headers": {
+        "connection": "keep-alive",
+        "content-length": "125",
+        "content-type": "application/json; charset=utf-8",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "date": "Sat, 25 Apr 2026 00:58:53 GMT",
+        "etag": "W/\"7d-S7EOHuvE2uKZjNls+29MKNXTL+U\"",
+        "origin-agent-cluster": "?1",
+        "referrer-policy": "no-referrer",
+        "server": "nginx/1.29.5",
+        "strict-transport-security": "max-age=31536000; includeSubDomains, max-age=31536000; includeSubDomains",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "off",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN",
+        "x-permitted-cross-domain-policies": "none",
+        "x-request-id": "req_1777078732759_ijtrlua",
+        "x-xss-protection": "0"
+      },
+      "response_body_raw": "{\"error\":{\"message\":\"Workspace has no owner configured\",\"code\":\"NO_WORKSPACE_OWNER\",\"requestId\":\"req_1777078732759_ijtrlua\"}}",
+      "response_body_json": {
+        "error": {
+          "message": "Workspace has no owner configured",
+          "code": "NO_WORKSPACE_OWNER",
+          "requestId": "req_1777078732759_ijtrlua"
+        }
+      }
+    },
+    {
+      "started_at": "2026-04-25T00:58:53.388Z",
+      "url": "https://bharag.duckdns.org/api/v1/ingest",
+      "method": "POST",
+      "request_headers": {
+        "content-type": "application/json",
+        "x-api-key": "lTuNmTHdGcwWP275xkxlVadkCwA",
+        "x-workspace-id": "1687fd99-3ef1-4e18-89fe-730c4d2ee100"
+      },
+      "request_body_raw": "{\"title\":\"Tim Cook is stepping down. What happens to Apple now?\",\"content\":\"TAGs: [RSS]\\nTimestamp ran: 2026-04-25T00:58:37.712Z\\nPrevious run: none\\nPost timestamp: 2026-04-24T14:00:00.000Z\\nTitle: Tim Cook is stepping down. What happens to Apple now?\\nContent: Tim Cook plans to step down from his CEO role in September, handing the reins to hardware chief John Ternus.   Ternus may be inheriting one of the most durable businesses in tech, but&#160;he’s&#160;also stepping into&#160;a very different&#160;ecosystemthan the one Cook spent decades shaping. The App Store’s 30% cut is under pressure, the behind-the-scenes power Apple once [&#8230;]\\nLink: https://techcrunch.com/video/tim-cook-is-stepping-down-what-happens-to-apple-now/\",\"source_type\":\"manual\",\"content_type\":\"doc\",\"source_url\":\"https://techcrunch.com/video/tim-cook-is-stepping-down-what-happens-to-apple-now/\",\"project_tags\":[\"rss\"],\"metadata\":{\"ingestion_type\":\"rss_feed\",\"feed_source\":\"https://techcrunch.com/feed/\",\"item_guid\":\"https://techcrunch.com/?post_type=tc_video&p=3116212\",\"item_pub_date\":\"2026-04-24T14:00:00.000Z\"}}",
+      "request_body_json": {
+        "title": "Tim Cook is stepping down. What happens to Apple now?",
+        "content": "TAGs: [RSS]\nTimestamp ran: 2026-04-25T00:58:37.712Z\nPrevious run: none\nPost timestamp: 2026-04-24T14:00:00.000Z\nTitle: Tim Cook is stepping down. What happens to Apple now?\nContent: Tim Cook plans to step down from his CEO role in September, handing the reins to hardware chief John Ternus.   Ternus may be inheriting one of the most durable businesses in tech, but&#160;he’s&#160;also stepping into&#160;a very different&#160;ecosystemthan the one Cook spent decades shaping. The App Store’s 30% cut is under pressure, the behind-the-scenes power Apple once [&#8230;]\nLink: https://techcrunch.com/video/tim-cook-is-stepping-down-what-happens-to-apple-now/",
+        "source_type": "manual",
+        "content_type": "doc",
+        "source_url": "https://techcrunch.com/video/tim-cook-is-stepping-down-what-happens-to-apple-now/",
+        "project_tags": [
+          "rss"
+        ],
+        "metadata": {
+          "ingestion_type": "rss_feed",
+          "feed_source": "https://techcrunch.com/feed/",
+          "item_guid": "https://techcrunch.com/?post_type=tc_video&p=3116212",
+          "item_pub_date": "2026-04-24T14:00:00.000Z"
+        }
+      },
+      "response_status": 500,
+      "response_headers": {
+        "connection": "keep-alive",
+        "content-length": "125",
+        "content-type": "application/json; charset=utf-8",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "date": "Sat, 25 Apr 2026 00:58:53 GMT",
+        "etag": "W/\"7d-Q1K2fQtwgiMtgO64Xirp3k6GrI4\"",
+        "origin-agent-cluster": "?1",
+        "referrer-policy": "no-referrer",
+        "server": "nginx/1.29.5",
+        "strict-transport-security": "max-age=31536000; includeSubDomains, max-age=31536000; includeSubDomains",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "off",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN",
+        "x-permitted-cross-domain-policies": "none",
+        "x-request-id": "req_1777078733498_6jqov1m",
+        "x-xss-protection": "0"
+      },
+      "response_body_raw": "{\"error\":{\"message\":\"Workspace has no owner configured\",\"code\":\"NO_WORKSPACE_OWNER\",\"requestId\":\"req_1777078733498_6jqov1m\"}}",
+      "response_body_json": {
+        "error": {
+          "message": "Workspace has no owner configured",
+          "code": "NO_WORKSPACE_OWNER",
+          "requestId": "req_1777078733498_6jqov1m"
+        }
+      }
+    },
+    {
+      "started_at": "2026-04-25T00:58:54.139Z",
+      "url": "https://bharag.duckdns.org/api/v1/ingest",
+      "method": "POST",
+      "request_headers": {
+        "content-type": "application/json",
+        "x-api-key": "lTuNmTHdGcwWP275xkxlVadkCwA",
+        "x-workspace-id": "1687fd99-3ef1-4e18-89fe-730c4d2ee100"
+      },
+      "request_body_raw": "{\"title\":\"Nothing introduces an AI-powered dictation tool\",\"content\":\"TAGs: [RSS]\\nTimestamp ran: 2026-04-25T00:58:37.712Z\\nPrevious run: none\\nPost timestamp: 2026-04-24T13:41:42.000Z\\nTitle: Nothing introduces an AI-powered dictation tool\\nContent: Nothing's new on-device dictation tool supports over 100 languages.\\nLink: https://techcrunch.com/2026/04/24/nothing-introduces-an-ai-powered-dictation-tool/\",\"source_type\":\"manual\",\"content_type\":\"doc\",\"source_url\":\"https://techcrunch.com/2026/04/24/nothing-introduces-an-ai-powered-dictation-tool/\",\"project_tags\":[\"rss\"],\"metadata\":{\"ingestion_type\":\"rss_feed\",\"feed_source\":\"https://techcrunch.com/feed/\",\"item_guid\":\"https://techcrunch.com/?p=3116112\",\"item_pub_date\":\"2026-04-24T13:41:42.000Z\"}}",
+      "request_body_json": {
+        "title": "Nothing introduces an AI-powered dictation tool",
+        "content": "TAGs: [RSS]\nTimestamp ran: 2026-04-25T00:58:37.712Z\nPrevious run: none\nPost timestamp: 2026-04-24T13:41:42.000Z\nTitle: Nothing introduces an AI-powered dictation tool\nContent: Nothing's new on-device dictation tool supports over 100 languages.\nLink: https://techcrunch.com/2026/04/24/nothing-introduces-an-ai-powered-dictation-tool/",
+        "source_type": "manual",
+        "content_type": "doc",
+        "source_url": "https://techcrunch.com/2026/04/24/nothing-introduces-an-ai-powered-dictation-tool/",
+        "project_tags": [
+          "rss"
+        ],
+        "metadata": {
+          "ingestion_type": "rss_feed",
+          "feed_source": "https://techcrunch.com/feed/",
+          "item_guid": "https://techcrunch.com/?p=3116112",
+          "item_pub_date": "2026-04-24T13:41:42.000Z"
+        }
+      },
+      "response_status": 500,
+      "response_headers": {
+        "connection": "keep-alive",
+        "content-length": "125",
+        "content-type": "application/json; charset=utf-8",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "date": "Sat, 25 Apr 2026 00:58:54 GMT",
+        "etag": "W/\"7d-xwdrb+51uPf/ya5Xzno3ZtXs90U\"",
+        "origin-agent-cluster": "?1",
+        "referrer-policy": "no-referrer",
+        "server": "nginx/1.29.5",
+        "strict-transport-security": "max-age=31536000; includeSubDomains, max-age=31536000; includeSubDomains",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "off",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN",
+        "x-permitted-cross-domain-policies": "none",
+        "x-request-id": "req_1777078734252_tmpbqaw",
+        "x-xss-protection": "0"
+      },
+      "response_body_raw": "{\"error\":{\"message\":\"Workspace has no owner configured\",\"code\":\"NO_WORKSPACE_OWNER\",\"requestId\":\"req_1777078734252_tmpbqaw\"}}",
+      "response_body_json": {
+        "error": {
+          "message": "Workspace has no owner configured",
+          "code": "NO_WORKSPACE_OWNER",
+          "requestId": "req_1777078734252_tmpbqaw"
+        }
+      }
+    },
+    {
+      "started_at": "2026-04-25T00:58:54.881Z",
+      "url": "https://bharag.duckdns.org/api/v1/ingest",
+      "method": "POST",
+      "request_headers": {
+        "content-type": "application/json",
+        "x-api-key": "lTuNmTHdGcwWP275xkxlVadkCwA",
+        "x-workspace-id": "1687fd99-3ef1-4e18-89fe-730c4d2ee100"
+      },
+      "request_body_raw": "{\"title\":\"DeepSeek previews new AI model that ‘closes the gap’ with frontier models\",\"content\":\"TAGs: [RSS]\\nTimestamp ran: 2026-04-25T00:58:37.712Z\\nPrevious run: none\\nPost timestamp: 2026-04-24T13:30:59.000Z\\nTitle: DeepSeek previews new AI model that ‘closes the gap’ with frontier models\\nContent: DeepSeek says both models are more efficient and performant than DeepSeek V3.2 due to architectural improvements, and have almost \\\"closed the gap\\\" with current leading models, both open and closed, on reasoning benchmarks.\\nLink: https://techcrunch.com/2026/04/24/deepseek-previews-new-ai-model-that-closes-the-gap-with-frontier-models/\",\"source_type\":\"manual\",\"content_type\":\"doc\",\"source_url\":\"https://techcrunch.com/2026/04/24/deepseek-previews-new-ai-model-that-closes-the-gap-with-frontier-models/\",\"project_tags\":[\"rss\"],\"metadata\":{\"ingestion_type\":\"rss_feed\",\"feed_source\":\"https://techcrunch.com/feed/\",\"item_guid\":\"https://techcrunch.com/?p=3116123\",\"item_pub_date\":\"2026-04-24T13:30:59.000Z\"}}",
+      "request_body_json": {
+        "title": "DeepSeek previews new AI model that ‘closes the gap’ with frontier models",
+        "content": "TAGs: [RSS]\nTimestamp ran: 2026-04-25T00:58:37.712Z\nPrevious run: none\nPost timestamp: 2026-04-24T13:30:59.000Z\nTitle: DeepSeek previews new AI model that ‘closes the gap’ with frontier models\nContent: DeepSeek says both models are more efficient and performant than DeepSeek V3.2 due to architectural improvements, and have almost \"closed the gap\" with current leading models, both open and closed, on reasoning benchmarks.\nLink: https://techcrunch.com/2026/04/24/deepseek-previews-new-ai-model-that-closes-the-gap-with-frontier-models/",
+        "source_type": "manual",
+        "content_type": "doc",
+        "source_url": "https://techcrunch.com/2026/04/24/deepseek-previews-new-ai-model-that-closes-the-gap-with-frontier-models/",
+        "project_tags": [
+          "rss"
+        ],
+        "metadata": {
+          "ingestion_type": "rss_feed",
+          "feed_source": "https://techcrunch.com/feed/",
+          "item_guid": "https://techcrunch.com/?p=3116123",
+          "item_pub_date": "2026-04-24T13:30:59.000Z"
+        }
+      },
+      "response_status": 500,
+      "response_headers": {
+        "connection": "keep-alive",
+        "content-length": "125",
+        "content-type": "application/json; charset=utf-8",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "date": "Sat, 25 Apr 2026 00:58:55 GMT",
+        "etag": "W/\"7d-Q9Ewu2qJ7ZzDUz9r1cnXeRRcxhM\"",
+        "origin-agent-cluster": "?1",
+        "referrer-policy": "no-referrer",
+        "server": "nginx/1.29.5",
+        "strict-transport-security": "max-age=31536000; includeSubDomains, max-age=31536000; includeSubDomains",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "off",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN",
+        "x-permitted-cross-domain-policies": "none",
+        "x-request-id": "req_1777078734994_mg46iv6",
+        "x-xss-protection": "0"
+      },
+      "response_body_raw": "{\"error\":{\"message\":\"Workspace has no owner configured\",\"code\":\"NO_WORKSPACE_OWNER\",\"requestId\":\"req_1777078734994_mg46iv6\"}}",
+      "response_body_json": {
+        "error": {
+          "message": "Workspace has no owner configured",
+          "code": "NO_WORKSPACE_OWNER",
+          "requestId": "req_1777078734994_mg46iv6"
+        }
+      }
+    },
+    {
+      "started_at": "2026-04-25T00:58:55.637Z",
+      "url": "https://bharag.duckdns.org/api/v1/ingest",
+      "method": "POST",
+      "request_headers": {
+        "content-type": "application/json",
+        "x-api-key": "lTuNmTHdGcwWP275xkxlVadkCwA",
+        "x-workspace-id": "1687fd99-3ef1-4e18-89fe-730c4d2ee100"
+      },
+      "request_body_raw": "{\"title\":\"In another wild turn for AI chips, Meta signs deal for millions of Amazon AI CPUs\",\"content\":\"TAGs: [RSS]\\nTimestamp ran: 2026-04-25T00:58:37.712Z\\nPrevious run: none\\nPost timestamp: 2026-04-24T12:00:00.000Z\\nTitle: In another wild turn for AI chips, Meta signs deal for millions of Amazon AI CPUs\\nContent: Meta has commandeered a big chunk of Amazon's homegrown CPUs (not GPUs) for AI agentic workloads, signaling that a new kind of chip race has begun.\\nLink: https://techcrunch.com/2026/04/24/in-another-wild-turn-for-ai-chips-meta-signs-deal-for-millions-of-amazon-ai-cpus/\",\"source_type\":\"manual\",\"content_type\":\"doc\",\"source_url\":\"https://techcrunch.com/2026/04/24/in-another-wild-turn-for-ai-chips-meta-signs-deal-for-millions-of-amazon-ai-cpus/\",\"project_tags\":[\"rss\"],\"metadata\":{\"ingestion_type\":\"rss_feed\",\"feed_source\":\"https://techcrunch.com/feed/\",\"item_guid\":\"https://techcrunch.com/?p=3115894\",\"item_pub_date\":\"2026-04-24T12:00:00.000Z\"}}",
+      "request_body_json": {
+        "title": "In another wild turn for AI chips, Meta signs deal for millions of Amazon AI CPUs",
+        "content": "TAGs: [RSS]\nTimestamp ran: 2026-04-25T00:58:37.712Z\nPrevious run: none\nPost timestamp: 2026-04-24T12:00:00.000Z\nTitle: In another wild turn for AI chips, Meta signs deal for millions of Amazon AI CPUs\nContent: Meta has commandeered a big chunk of Amazon's homegrown CPUs (not GPUs) for AI agentic workloads, signaling that a new kind of chip race has begun.\nLink: https://techcrunch.com/2026/04/24/in-another-wild-turn-for-ai-chips-meta-signs-deal-for-millions-of-amazon-ai-cpus/",
+        "source_type": "manual",
+        "content_type": "doc",
+        "source_url": "https://techcrunch.com/2026/04/24/in-another-wild-turn-for-ai-chips-meta-signs-deal-for-millions-of-amazon-ai-cpus/",
+        "project_tags": [
+          "rss"
+        ],
+        "metadata": {
+          "ingestion_type": "rss_feed",
+          "feed_source": "https://techcrunch.com/feed/",
+          "item_guid": "https://techcrunch.com/?p=3115894",
+          "item_pub_date": "2026-04-24T12:00:00.000Z"
+        }
+      },
+      "response_status": 500,
+      "response_headers": {
+        "connection": "keep-alive",
+        "content-length": "125",
+        "content-type": "application/json; charset=utf-8",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "date": "Sat, 25 Apr 2026 00:58:56 GMT",
+        "etag": "W/\"7d-UTj3lRnW1NFn9zAA+PCOgDxoXyk\"",
+        "origin-agent-cluster": "?1",
+        "referrer-policy": "no-referrer",
+        "server": "nginx/1.29.5",
+        "strict-transport-security": "max-age=31536000; includeSubDomains, max-age=31536000; includeSubDomains",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "off",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN",
+        "x-permitted-cross-domain-policies": "none",
+        "x-request-id": "req_1777078735745_etwhg5g",
+        "x-xss-protection": "0"
+      },
+      "response_body_raw": "{\"error\":{\"message\":\"Workspace has no owner configured\",\"code\":\"NO_WORKSPACE_OWNER\",\"requestId\":\"req_1777078735745_etwhg5g\"}}",
+      "response_body_json": {
+        "error": {
+          "message": "Workspace has no owner configured",
+          "code": "NO_WORKSPACE_OWNER",
+          "requestId": "req_1777078735745_etwhg5g"
+        }
+      }
+    },
+    {
+      "started_at": "2026-04-25T00:58:56.385Z",
+      "url": "https://bharag.duckdns.org/api/v1/ingest",
+      "method": "POST",
+      "request_headers": {
+        "content-type": "application/json",
+        "x-api-key": "lTuNmTHdGcwWP275xkxlVadkCwA",
+        "x-workspace-id": "1687fd99-3ef1-4e18-89fe-730c4d2ee100"
+      },
+      "request_body_raw": "{\"title\":\"Porsche is adding an all-electric Cayenne coupe to its lineup\",\"content\":\"TAGs: [RSS]\\nTimestamp ran: 2026-04-25T00:58:37.712Z\\nPrevious run: none\\nPost timestamp: 2026-04-24T04:01:00.000Z\\nTitle: Porsche is adding an all-electric Cayenne coupe to its lineup\\nContent: Porsche will start selling the Cayenne Coupe Electric in late summer. \\nLink: https://techcrunch.com/2026/04/23/porsche-is-adding-an-all-electric-cayenne-coupe-to-its-lineup/\",\"source_type\":\"manual\",\"content_type\":\"doc\",\"source_url\":\"https://techcrunch.com/2026/04/23/porsche-is-adding-an-all-electric-cayenne-coupe-to-its-lineup/\",\"project_tags\":[\"rss\"],\"metadata\":{\"ingestion_type\":\"rss_feed\",\"feed_source\":\"https://techcrunch.com/feed/\",\"item_guid\":\"https://techcrunch.com/?p=3116001\",\"item_pub_date\":\"2026-04-24T04:01:00.000Z\"}}",
+      "request_body_json": {
+        "title": "Porsche is adding an all-electric Cayenne coupe to its lineup",
+        "content": "TAGs: [RSS]\nTimestamp ran: 2026-04-25T00:58:37.712Z\nPrevious run: none\nPost timestamp: 2026-04-24T04:01:00.000Z\nTitle: Porsche is adding an all-electric Cayenne coupe to its lineup\nContent: Porsche will start selling the Cayenne Coupe Electric in late summer. \nLink: https://techcrunch.com/2026/04/23/porsche-is-adding-an-all-electric-cayenne-coupe-to-its-lineup/",
+        "source_type": "manual",
+        "content_type": "doc",
+        "source_url": "https://techcrunch.com/2026/04/23/porsche-is-adding-an-all-electric-cayenne-coupe-to-its-lineup/",
+        "project_tags": [
+          "rss"
+        ],
+        "metadata": {
+          "ingestion_type": "rss_feed",
+          "feed_source": "https://techcrunch.com/feed/",
+          "item_guid": "https://techcrunch.com/?p=3116001",
+          "item_pub_date": "2026-04-24T04:01:00.000Z"
+        }
+      },
+      "response_status": 500,
+      "response_headers": {
+        "connection": "keep-alive",
+        "content-length": "125",
+        "content-type": "application/json; charset=utf-8",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "date": "Sat, 25 Apr 2026 00:58:56 GMT",
+        "etag": "W/\"7d-uduGvYrcs3d10mTC2ABeoJnH+J4\"",
+        "origin-agent-cluster": "?1",
+        "referrer-policy": "no-referrer",
+        "server": "nginx/1.29.5",
+        "strict-transport-security": "max-age=31536000; includeSubDomains, max-age=31536000; includeSubDomains",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "off",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN",
+        "x-permitted-cross-domain-policies": "none",
+        "x-request-id": "req_1777078736487_wjtsasv",
+        "x-xss-protection": "0"
+      },
+      "response_body_raw": "{\"error\":{\"message\":\"Workspace has no owner configured\",\"code\":\"NO_WORKSPACE_OWNER\",\"requestId\":\"req_1777078736487_wjtsasv\"}}",
+      "response_body_json": {
+        "error": {
+          "message": "Workspace has no owner configured",
+          "code": "NO_WORKSPACE_OWNER",
+          "requestId": "req_1777078736487_wjtsasv"
+        }
+      }
+    },
+    {
+      "started_at": "2026-04-25T00:58:57.133Z",
+      "url": "https://bharag.duckdns.org/api/v1/ingest",
+      "method": "POST",
+      "request_headers": {
+        "content-type": "application/json",
+        "x-api-key": "lTuNmTHdGcwWP275xkxlVadkCwA",
+        "x-workspace-id": "1687fd99-3ef1-4e18-89fe-730c4d2ee100"
+      },
+      "request_body_raw": "{\"title\":\"Bob Iger rejoins Thrive Capital as advisor after Disney exit\",\"content\":\"TAGs: [RSS]\\nTimestamp ran: 2026-04-25T00:58:37.712Z\\nPrevious run: none\\nPost timestamp: 2026-04-24T00:11:25.000Z\\nTitle: Bob Iger rejoins Thrive Capital as advisor after Disney exit\\nContent: The former Disney CEO hold a stake in Thrive and has previously held the role of the venture partner at the firm.\\nLink: https://techcrunch.com/2026/04/23/bob-iger-rejoins-thrive-capital-as-advisor-after-disney-exit/\",\"source_type\":\"manual\",\"content_type\":\"doc\",\"source_url\":\"https://techcrunch.com/2026/04/23/bob-iger-rejoins-thrive-capital-as-advisor-after-disney-exit/\",\"project_tags\":[\"rss\"],\"metadata\":{\"ingestion_type\":\"rss_feed\",\"feed_source\":\"https://techcrunch.com/feed/\",\"item_guid\":\"https://techcrunch.com/?p=3116079\",\"item_pub_date\":\"2026-04-24T00:11:25.000Z\"}}",
+      "request_body_json": {
+        "title": "Bob Iger rejoins Thrive Capital as advisor after Disney exit",
+        "content": "TAGs: [RSS]\nTimestamp ran: 2026-04-25T00:58:37.712Z\nPrevious run: none\nPost timestamp: 2026-04-24T00:11:25.000Z\nTitle: Bob Iger rejoins Thrive Capital as advisor after Disney exit\nContent: The former Disney CEO hold a stake in Thrive and has previously held the role of the venture partner at the firm.\nLink: https://techcrunch.com/2026/04/23/bob-iger-rejoins-thrive-capital-as-advisor-after-disney-exit/",
+        "source_type": "manual",
+        "content_type": "doc",
+        "source_url": "https://techcrunch.com/2026/04/23/bob-iger-rejoins-thrive-capital-as-advisor-after-disney-exit/",
+        "project_tags": [
+          "rss"
+        ],
+        "metadata": {
+          "ingestion_type": "rss_feed",
+          "feed_source": "https://techcrunch.com/feed/",
+          "item_guid": "https://techcrunch.com/?p=3116079",
+          "item_pub_date": "2026-04-24T00:11:25.000Z"
+        }
+      },
+      "response_status": 500,
+      "response_headers": {
+        "connection": "keep-alive",
+        "content-length": "125",
+        "content-type": "application/json; charset=utf-8",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "date": "Sat, 25 Apr 2026 00:58:57 GMT",
+        "etag": "W/\"7d-HS+D7Rf+52d3UERj7OlkvZDm83U\"",
+        "origin-agent-cluster": "?1",
+        "referrer-policy": "no-referrer",
+        "server": "nginx/1.29.5",
+        "strict-transport-security": "max-age=31536000; includeSubDomains, max-age=31536000; includeSubDomains",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "off",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN",
+        "x-permitted-cross-domain-policies": "none",
+        "x-request-id": "req_1777078737248_954jrgh",
+        "x-xss-protection": "0"
+      },
+      "response_body_raw": "{\"error\":{\"message\":\"Workspace has no owner configured\",\"code\":\"NO_WORKSPACE_OWNER\",\"requestId\":\"req_1777078737248_954jrgh\"}}",
+      "response_body_json": {
+        "error": {
+          "message": "Workspace has no owner configured",
+          "code": "NO_WORKSPACE_OWNER",
+          "requestId": "req_1777078737248_954jrgh"
+        }
+      }
+    },
+    {
+      "started_at": "2026-04-25T00:58:57.877Z",
+      "url": "https://bharag.duckdns.org/api/v1/ingest",
+      "method": "POST",
+      "request_headers": {
+        "content-type": "application/json",
+        "x-api-key": "lTuNmTHdGcwWP275xkxlVadkCwA",
+        "x-workspace-id": "1687fd99-3ef1-4e18-89fe-730c4d2ee100"
+      },
+      "request_body_raw": "{\"title\":\"Authorities arrest special forces soldier who allegedly made $400K on Polymarket bet involving Maduro operation\",\"content\":\"TAGs: [RSS]\\nTimestamp ran: 2026-04-25T00:58:37.712Z\\nPrevious run: none\\nPost timestamp: 2026-04-23T23:32:33.000Z\\nTitle: Authorities arrest special forces soldier who allegedly made $400K on Polymarket bet involving Maduro operation\\nContent: The soldier is accused of using classified government information to inform a wager on the prediction market Polymarket. \\nLink: https://techcrunch.com/2026/04/23/authorities-arrest-special-forces-soldier-who-allegedly-made-400k-on-polymarket-bet-involving-maduro-operation/\",\"source_type\":\"manual\",\"content_type\":\"doc\",\"source_url\":\"https://techcrunch.com/2026/04/23/authorities-arrest-special-forces-soldier-who-allegedly-made-400k-on-polymarket-bet-involving-maduro-operation/\",\"project_tags\":[\"rss\"],\"metadata\":{\"ingestion_type\":\"rss_feed\",\"feed_source\":\"https://techcrunch.com/feed/\",\"item_guid\":\"https://techcrunch.com/?p=3116048\",\"item_pub_date\":\"2026-04-23T23:32:33.000Z\"}}",
+      "request_body_json": {
+        "title": "Authorities arrest special forces soldier who allegedly made $400K on Polymarket bet involving Maduro operation",
+        "content": "TAGs: [RSS]\nTimestamp ran: 2026-04-25T00:58:37.712Z\nPrevious run: none\nPost timestamp: 2026-04-23T23:32:33.000Z\nTitle: Authorities arrest special forces soldier who allegedly made $400K on Polymarket bet involving Maduro operation\nContent: The soldier is accused of using classified government information to inform a wager on the prediction market Polymarket. \nLink: https://techcrunch.com/2026/04/23/authorities-arrest-special-forces-soldier-who-allegedly-made-400k-on-polymarket-bet-involving-maduro-operation/",
+        "source_type": "manual",
+        "content_type": "doc",
+        "source_url": "https://techcrunch.com/2026/04/23/authorities-arrest-special-forces-soldier-who-allegedly-made-400k-on-polymarket-bet-involving-maduro-operation/",
+        "project_tags": [
+          "rss"
+        ],
+        "metadata": {
+          "ingestion_type": "rss_feed",
+          "feed_source": "https://techcrunch.com/feed/",
+          "item_guid": "https://techcrunch.com/?p=3116048",
+          "item_pub_date": "2026-04-23T23:32:33.000Z"
+        }
+      },
+      "response_status": 500,
+      "response_headers": {
+        "connection": "keep-alive",
+        "content-length": "125",
+        "content-type": "application/json; charset=utf-8",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "date": "Sat, 25 Apr 2026 00:58:58 GMT",
+        "etag": "W/\"7d-LzybRVNUyYhq+Oc+YsP7ABrYUME\"",
+        "origin-agent-cluster": "?1",
+        "referrer-policy": "no-referrer",
+        "server": "nginx/1.29.5",
+        "strict-transport-security": "max-age=31536000; includeSubDomains, max-age=31536000; includeSubDomains",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "off",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN",
+        "x-permitted-cross-domain-policies": "none",
+        "x-request-id": "req_1777078737984_ngsinnq",
+        "x-xss-protection": "0"
+      },
+      "response_body_raw": "{\"error\":{\"message\":\"Workspace has no owner configured\",\"code\":\"NO_WORKSPACE_OWNER\",\"requestId\":\"req_1777078737984_ngsinnq\"}}",
+      "response_body_json": {
+        "error": {
+          "message": "Workspace has no owner configured",
+          "code": "NO_WORKSPACE_OWNER",
+          "requestId": "req_1777078737984_ngsinnq"
+        }
+      }
+    },
+    {
+      "started_at": "2026-04-25T00:58:07.696Z",
+      "url": "http://127.0.0.1:62391/cards/1e62ea35-61bc-480b-bc2d-6edbb16095c7/run",
+      "method": "POST",
+      "request_headers": {
+        "content-type": "application/json",
+        "x-user-id": "dev-user-1"
+      },
+      "request_body_raw": null,
+      "request_body_json": null,
+      "response_status": 202,
+      "response_headers": {
+        "access-control-allow-origin": "http://localhost:5173",
+        "connection": "keep-alive",
+        "content-length": "810",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Sat, 25 Apr 2026 00:58:58 GMT",
+        "etag": "W/\"32a-ZS/rYYmsf7U1lIoja26GeSopM7c\"",
+        "keep-alive": "timeout=5",
+        "vary": "Origin",
+        "x-powered-by": "Express"
+      },
+      "response_body_raw": "{\"id\":\"0023a902-09e0-4801-8e46-6d7dfb1b4e34\",\"created_at\":\"2026-04-25T00:58:07.700Z\",\"card_id\":\"1e62ea35-61bc-480b-bc2d-6edbb16095c7\",\"owner_id\":\"dev-user-1\",\"status\":\"failed\",\"trigger_mode\":\"manual\",\"attempts\":2,\"started_at\":\"2026-04-25T00:58:37.712Z\",\"ended_at\":\"2026-04-25T00:58:58.616Z\",\"error\":\"failed to ingest RSS items: request failed (500) for https://bharag.duckdns.org/api/v1/ingest: {\\\"error\\\":{\\\"message\\\":\\\"Workspace has no owner configured\\\",\\\"code\\\":\\\"NO_WORKSPACE_OWNER\\\",\\\"requestId\\\":\\\"req_1777078723662_90318ry\\\"}}\",\"logs\":[{\"level\":\"error\",\"message\":\"failed to ingest RSS items: request failed (500) for https://bharag.duckdns.org/api/v1/ingest: {\\\"error\\\":{\\\"message\\\":\\\"Workspace has no owner configured\\\",\\\"code\\\":\\\"NO_WORKSPACE_OWNER\\\",\\\"requestId\\\":\\\"req_1777078723662_90318ry\\\"}}\"}]}",
+      "response_body_json": {
+        "id": "0023a902-09e0-4801-8e46-6d7dfb1b4e34",
+        "created_at": "2026-04-25T00:58:07.700Z",
+        "card_id": "1e62ea35-61bc-480b-bc2d-6edbb16095c7",
+        "owner_id": "dev-user-1",
+        "status": "failed",
+        "trigger_mode": "manual",
+        "attempts": 2,
+        "started_at": "2026-04-25T00:58:37.712Z",
+        "ended_at": "2026-04-25T00:58:58.616Z",
+        "error": "failed to ingest RSS items: request failed (500) for https://bharag.duckdns.org/api/v1/ingest: {\"error\":{\"message\":\"Workspace has no owner configured\",\"code\":\"NO_WORKSPACE_OWNER\",\"requestId\":\"req_1777078723662_90318ry\"}}",
+        "logs": [
+          {
+            "level": "error",
+            "message": "failed to ingest RSS items: request failed (500) for https://bharag.duckdns.org/api/v1/ingest: {\"error\":{\"message\":\"Workspace has no owner configured\",\"code\":\"NO_WORKSPACE_OWNER\",\"requestId\":\"req_1777078723662_90318ry\"}}"
+          }
+        ]
+      }
+    },
+    {
+      "started_at": "2026-04-25T00:58:58.618Z",
+      "url": "http://127.0.0.1:62391/cards/1e62ea35-61bc-480b-bc2d-6edbb16095c7/runs",
+      "method": "GET",
+      "request_headers": {
+        "content-type": "application/json",
+        "x-user-id": "dev-user-1"
+      },
+      "request_body_raw": null,
+      "request_body_json": null,
+      "response_status": 200,
+      "response_headers": {
+        "access-control-allow-origin": "http://localhost:5173",
+        "connection": "keep-alive",
+        "content-length": "812",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Sat, 25 Apr 2026 00:58:58 GMT",
+        "etag": "W/\"32c-rq33Zr7NzttVLf1xVuVf3IhUVj8\"",
+        "keep-alive": "timeout=5",
+        "vary": "Origin",
+        "x-powered-by": "Express"
+      },
+      "response_body_raw": "[{\"id\":\"0023a902-09e0-4801-8e46-6d7dfb1b4e34\",\"created_at\":\"2026-04-25T00:58:07.700Z\",\"card_id\":\"1e62ea35-61bc-480b-bc2d-6edbb16095c7\",\"owner_id\":\"dev-user-1\",\"status\":\"failed\",\"trigger_mode\":\"manual\",\"attempts\":2,\"started_at\":\"2026-04-25T00:58:37.712Z\",\"ended_at\":\"2026-04-25T00:58:58.616Z\",\"error\":\"failed to ingest RSS items: request failed (500) for https://bharag.duckdns.org/api/v1/ingest: {\\\"error\\\":{\\\"message\\\":\\\"Workspace has no owner configured\\\",\\\"code\\\":\\\"NO_WORKSPACE_OWNER\\\",\\\"requestId\\\":\\\"req_1777078723662_90318ry\\\"}}\",\"logs\":[{\"level\":\"error\",\"message\":\"failed to ingest RSS items: request failed (500) for https://bharag.duckdns.org/api/v1/ingest: {\\\"error\\\":{\\\"message\\\":\\\"Workspace has no owner configured\\\",\\\"code\\\":\\\"NO_WORKSPACE_OWNER\\\",\\\"requestId\\\":\\\"req_1777078723662_90318ry\\\"}}\"}]}]",
+      "response_body_json": [
+        {
+          "id": "0023a902-09e0-4801-8e46-6d7dfb1b4e34",
+          "created_at": "2026-04-25T00:58:07.700Z",
+          "card_id": "1e62ea35-61bc-480b-bc2d-6edbb16095c7",
+          "owner_id": "dev-user-1",
+          "status": "failed",
+          "trigger_mode": "manual",
+          "attempts": 2,
+          "started_at": "2026-04-25T00:58:37.712Z",
+          "ended_at": "2026-04-25T00:58:58.616Z",
+          "error": "failed to ingest RSS items: request failed (500) for https://bharag.duckdns.org/api/v1/ingest: {\"error\":{\"message\":\"Workspace has no owner configured\",\"code\":\"NO_WORKSPACE_OWNER\",\"requestId\":\"req_1777078723662_90318ry\"}}",
+          "logs": [
+            {
+              "level": "error",
+              "message": "failed to ingest RSS items: request failed (500) for https://bharag.duckdns.org/api/v1/ingest: {\"error\":{\"message\":\"Workspace has no owner configured\",\"code\":\"NO_WORKSPACE_OWNER\",\"requestId\":\"req_1777078723662_90318ry\"}}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
