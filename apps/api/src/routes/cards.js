@@ -5,10 +5,26 @@ import { getRepository } from '../repository/index.js';
 import { validateCardPayload, validateSchedulePreview } from '../lib/validation.js';
 import { executeRun } from '../lib/run-engine.js';
 import { cardsToCsv, csvToCardInputs } from '../lib/cards-csv.js';
+import { validateRssSourceBeforeCardCreation } from '../lib/rss-source-check.js';
+import { SourceCheckError } from '../lib/errors.js';
 
 export function createCardsRouter() {
   const router = express.Router();
   const repository = getRepository();
+
+  async function assertRssSourceCheck(payload) {
+    if (payload.source_type !== 'rss_feed') return;
+
+    try {
+      await validateRssSourceBeforeCardCreation({
+        sourceInput: payload.source_input,
+        params: payload.params
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new SourceCheckError(`RSS source check failed: ${message}`);
+    }
+  }
 
   router.get('/', async (req, res, next) => {
     try {
@@ -22,6 +38,7 @@ export function createCardsRouter() {
   router.post('/', async (req, res, next) => {
     try {
       const payload = validateCardPayload(req.body, config.defaultTimezone);
+      await assertRssSourceCheck(payload);
       const card = await repository.createCard({ ...payload, owner_id: req.user.id });
       res.status(201).json(card);
     } catch (error) {
@@ -57,6 +74,7 @@ export function createCardsRouter() {
             skippedDuplicates += 1;
             continue;
           }
+          await assertRssSourceCheck(payload);
           await repository.createCard({ ...payload, owner_id: req.user.id });
           created += 1;
         } catch (error) {

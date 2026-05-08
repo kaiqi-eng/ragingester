@@ -5,3 +5,11 @@ export class RunOverlapError extends Error {
     this.statusCode = 409;
   }
 }
+
+export class SourceCheckError extends Error {
+  constructor(message = 'source check failed') {
+    super(message);
+    this.name = 'SourceCheckError';
+    this.statusCode = 422;
+  }
+}

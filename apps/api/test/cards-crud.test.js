@@ -184,6 +184,45 @@ test('cards API accepts smartcursor_link source type create and update', async (
   resetRepositoryForTests();
 });
 
+test('cards API rejects rss_feed card creation when source check fails', async () => {
+  setRepositoryForTests(createMemoryRepository());
+
+  const originalFetch = global.fetch;
+  global.fetch = async (url, options = {}) => {
+    if (String(url).includes('/api/rss/fetch') && options.method === 'POST') {
+      return new Response('invalid feed', { status: 422 });
+    }
+    return originalFetch(url, options);
+  };
+
+  try {
+    await withServer(async (baseUrl) => {
+      const createResponse = await fetch(`${baseUrl}/cards`, {
+        method: 'POST',
+        headers: authHeaders('user-a'),
+        body: JSON.stringify({
+          source_type: 'rss_feed',
+          source_input: 'https://example.com/feed.xml',
+          params: {
+            genie_rss_api_key: 'test-key',
+            genie_rss_base_url: baseUrl
+          },
+          schedule_enabled: false,
+          active: true
+        })
+      });
+
+      assert.equal(createResponse.status, 422);
+      const body = await createResponse.json();
+      assert.match(body.error, /RSS source check failed/i);
+      assert.match(body.error, /invalid feed/i);
+    });
+  } finally {
+    global.fetch = originalFetch;
+    resetRepositoryForTests();
+  }
+});
+
 test('cards API schedules all cards for stress test and skips already queued cards', async () => {
   setRepositoryForTests(createMemoryRepository());
 
