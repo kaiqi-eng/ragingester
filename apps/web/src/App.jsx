@@ -150,6 +150,9 @@ function CardsWorkspace({ auth, userEmail, onSignOut }) {
   }
 
   async function handleDelete(cardId) {
+    const confirmed = window.confirm('Delete this card? This cannot be undone.');
+    if (!confirmed) return;
+
     setError('');
     try {
       await api.deleteCard(auth, cardId);

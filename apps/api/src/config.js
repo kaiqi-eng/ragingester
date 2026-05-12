@@ -20,7 +20,13 @@ export const config = {
   schedulerPollMs: Number(process.env.SCHEDULER_POLL_MS || 15000),
   rssPrewarmWindowMs: Number(process.env.RSS_PREWARM_WINDOW_MS || 120000),
   runTimeoutMs: Number(process.env.RUN_TIMEOUT_MS || 180000),
-  runMaxRetries: Number(process.env.RUN_MAX_RETRIES || 1)
+  runMaxRetries: Number(process.env.RUN_MAX_RETRIES || 1),
+  alertsEnabled: String(process.env.ALERTS_ENABLED || 'false').toLowerCase() === 'true',
+  alertsSlackPrimary: String(process.env.ALERTS_SLACK_PRIMARY || 'webhook').toLowerCase(),
+  alertsSlackTimeoutMs: Number(process.env.ALERTS_SLACK_TIMEOUT_MS || 5000),
+  slackWebhookUrl: process.env.SLACK_WEBHOOK_URL || '',
+  slackBotToken: process.env.SLACK_BOT_TOKEN || '',
+  slackChannelId: process.env.SLACK_CHANNEL_ID || ''
 };
 
 export function hasSupabaseConfig() {

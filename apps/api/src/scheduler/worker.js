@@ -2,6 +2,7 @@ import { fileURLToPath } from 'node:url';
 import { config } from '../config.js';
 import { getRepository } from '../repository/index.js';
 import { runSchedulerTick as runSchedulerTickCore } from '../lib/scheduler-tick.js';
+import { flushDailyFailureAlerts } from '../services/alerts/index.js';
 
 export async function runSchedulerTick({
   repository = getRepository(),
@@ -25,6 +26,7 @@ export function startScheduler({ pollMs = config.schedulerPollMs } = {}) {
     tickInFlight = true;
 
     runSchedulerTick()
+      .then(() => flushDailyFailureAlerts({ now: new Date() }))
       .catch((error) => {
         // eslint-disable-next-line no-console
         console.error('scheduler tick failed', error);

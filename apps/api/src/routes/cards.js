@@ -5,7 +5,7 @@ import { getRepository } from '../repository/index.js';
 import { validateCardPayload, validateSchedulePreview } from '../lib/validation.js';
 import { executeRun } from '../lib/run-engine.js';
 import { cardsToCsv, csvToCardInputs } from '../lib/cards-csv.js';
-import { validateRssSourceBeforeCardCreation } from '../lib/rss-source-check.js';
+import { validateRssSourceBeforeCardCreation, validateRssSourcesBeforeCardCreation } from '../lib/rss-source-check.js';
 import { SourceCheckError } from '../lib/errors.js';
 
 export function createCardsRouter() {
@@ -64,6 +64,7 @@ export function createCardsRouter() {
       let created = 0;
       let skippedDuplicates = 0;
       const errors = [];
+      const pending = [];
 
       for (let i = 0; i < rows.length; i += 1) {
         const row = rows[i];
@@ -74,12 +75,43 @@ export function createCardsRouter() {
             skippedDuplicates += 1;
             continue;
           }
-          await assertRssSourceCheck(payload);
-          await repository.createCard({ ...payload, owner_id: req.user.id });
-          created += 1;
+          pending.push({ rowNumber: i + 2, payload });
         } catch (error) {
           errors.push({
             row: i + 2,
+            error: error instanceof Error ? error.message : String(error)
+          });
+        }
+      }
+
+      const rssChecks = await validateRssSourcesBeforeCardCreation({
+        items: pending
+          .filter((item) => item.payload.source_type === 'rss_feed')
+          .map((item) => ({
+            sourceInput: item.payload.source_input,
+            params: item.payload.params,
+            meta: { rowNumber: item.rowNumber }
+          }))
+      });
+      const rssErrorsByRow = new Map(
+        rssChecks
+          .filter((result) => !result.ok)
+          .map((result) => [result.meta.rowNumber, result.error])
+      );
+
+      for (const item of pending) {
+        try {
+          if (item.payload.source_type === 'rss_feed') {
+            const rssError = rssErrorsByRow.get(item.rowNumber);
+            if (rssError) {
+              throw new SourceCheckError(`RSS source check failed: ${rssError}`);
+            }
+          }
+          await repository.createCard({ ...item.payload, owner_id: req.user.id });
+          created += 1;
+        } catch (error) {
+          errors.push({
+            row: item.rowNumber,
             error: error instanceof Error ? error.message : String(error)
           });
         }

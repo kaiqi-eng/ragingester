@@ -1,6 +1,7 @@
 import { config } from '../config.js';
 
 const DEFAULT_TIMEOUT_MS = 15_000;
+const DEFAULT_CONCURRENCY = 5;
 
 function trimTrailingSlash(value) {
   return value.endsWith('/') ? value.slice(0, -1) : value;
@@ -64,4 +65,45 @@ export async function validateRssSourceBeforeCardCreation({ sourceInput, params 
   }
 
   await endpointFeedCheck(parsed.toString(), params);
+}
+
+export async function validateRssSourcesBeforeCardCreation({ items, concurrency = DEFAULT_CONCURRENCY }) {
+  const safeItems = Array.isArray(items) ? items : [];
+  const normalizedConcurrency = Number.isInteger(concurrency) && concurrency > 0
+    ? concurrency
+    : DEFAULT_CONCURRENCY;
+
+  const results = new Array(safeItems.length);
+  let nextIndex = 0;
+
+  async function worker() {
+    while (true) {
+      const index = nextIndex;
+      nextIndex += 1;
+      if (index >= safeItems.length) break;
+
+      const item = safeItems[index];
+      try {
+        await validateRssSourceBeforeCardCreation({
+          sourceInput: item.sourceInput,
+          params: item.params
+        });
+        results[index] = { ok: true, meta: item.meta };
+      } catch (error) {
+        results[index] = {
+          ok: false,
+          meta: item.meta,
+          error: error instanceof Error ? error.message : String(error)
+        };
+      }
+    }
+  }
+
+  const workers = Array.from(
+    { length: Math.min(normalizedConcurrency, Math.max(1, safeItems.length)) },
+    () => worker()
+  );
+
+  await Promise.all(workers);
+  return results;
 }

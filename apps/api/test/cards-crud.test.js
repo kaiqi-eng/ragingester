@@ -223,6 +223,58 @@ test('cards API rejects rss_feed card creation when source check fails', async (
   }
 });
 
+test('cards CSV import runs rss_feed source checks concurrently', async () => {
+  setRepositoryForTests(createMemoryRepository());
+
+  const originalFetch = global.fetch;
+  let activeChecks = 0;
+  let maxActiveChecks = 0;
+  global.fetch = async (url, options = {}) => {
+    if (String(url).includes('/api/rss/fetch') && options.method === 'POST') {
+      activeChecks += 1;
+      maxActiveChecks = Math.max(maxActiveChecks, activeChecks);
+      await new Promise((resolve) => setTimeout(resolve, 40));
+      activeChecks -= 1;
+      return new Response(JSON.stringify({ feed: { items: [] } }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' }
+      });
+    }
+    return originalFetch(url, options);
+  };
+
+  try {
+    await withServer(async (baseUrl) => {
+      const paramsA = JSON.stringify({ genie_rss_api_key: 'test-key', genie_rss_base_url: baseUrl }).replaceAll('"', '""');
+      const paramsB = JSON.stringify({ genie_rss_api_key: 'test-key', genie_rss_base_url: baseUrl }).replaceAll('"', '""');
+      const csv = [
+        'source_type,source_input,params',
+        `rss_feed,https://example.com/feed-a.xml,"${paramsA}"`,
+        `rss_feed,https://example.com/feed-b.xml,"${paramsB}"`
+      ].join('\n');
+
+      const importResponse = await fetch(`${baseUrl}/cards/import.csv`, {
+        method: 'POST',
+        headers: {
+          'content-type': 'text/csv',
+          'x-user-id': 'user-a'
+        },
+        body: csv
+      });
+
+      assert.equal(importResponse.status, 200);
+      const body = await importResponse.json();
+      assert.equal(body.created, 2);
+      assert.equal(body.errors.length, 0);
+    });
+
+    assert.ok(maxActiveChecks > 1, `expected concurrent checks, got maxActiveChecks=${maxActiveChecks}`);
+  } finally {
+    global.fetch = originalFetch;
+    resetRepositoryForTests();
+  }
+});
+
 test('cards API schedules all cards for stress test and skips already queued cards', async () => {
   setRepositoryForTests(createMemoryRepository());
 
