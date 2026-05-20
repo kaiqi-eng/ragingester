@@ -184,6 +184,41 @@ test('cards API accepts smartcursor_link source type create and update', async (
   resetRepositoryForTests();
 });
 
+test('cards API accepts slack_engine_fetch source type create and update', async () => {
+  setRepositoryForTests(createMemoryRepository());
+
+  await withServer(async (baseUrl) => {
+    const createResponse = await fetch(`${baseUrl}/cards`, {
+      method: 'POST',
+      headers: authHeaders('user-a'),
+      body: JSON.stringify({
+        source_type: 'slack_engine_fetch',
+        source_input: 'bha-coordination',
+        params: {},
+        schedule_enabled: false,
+        active: true
+      })
+    });
+
+    assert.equal(createResponse.status, 201);
+    const created = await createResponse.json();
+    assert.equal(created.source_type, 'slack_engine_fetch');
+
+    const updateResponse = await fetch(`${baseUrl}/cards/${created.id}`, {
+      method: 'PATCH',
+      headers: authHeaders('user-a'),
+      body: JSON.stringify({
+        source_input: 'all-bayshorizonnetwork'
+      })
+    });
+    assert.equal(updateResponse.status, 200);
+    const updated = await updateResponse.json();
+    assert.equal(updated.source_input, 'all-bayshorizonnetwork');
+  });
+
+  resetRepositoryForTests();
+});
+
 test('cards API rejects rss_feed card creation when source check fails', async () => {
   setRepositoryForTests(createMemoryRepository());
 

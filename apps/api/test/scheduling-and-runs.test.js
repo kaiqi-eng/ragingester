@@ -593,6 +593,51 @@ test('failed smartcursor_link run does not update smartcursor_workspace_id', asy
   }
 });
 
+test('failed slack_engine_fetch run does not update slack_engine params', async () => {
+  const repository = createMemoryRepository();
+  const originalFetch = global.fetch;
+  global.fetch = async () => {
+    throw new Error('forced fetch failure');
+  };
+
+  try {
+    const initialWorkspace = 'ws-slack-existing';
+    const initialDate = '2026-05-19';
+    const card = await repository.createCard({
+      owner_id: 'user-a',
+      source_type: 'slack_engine_fetch',
+      source_input: 'bha-coordination',
+      params: {
+        slack_engine_workspace_id: initialWorkspace,
+        slack_engine_last_date: initialDate
+      },
+      run_timeout_ms: 30000,
+      run_max_retries: 0,
+      schedule_enabled: false,
+      cron_expression: null,
+      timezone: 'America/Chicago',
+      next_run_at: null,
+      last_run_at: null,
+      active: true
+    });
+
+    const run = await executeRun({
+      repository,
+      card,
+      triggerMode: TRIGGER_MODE.MANUAL,
+      timeoutMs: config.runTimeoutMs,
+      maxRetries: config.runMaxRetries
+    });
+
+    assert.equal(run.status, 'failed');
+    const updatedCard = await repository.getCardById(card.id, card.owner_id);
+    assert.equal(updatedCard.params.slack_engine_workspace_id, initialWorkspace);
+    assert.equal(updatedCard.params.slack_engine_last_date, initialDate);
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
+
 test('list all runs returns only the requesting owner history', async () => {
   setRepositoryForTests(createMemoryRepository());
 

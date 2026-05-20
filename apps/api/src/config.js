@@ -10,6 +10,8 @@ export const config = {
   genieRssApiKey: process.env.GENIE_RSS_API_KEY || '',
   smartcursorBaseUrl: process.env.SMARTCURSOR_BASE_URL || '',
   smartcursorApiKey: process.env.SMARTCURSOR_API_KEY || '',
+  slackEngineBaseUrl: process.env.SLACK_ENGINE_BASE_URL || 'https://n8n.arupiautomates.com',
+  slackEngineApiKey: process.env.SLACK_ENGINE_API_KEY || '',
   bharagBaseUrl: process.env.BHARAG_BASE_URL || 'https://bharag.duckdns.org',
   bharagMasterApiKey: process.env.BHARAG_MASTER_API_KEY || '',
   bharagOwnerBuilderId: process.env.BHARAG_OWNER_BUILDER_ID || '',

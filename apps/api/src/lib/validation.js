@@ -15,7 +15,8 @@ const cardInputSchema = z.object({
     SOURCE_TYPES.RSS_FEED,
     SOURCE_TYPES.IDENTIFIER_BASED,
     SOURCE_TYPES.YOUTUBE,
-    SOURCE_TYPES.SMARTCURSOR_LINK
+    SOURCE_TYPES.SMARTCURSOR_LINK,
+    SOURCE_TYPES.SLACK_ENGINE_FETCH
   ]),
   source_input: z.string().min(1),
   params: z.record(z.any()).default({}),
