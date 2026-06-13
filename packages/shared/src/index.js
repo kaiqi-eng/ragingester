@@ -4,6 +4,7 @@ export const SOURCE_TYPES = {
   RSS_FEED: 'rss_feed',
   IDENTIFIER_BASED: 'identifier_based',
   YOUTUBE: 'youtube',
+  LINKEDIN: 'linkedin',
   SMARTCURSOR_LINK: 'smartcursor_link',
   SLACK_ENGINE_FETCH: 'slack_engine_fetch'
 };

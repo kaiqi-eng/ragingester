@@ -4,6 +4,7 @@ import { websiteUrlCollector } from './website-url.js';
 import { rssFeedCollector } from './rss-feed.js';
 import { identifierBasedCollector } from './identifier-based.js';
 import { youtubeCollector } from './youtube.js';
+import { linkedinCollector } from './linkedin.js';
 import { smartcursorLinkCollector } from './smartcursor-link.js';
 import { slackEngineFetchCollector } from './slack-engine-fetch.js';
 
@@ -13,6 +14,7 @@ const collectors = {
   [SOURCE_TYPES.RSS_FEED]: rssFeedCollector,
   [SOURCE_TYPES.IDENTIFIER_BASED]: identifierBasedCollector,
   [SOURCE_TYPES.YOUTUBE]: youtubeCollector,
+  [SOURCE_TYPES.LINKEDIN]: linkedinCollector,
   [SOURCE_TYPES.SMARTCURSOR_LINK]: smartcursorLinkCollector,
   [SOURCE_TYPES.SLACK_ENGINE_FETCH]: slackEngineFetchCollector
 };

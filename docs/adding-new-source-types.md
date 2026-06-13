@@ -133,6 +133,45 @@ Notes:
 - Prefer `SMARTCURSOR_BASE_URL` and `SMARTCURSOR_API_KEY` in env for production; use params for per-card overrides only.
 - Keep credentials in `params.auth.login_fields`; do not put secrets in `source_input`.
 
+### `linkedin` params example (profile/company posts)
+
+Use `source_type: "linkedin"` with `source_input` set to a public LinkedIn profile or company URL:
+
+```json
+{
+  "source_type": "linkedin",
+  "source_input": "https://www.linkedin.com/in/satyanadella/",
+  "params": {
+    "maxPosts": 10
+  }
+}
+```
+
+The collector calls Genie-RSS `/api/linkedin/profile-posts`, filters posts with `linkedin_cursor_pub_date`, and stores the Bharag workspace in `linkedin_workspace_id`.
+
+### `linkedin` params example (topic search)
+
+For keyword searches, set `params.linkedin_mode` to `topic`. If `searchQueries` is omitted, the collector splits `source_input` on commas.
+
+```json
+{
+  "source_type": "linkedin",
+  "source_input": "b2b sales, revenue operations",
+  "params": {
+    "linkedin_mode": "topic",
+    "searchQueries": ["b2b sales", "revenue operations"],
+    "authorsCompanies": ["Microsoft"],
+    "contentType": "posts",
+    "maxPosts": 20
+  }
+}
+```
+
+Notes:
+- Reuse `GENIE_RSS_BASE_URL`, `GENIE_RSS_API_KEY`, `BHARAG_BASE_URL`, and `BHARAG_MASTER_API_KEY` from the RSS/YouTube integrations.
+- Use params for per-card overrides only: `genie_rss_base_url`, `genie_rss_api_key`, `bharag_base_url`, `bharag_master_api_key`.
+- Supported topic params mirror Genie-RSS: `authorUrls`, `authorsCompanies`, `contentType`, `maxPosts`, `maxReactions`, `postNestedComments`, `postNestedReactions`, `scrapeComments`, and `scrapeReactions`.
+
 ## 8) Add/Update Environment Variables
 
 If the source calls external systems:

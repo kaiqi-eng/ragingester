@@ -147,6 +147,46 @@ test('cards API accepts youtube source type create and update', async () => {
   resetRepositoryForTests();
 });
 
+test('cards API accepts linkedin source type create and update', async () => {
+  setRepositoryForTests(createMemoryRepository());
+
+  await withServer(async (baseUrl) => {
+    const createResponse = await fetch(`${baseUrl}/cards`, {
+      method: 'POST',
+      headers: authHeaders('user-a'),
+      body: JSON.stringify({
+        source_type: 'linkedin',
+        source_input: 'https://www.linkedin.com/in/satyanadella/',
+        params: { maxPosts: 10 },
+        schedule_enabled: false,
+        active: true
+      })
+    });
+
+    assert.equal(createResponse.status, 201);
+    const created = await createResponse.json();
+    assert.equal(created.source_type, 'linkedin');
+
+    const updateResponse = await fetch(`${baseUrl}/cards/${created.id}`, {
+      method: 'PATCH',
+      headers: authHeaders('user-a'),
+      body: JSON.stringify({
+        source_input: 'b2b sales, revenue operations',
+        params: {
+          linkedin_mode: 'topic',
+          searchQueries: ['b2b sales', 'revenue operations']
+        }
+      })
+    });
+    assert.equal(updateResponse.status, 200);
+    const updated = await updateResponse.json();
+    assert.equal(updated.source_input, 'b2b sales, revenue operations');
+    assert.equal(updated.params.linkedin_mode, 'topic');
+  });
+
+  resetRepositoryForTests();
+});
+
 test('cards API accepts smartcursor_link source type create and update', async () => {
   setRepositoryForTests(createMemoryRepository());
 

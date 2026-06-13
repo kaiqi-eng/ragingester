@@ -134,6 +134,12 @@ export function CardForm({ onSubmit, loading, mode = 'create', initialCard = nul
             {' '}`https://www.youtube.com/feeds/videos.xml?channel_id=...`.
           </div>
         )}
+        {form.source_type === SOURCE_TYPES.LINKEDIN && (
+          <div className="meta">
+            LinkedIn source accepts an HTTPS profile/company URL by default. For topic search, set
+            {' '}`params.linkedin_mode` to `topic` and provide `params.searchQueries`, or use comma-separated terms here.
+          </div>
+        )}
         {form.source_type === SOURCE_TYPES.SMARTCURSOR_LINK && (
           <div className="meta">
             SmartCursor link source supports login via `params.auth.login_fields` (array of `{`name, selector, value, secret?`}`),
