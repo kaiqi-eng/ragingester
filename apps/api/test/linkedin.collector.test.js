@@ -210,6 +210,7 @@ test('linkedinCollector builds topic payload and reports partial ingest failures
         maxPosts: 20,
         scrapeComments: true,
         genie_rss_base_url: 'https://genie.example',
+        genie_rss_api_key: 'genie-key',
         bharag_base_url: 'https://bharag.example',
         bharag_master_api_key: 'bharag-key'
       }
@@ -224,7 +225,7 @@ test('linkedinCollector builds topic payload and reports partial ingest failures
 
     const fetchCall = calls.find((call) => call.url.endsWith('/api/linkedin/topic-posts'));
     assert.ok(fetchCall);
-    assert.equal(fetchCall.options.headers['x-api-key'], undefined);
+    assert.equal(fetchCall.options.headers['x-api-key'], 'genie-key');
     const fetchPayload = JSON.parse(fetchCall.options.body);
     assert.deepEqual(fetchPayload.searchQueries, ['b2b sales', 'revenue operations']);
     assert.deepEqual(fetchPayload.authorsCompanies, ['Microsoft']);
