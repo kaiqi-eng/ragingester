@@ -179,6 +179,32 @@ export function createCardsRouter() {
     }
   });
 
+  router.post('/bulk/activate', async (req, res, next) => {
+    try {
+      const ids = Array.isArray(req.body?.ids) ? req.body.ids : [];
+      if (ids.length === 0) {
+        return res.status(400).json({ error: 'ids must be a non-empty array' });
+      }
+
+      let updated = 0;
+      let skipped = 0;
+
+      for (const id of ids) {
+        const card = await repository.getCardById(id, req.user.id);
+        if (!card) {
+          skipped += 1;
+          continue;
+        }
+        await repository.updateCard(id, { active: true });
+        updated += 1;
+      }
+
+      res.status(200).json({ requested: ids.length, updated, skipped });
+    } catch (error) {
+      next(error);
+    }
+  });
+
   router.post('/bulk/delete', async (req, res, next) => {
     try {
       const ids = Array.isArray(req.body?.ids) ? req.body.ids : [];

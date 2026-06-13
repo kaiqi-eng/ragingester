@@ -44,6 +44,14 @@ export const api = {
     }));
   },
 
+  async bulkActivateCards(auth, ids) {
+    return handle(await fetch(`${API_BASE}/cards/bulk/activate`, {
+      method: 'POST',
+      headers: authHeaders(auth),
+      body: JSON.stringify({ ids })
+    }));
+  },
+
   async bulkDeleteCards(auth, ids) {
     return handle(await fetch(`${API_BASE}/cards/bulk/delete`, {
       method: 'POST',

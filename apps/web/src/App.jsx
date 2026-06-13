@@ -193,6 +193,29 @@ function CardsWorkspace({ auth, userEmail, onSignOut }) {
     }
   }
 
+  async function handleBulkActivate() {
+    const ids = filteredCards.map((card) => card.id);
+    if (ids.length === 0) return;
+
+    const confirmed = window.confirm(`Activate ${ids.length} visible card${ids.length === 1 ? '' : 's'}?`);
+    if (!confirmed) return;
+
+    setLoading(true);
+    setError('');
+    try {
+      const result = await api.bulkActivateCards(auth, ids);
+      await refreshCards();
+      if (selectedCardId && ids.includes(selectedCardId)) {
+        await refreshRuns(selectedCardId);
+      }
+      setToast(`Bulk activate complete: ${result.updated} updated, ${result.skipped} skipped.`);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleBulkDelete() {
     const ids = filteredCards.map((card) => card.id);
     if (ids.length === 0) return;
@@ -386,6 +409,9 @@ function CardsWorkspace({ auth, userEmail, onSignOut }) {
               Applies to the {filteredCards.length} currently visible card{filteredCards.length === 1 ? '' : 's'}.
             </div>
             <div className="row" style={{ marginTop: 12 }}>
+              <button className="secondary" type="button" onClick={handleBulkActivate} disabled={loading || filteredCards.length === 0}>
+                Activate Visible
+              </button>
               <button className="secondary" type="button" onClick={handleBulkDeactivate} disabled={loading || filteredCards.length === 0}>
                 Deactivate Visible
               </button>

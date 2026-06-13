@@ -454,6 +454,24 @@ test('cards API bulk deactivates and deletes requested owner cards only', async 
     const otherOwner = await otherOwnerResponse.json();
     assert.equal(otherOwner.active, true);
 
+    const activateResponse = await fetch(`${baseUrl}/cards/bulk/activate`, {
+      method: 'POST',
+      headers: authHeaders('user-a'),
+      body: JSON.stringify({ ids: [firstCard.id, otherOwnerCard.id] })
+    });
+    assert.equal(activateResponse.status, 200);
+    assert.deepEqual(await activateResponse.json(), {
+      requested: 2,
+      updated: 1,
+      skipped: 1
+    });
+
+    const reactivatedFirstResponse = await fetch(`${baseUrl}/cards/${firstCard.id}`, {
+      headers: authHeaders('user-a')
+    });
+    const reactivatedFirst = await reactivatedFirstResponse.json();
+    assert.equal(reactivatedFirst.active, true);
+
     const deleteResponse = await fetch(`${baseUrl}/cards/bulk/delete`, {
       method: 'POST',
       headers: authHeaders('user-a'),
