@@ -15,6 +15,11 @@ Monorepo for a card-based data collection service:
 4. Run Web: `npm.cmd run dev:web`
 5. Run tests: `npm.cmd test`
 
+## Documentation
+
+- [Ingestion stack](docs/ingestion-stack.md) — all source types: Genie-RSS, YouTube, LinkedIn, SmartCursor, Slack Engine → Bharag.
+- [Adding new source types](docs/adding-new-source-types.md)
+
 ## Stage status
 
 - Stage 0 complete: repo bootstrap + workspace setup.
