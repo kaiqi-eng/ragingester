@@ -1,6 +1,8 @@
 # Ragingester → Bharag Ingestion Stack
 
 > **Source of truth:** This file lives in the ragingester repo. Import into Notion via **Import → Markdown**, then add dashboard links and access-control notes that should not live in git.
+>
+> **Builder handoff (LinkedIn / YouTube intel lane):** [linkedin-youtube-intel-handoff.md](./linkedin-youtube-intel-handoff.md)
 
 **Last verified:** ragingester @ `3e5f3cc`
 

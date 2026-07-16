@@ -18,6 +18,7 @@ Monorepo for a card-based data collection service:
 ## Documentation
 
 - [Ingestion stack](docs/ingestion-stack.md) — all source types: Genie-RSS, YouTube, LinkedIn, SmartCursor, Slack Engine → Bharag.
+- [LinkedIn / YouTube intel handoff](docs/linkedin-youtube-intel-handoff.md) — status, architecture summary, and next steps for the Third Eye / external intel lane.
 - [Adding new source types](docs/adding-new-source-types.md)
 
 ## Stage status
