@@ -1,0 +1,27 @@
+{
+  "system": "genie_rss",
+  "run_id": "genie_rss:2026-07-26",
+  "date": "2026-07-26",
+  "feeds_active": 18,
+  "ingest": {
+    "ok": 15,
+    "degraded": 2,
+    "failed": 1
+  },
+  "last_run": "2026-07-26T22:10:00.000Z",
+  "failures": [
+    {
+      "feed": "https://techcrunch.com/feed/",
+      "code": "run timed out after 30000ms",
+      "count": 2,
+      "first_seen": "2026-07-26T08:00:00.000Z"
+    },
+    {
+      "feed": "https://www.theverge.com/rss/index.xml",
+      "code": "GENIE_RSS_API_KEY is required for rss_feed ingestion",
+      "count": 1,
+      "first_seen": "2026-07-26T12:30:00.000Z"
+    }
+  ],
+  "link": "genie_rss:2026-07-26"
+}

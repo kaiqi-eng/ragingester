@@ -1,0 +1,14 @@
+{
+  "system": "genie_rss",
+  "run_id": "genie_rss:2026-07-26",
+  "date": "2026-07-26",
+  "feeds_active": 18,
+  "ingest": {
+    "ok": 16,
+    "degraded": 2,
+    "failed": 0
+  },
+  "last_run": "2026-07-26T21:00:00.000Z",
+  "failures": [],
+  "link": "genie_rss:2026-07-26"
+}

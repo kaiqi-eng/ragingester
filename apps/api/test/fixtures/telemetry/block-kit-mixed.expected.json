@@ -1,0 +1,52 @@
+{
+  "blocks": [
+    {
+      "type": "header",
+      "text": {
+        "type": "plain_text",
+        "text": "RSS Daily Status, 2026-07-26"
+      }
+    },
+    {
+      "type": "section",
+      "fields": [
+        {
+          "type": "mrkdwn",
+          "text": "*Feeds active:*\n18"
+        },
+        {
+          "type": "mrkdwn",
+          "text": "*Ingest:*\nOK 15 | Degraded 2 | Failed 1"
+        }
+      ]
+    },
+    {
+      "type": "context",
+      "elements": [
+        {
+          "type": "mrkdwn",
+          "text": "Last run: 2026-07-26T22:10:00.000Z"
+        }
+      ]
+    },
+    {
+      "type": "divider"
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*Failures:*\n• `https://techcrunch.com/feed/`, run timed out after 30000ms, 2 (2026-07-26T08:00:00.000Z)\n• `https://www.theverge.com/rss/index.xml`, GENIE_RSS_API_KEY is required for rss_feed ingestion, 1 (2026-07-26T12:30:00.000Z)"
+      }
+    },
+    {
+      "type": "context",
+      "elements": [
+        {
+          "type": "mrkdwn",
+          "text": "Full run log: genie_rss:2026-07-26"
+        }
+      ]
+    }
+  ]
+}
