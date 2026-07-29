@@ -192,6 +192,40 @@ export function createMemoryRepository() {
       });
     },
 
+    async listActiveRssFeedCards() {
+      return [...store.cards.values()].filter(
+        (card) => card.active === true && card.source_type === 'rss_feed'
+      );
+    },
+
+    async listRunsForCardsInWindow({ cardIds, fromIso, toIso }) {
+      const ids = new Set(Array.isArray(cardIds) ? cardIds : []);
+      if (ids.size === 0) return [];
+
+      const fromMs = new Date(fromIso).getTime();
+      const toMs = new Date(toIso).getTime();
+
+      const runs = [...store.runs.values()].filter((run) => {
+        if (!ids.has(run.card_id)) return false;
+        const stamp = run.ended_at || run.created_at;
+        if (!stamp) return false;
+        const ts = new Date(stamp).getTime();
+        return ts >= fromMs && ts < toMs;
+      });
+
+      return runs.sort((a, b) => {
+        const aTs = new Date(a.ended_at || a.created_at || 0).getTime();
+        const bTs = new Date(b.ended_at || b.created_at || 0).getTime();
+        return aTs - bTs;
+      });
+    },
+
+    async listCollectedDataByRunIds(runIds) {
+      const ids = new Set(Array.isArray(runIds) ? runIds : []);
+      if (ids.size === 0) return [];
+      return [...store.collectedData.values()].filter((row) => ids.has(row.run_id));
+    },
+
     async createCollectedData(payload) {
       const row = { id: randomUUID(), created_at: new Date().toISOString(), ...payload };
       store.collectedData.set(row.id, row);

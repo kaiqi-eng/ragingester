@@ -7,6 +7,7 @@ import { config } from './config.js';
 import { authMiddleware } from './lib/auth.js';
 import { createCardsRouter } from './routes/cards.js';
 import { createRunsRouter } from './routes/runs.js';
+import { createTelemetryRouter } from './routes/telemetry.js';
 
 export function createApp() {
   const app = express();
@@ -25,11 +26,17 @@ export function createApp() {
   app.use(authMiddleware);
   app.use('/cards', createCardsRouter());
   app.use('/runs', createRunsRouter());
+  app.use('/telemetry', createTelemetryRouter());
 
   if (hasWebBuild) {
     app.use(express.static(webDistPath));
     app.get('*', (req, res, next) => {
-      if (req.path.startsWith('/cards') || req.path.startsWith('/runs') || req.path === '/health') {
+      if (
+        req.path.startsWith('/cards')
+        || req.path.startsWith('/runs')
+        || req.path.startsWith('/telemetry')
+        || req.path === '/health'
+      ) {
         return next();
       }
       return res.sendFile(path.join(webDistPath, 'index.html'));

@@ -1,8 +1,8 @@
 # Multi-Phase Plan: Logging & Telemetry (RSS Daily Status + Pipeline Errors)
 
-**Status:** Phase 0 done · Phase 1+ planned  
+**Status:** Phase 0–2 done · Phase 3+ planned (pipeline errors owned separately)  
 **Owner:** ragingester (Kaiqi) · contract from Jason Bays / monitoring twin  
-**Last updated:** 2026-07-27
+**Last updated:** 2026-07-29
 
 ## Goal
 
@@ -162,6 +162,11 @@ Relevant code:
 
 ## Phase 1 — Persist enough to build a real daily rollup
 
+**Status:** done (2026-07-28)  
+**Contracts:** [telemetry-contracts.md](./telemetry-contracts.md)  
+**Builder:** [`apps/api/src/telemetry/build-daily-status.js`](../apps/api/src/telemetry/build-daily-status.js)  
+**Dry-run:** `GET /telemetry/rss-daily-status?date=YYYY-MM-DD`
+
 **Outcome:** A day’s RSS runs can be queried and mapped into the status schema without relying on in-memory alert maps.
 
 ### Work
@@ -179,9 +184,9 @@ Relevant code:
 
 ### Exit criteria
 
-- [ ] Dry-run CLI or admin endpoint returns schema-valid JSON for a real day
-- [ ] Degraded runs appear in `ingest.degraded`, not only in `failures`
-- [ ] Restart-safe (DB-backed), unlike today’s in-memory digest
+- [x] Dry-run CLI or admin endpoint returns schema-valid JSON for a real day
+- [x] Degraded runs appear in `ingest.degraded`, not only in `failures`
+- [x] Restart-safe (DB-backed), unlike today’s in-memory digest
 
 ### Non-goals
 
@@ -191,7 +196,12 @@ Relevant code:
 
 ## Phase 2 — Emit daily status card (Slack Block Kit)
 
-**Outcome:** One structured daily card replaces (or supersedes) the plain-text failure-only digest for RSS.
+**Status:** done (2026-07-29)  
+**Contracts:** [telemetry-contracts.md](./telemetry-contracts.md)  
+**Flush:** [`apps/api/src/telemetry/flush-daily-status.js`](../apps/api/src/telemetry/flush-daily-status.js)  
+**Manual emit:** `POST /telemetry/rss-daily-status/emit?date=YYYY-MM-DD`
+
+**Outcome:** One structured daily card posts to the status channel (additive; plain-text digest unchanged). Pipeline errors / Bays are out of scope for this path.
 
 ### Work
 
@@ -201,23 +211,27 @@ Relevant code:
 4. Feature flag: e.g. `TELEMETRY_DAILY_STATUS_ENABLED` (default off until smoke-tested).
 5. Migrate off RSS-relevant plain-text digest once status card is trusted (keep digest for non-RSS sources if needed, or generalize later).
 
-### Config (illustrative)
+### Config
 
 | Env | Purpose |
 |-----|---------|
-| `TELEMETRY_DAILY_STATUS_ENABLED` | Gate daily card |
-| `TELEMETRY_STATUS_SLACK_CHANNEL_ID` / webhook | Status channel (not pipeline-errors) |
-| Existing `ALERTS_*` / `SLACK_*` | Interim digest / bot transport reuse where safe |
+| `TELEMETRY_DAILY_STATUS_ENABLED` | Gate daily card (default false) |
+| `TELEMETRY_STATUS_SLACK_CHANNEL_ID` | Status channel for bot path |
+| `TELEMETRY_STATUS_SLACK_WEBHOOK_URL` | Preferred status webhook |
+| `SLACK_BOT_TOKEN` | Bot path token |
+| Existing `ALERTS_*` / digest `SLACK_*` | Unchanged digest |
 
 ### Exit criteria
 
-- [ ] Card posts for a known day with correct ok/degraded/failed counts
-- [ ] Structured JSON available alongside Block Kit
-- [ ] Flag-off leaves production behavior unchanged
+- [x] Card posts for a known day with correct ok/degraded/failed counts
+- [x] Structured JSON available alongside Block Kit
+- [x] Flag-off leaves production behavior unchanged
 
 ---
 
 ## Phase 3 — Pipeline errors via Bays (reuse existing handler)
+
+**Owner note:** Pipeline-errors wiring is owned separately from the daily status emit path.
 
 **Outcome:** Terminal RSS failures classify and post through the Bays Error Handler — same 5-class taxonomy, same Slack template, same `engine_errors` sheet.
 

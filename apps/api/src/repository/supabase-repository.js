@@ -180,6 +180,54 @@ export function createSupabaseRepository({ supabaseUrl, serviceRoleKey, tables =
       );
     },
 
+    async listActiveRssFeedCards() {
+      return unwrap(
+        await supabase
+          .from(table.cards)
+          .select('*')
+          .eq('active', true)
+          .eq('source_type', 'rss_feed')
+      );
+    },
+
+    async listRunsForCardsInWindow({ cardIds, fromIso, toIso }) {
+      const ids = Array.isArray(cardIds) ? cardIds.filter(Boolean) : [];
+      if (ids.length === 0) return [];
+
+      const fromMs = new Date(fromIso).getTime();
+      const toMs = new Date(toIso).getTime();
+      const rows = unwrap(
+        await supabase
+          .from(table.collectionRuns)
+          .select('*')
+          .in('card_id', ids)
+      ) || [];
+
+      return rows
+        .filter((run) => {
+          const stamp = run.ended_at || run.created_at;
+          if (!stamp) return false;
+          const ts = new Date(stamp).getTime();
+          return ts >= fromMs && ts < toMs;
+        })
+        .sort((a, b) => {
+          const aTs = new Date(a.ended_at || a.created_at || 0).getTime();
+          const bTs = new Date(b.ended_at || b.created_at || 0).getTime();
+          return aTs - bTs;
+        });
+    },
+
+    async listCollectedDataByRunIds(runIds) {
+      const ids = Array.isArray(runIds) ? runIds.filter(Boolean) : [];
+      if (ids.length === 0) return [];
+      return unwrap(
+        await supabase
+          .from(table.collectedData)
+          .select('run_id, metadata')
+          .in('run_id', ids)
+      ) || [];
+    },
+
     async createCollectedData(payload) {
       return unwrap(await supabase.from(table.collectedData).insert(payload).select('*').single());
     }

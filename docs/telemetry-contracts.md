@@ -1,6 +1,6 @@
 # Telemetry Contracts (RSS Daily Status)
 
-**Phase:** 0 (contracts & fixtures)  
+**Phase:** 0–2 (contracts, DB rollup, Slack status card)  
 **Module:** [`apps/api/src/telemetry/`](../apps/api/src/telemetry/)  
 **Roadmap:** [logging-telemetry-plan.md](./logging-telemetry-plan.md)
 
@@ -22,7 +22,7 @@
       "first_seen": "<ISO timestamp or null>"
     }
   ],
-  "link": "<run id or log pointer>"
+  "link": "genie_rss:YYYY-MM-DD"
 }
 ```
 
@@ -34,7 +34,9 @@ Helpers:
 | `groupFailures` | Aggregate by `(feed, code)` with earliest `first_seen` |
 | `validateRssDailyStatus` | Throw on invalid shape |
 | `buildDailyRunId` | `genie_rss:${date}` |
+| `buildRssDailyStatus` | DB rollup for a UTC day → validated status |
 | `buildRssDailyStatusBlocks` | Slack Block Kit (truncates `code` to 120 chars for display only) |
+| `flushRssDailyStatus` | Build + post yesterday’s card (feature-flagged) |
 
 Golden fixtures: [`apps/api/test/fixtures/telemetry/`](../apps/api/test/fixtures/telemetry/).
 
@@ -46,19 +48,69 @@ Golden fixtures: [`apps/api/test/fixtures/telemetry/`](../apps/api/test/fixtures
 | `degraded` | Run `status === 'success'` and item `failedCount > 0` |
 | `ok` | Run `status === 'success'` and `failedCount === 0` |
 
-## Env / channel targets (not wired in Phase 0)
+`pending` / `running` runs are skipped. Degraded runs count in `ingest.degraded` only — they are **not** listed under `failures`.
+
+## Phase 1 rollup rules
+
+| Topic | Rule |
+|-------|------|
+| Window | UTC calendar day `[dateT00:00:00.000Z, nextDayT00:00:00.000Z)` |
+| Run timestamp | Prefer `ended_at`; fallback `created_at` |
+| Scope | All active `source_type=rss_feed` cards (fleet-wide) |
+| Ingest unit | Each terminal run in the window counts once |
+| `failedCount` | `collected_data.metadata.metrics.failed`; missing → `0` |
+| `failures[]` | `status=failed` only; `feed=source_input`; `code=run.error` |
+| `run_id` / `link` | Both `genie_rss:YYYY-MM-DD` |
+| `last_run` | Max terminal `ended_at` in window; if none, day start ISO |
+| Persistence | Computed from DB on each request (no daily status table) |
+
+### Dry-run endpoint
+
+`GET /telemetry/rss-daily-status?date=YYYY-MM-DD` (auth required).
+
+- Omit `date` → yesterday UTC.
+- Invalid `date` → `400`.
+- Response: schema-valid `RssDailyStatus` JSON (no Slack).
+
+Builder: `buildRssDailyStatus({ repository, date })`.
+
+## Phase 2 Slack status card
+
+| Topic | Rule |
+|-------|------|
+| Gate | `TELEMETRY_DAILY_STATUS_ENABLED` (default `false`) |
+| Auto day | Yesterday UTC, from scheduler after digest flush |
+| Transport | Prefer `TELEMETRY_STATUS_SLACK_WEBHOOK_URL`; else `SLACK_BOT_TOKEN` + `TELEMETRY_STATUS_SLACK_CHANNEL_ID` |
+| Payload | Block Kit from `buildRssDailyStatusBlocks` + fallback text |
+| Twin JSON | `console.info('telemetry.rss_daily_status', …)`; bot thread reply with fenced JSON; webhook second POST with fenced JSON |
+| Idempotency | In-memory posted-date set (restart may re-post once; durable = Phase 4) |
+| Digest | Unchanged — status card is additive |
+
+### Emit endpoint
+
+`POST /telemetry/rss-daily-status/emit?date=YYYY-MM-DD` (auth required).
+
+- Flag off → `503`.
+- Forces emit even if date was already posted this process (smoke/testing).
+- Success → `{ posted: true, date, status }`.
+
+Do **not** use `SLACK_CHANNEL_ID` for the status card (that may be digest / other). Status channel stays separate from `#bha-pipeline-errors` (Phase 3, owned outside this emit path).
+
+## Env / channel targets
 
 | Concern | Env / destination | Notes |
 |---------|-------------------|-------|
-| Daily status gate | `TELEMETRY_DAILY_STATUS_ENABLED` | Phase 2 |
-| Status Slack channel | `TELEMETRY_STATUS_SLACK_CHANNEL_ID` | Twin-facing daily card |
-| Status Slack webhook | `TELEMETRY_STATUS_SLACK_WEBHOOK_URL` | Alternate transport |
-| Pipeline errors | `#bha-pipeline-errors` via Bays Error Handler | Phase 3; do not invent a second template |
-| Existing digest (interim) | `ALERTS_ENABLED`, `SLACK_*` | Plain-text failure digest today |
-
-Status channel and `#bha-pipeline-errors` stay separate: rollup card vs classified failures.
+| Daily status gate | `TELEMETRY_DAILY_STATUS_ENABLED` | Default off |
+| Status Slack channel | `TELEMETRY_STATUS_SLACK_CHANNEL_ID` | Twin-facing daily card (bot path) |
+| Status Slack webhook | `TELEMETRY_STATUS_SLACK_WEBHOOK_URL` | Preferred transport when set |
+| Bot token | `SLACK_BOT_TOKEN` | Reused for status bot path |
+| Timeout | `ALERTS_SLACK_TIMEOUT_MS` | Shared Slack timeout |
+| Pipeline errors | `#bha-pipeline-errors` via Bays | Phase 3 — not wired by status emit |
+| Existing digest | `ALERTS_ENABLED`, `SLACK_*` | Plain-text failure digest; unchanged |
 
 ## Bays Error Handler mapping (Phase 3)
+
+Owned separately from the daily status card path.
 
 | Bays field | Value |
 |------------|-------|
