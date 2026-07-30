@@ -1,6 +1,6 @@
 # Telemetry Contracts (RSS Daily Status)
 
-**Phase:** 0–2 (contracts, DB rollup, Slack status card)  
+**Phase:** 0–3 (contracts, DB rollup, Slack status card, pipeline-error Slack)  
 **Module:** [`apps/api/src/telemetry/`](../apps/api/src/telemetry/)  
 **Roadmap:** [logging-telemetry-plan.md](./logging-telemetry-plan.md)
 
@@ -94,7 +94,7 @@ Builder: `buildRssDailyStatus({ repository, date })`.
 - Forces emit even if date was already posted this process (smoke/testing).
 - Success → `{ posted: true, date, status }`.
 
-Do **not** use `SLACK_CHANNEL_ID` for the status card (that may be digest / other). Status channel stays separate from `#bha-pipeline-errors` (Phase 3, owned outside this emit path).
+Do **not** use `SLACK_CHANNEL_ID` for the status card (that may be digest / other). Status channel stays separate from `#bha-pipeline-errors`.
 
 ## Env / channel targets
 
@@ -103,27 +103,44 @@ Do **not** use `SLACK_CHANNEL_ID` for the status card (that may be digest / othe
 | Daily status gate | `TELEMETRY_DAILY_STATUS_ENABLED` | Default off |
 | Status Slack channel | `TELEMETRY_STATUS_SLACK_CHANNEL_ID` | Twin-facing daily card (bot path) |
 | Status Slack webhook | `TELEMETRY_STATUS_SLACK_WEBHOOK_URL` | Preferred transport when set |
-| Bot token | `SLACK_BOT_TOKEN` | Reused for status bot path |
+| Bot token | `SLACK_BOT_TOKEN` | Reused for status + pipeline-error bot paths |
 | Timeout | `ALERTS_SLACK_TIMEOUT_MS` | Shared Slack timeout |
-| Pipeline errors | `#bha-pipeline-errors` via Bays | Phase 3 — not wired by status emit |
+| Pipeline errors gate | `TELEMETRY_PIPELINE_ERRORS_ENABLED` | Default off |
+| Pipeline errors channel | `TELEMETRY_PIPELINE_ERRORS_SLACK_CHANNEL_ID` | `#bha-pipeline-errors` (bot path) |
+| Pipeline errors webhook | `TELEMETRY_PIPELINE_ERRORS_SLACK_WEBHOOK_URL` | Preferred when set |
+| Pipeline errors mention | `TELEMETRY_PIPELINE_ERRORS_MENTION` | Optional footer mention |
 | Existing digest | `ALERTS_ENABLED`, `SLACK_*` | Plain-text failure digest; unchanged |
 
-## Bays Error Handler mapping (Phase 3)
+## Phase 3 pipeline-error Slack (implemented)
 
-Owned separately from the daily status card path.
+On terminal `rss_feed` failures, `emitRssPipelineError` posts **directly** to the pipeline-errors channel (Block Kit), without calling Bays:
 
-| Bays field | Value |
-|------------|-------|
-| `workflow_name` | `Genie_RSS` (`BAYS_WORKFLOW_NAME`) |
-| `failed_node` | Feed URL (`source_input`) |
-| `error_class` | Bays taxonomy only |
-| `error_message` | Free-text from ragingester |
-| `execution_id` | Prefer daily `run_id`; else per-run UUID |
+```text
+Bays — Pipeline Failure
+Workflow: Genie_RSS
+Failed Node: <source_input URL>
+Error Class: CONFIG/AUTH | NETWORK/TIMEOUT | ...
+Error: <free-text message>
+Execution ID: genie_rss:YYYY-MM-DD
+Time: <human-readable UTC timestamp>
+Auto-Action: <local guidance for class>
+@mention
+```
 
-## ADR: `failures[].code` vs Bays `error_class`
+| Line | Source |
+|------|--------|
+| Workflow | `Genie_RSS` |
+| Failed Node | `source_input` |
+| Error Class | Local `classifyErrorClass` heuristics |
+| Error | `run.error` / `error.message` |
+| Execution ID | `genie_rss:YYYY-MM-DD` (UTC day of failure) |
 
-**Decision:** On the daily status card, `failures[].code` is the free-text failure message (`error.message` / `run.error`). It is **not** the Bays 5-class taxonomy.
+Hook: [`run-engine.js`](../apps/api/src/lib/run-engine.js) after `recordFailureAlert` (alert card now includes `source_input`). Slack delivery failures are logged and never fail the run.
 
-**Rationale:** Ragingester stores free-text errors today; short taxonomy codes are not native. Grouping and Slack display can use the message string. Classification into `billing_quota` | `network_timeout` | `schema_validation` | `config_auth` | `unknown` belongs only on the Bays pipeline-error path (`error_class`), not on the daily status schema.
+## ADR: `failures[].code` vs pipeline `Error Class`
 
-**Consequence:** Identical root causes with slightly different message text will not collapse into one `count`. Slack display truncates long codes to 120 characters; the structured JSON keeps the full message.
+**Decision:** On the daily status card, `failures[].code` is the free-text failure message (`error.message` / `run.error`). It is **not** the pipeline-error taxonomy.
+
+**Rationale:** Ragingester stores free-text errors today; short taxonomy codes are not native on the status card. Grouping and Slack display can use the message string. Classification into `BILLING/QUOTA` | `NETWORK/TIMEOUT` | `SCHEMA/VALIDATION` | `CONFIG/AUTH` | `UNKNOWN` belongs on the `#bha-pipeline-errors` post (`Error Class`), mapped locally without calling the Bays handler.
+
+**Consequence:** Identical root causes with slightly different message text will not collapse into one status-card `count`. Slack status display truncates long codes to 120 characters; the structured JSON keeps the full message.

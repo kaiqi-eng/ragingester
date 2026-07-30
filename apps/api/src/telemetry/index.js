@@ -28,3 +28,20 @@ export {
   statusFallbackText,
   statusJsonFenceText
 } from './slack-status.js';
+export {
+  PIPELINE_ERROR_CLASSES,
+  classifyErrorClass,
+  autoActionForClass
+} from './pipeline-error-class.js';
+export {
+  buildPipelineErrorBlocks,
+  pipelineErrorFallbackText
+} from './pipeline-error-blocks.js';
+export {
+  postPipelineErrorWebhook,
+  postPipelineErrorBot
+} from './slack-pipeline-errors.js';
+export {
+  emitRssPipelineError,
+  formatPipelineErrorTime
+} from './emit-pipeline-error.js';

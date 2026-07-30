@@ -31,7 +31,11 @@ export const config = {
   slackChannelId: process.env.SLACK_CHANNEL_ID || '',
   telemetryDailyStatusEnabled: String(process.env.TELEMETRY_DAILY_STATUS_ENABLED || 'false').toLowerCase() === 'true',
   telemetryStatusSlackChannelId: process.env.TELEMETRY_STATUS_SLACK_CHANNEL_ID || '',
-  telemetryStatusSlackWebhookUrl: process.env.TELEMETRY_STATUS_SLACK_WEBHOOK_URL || ''
+  telemetryStatusSlackWebhookUrl: process.env.TELEMETRY_STATUS_SLACK_WEBHOOK_URL || '',
+  telemetryPipelineErrorsEnabled: String(process.env.TELEMETRY_PIPELINE_ERRORS_ENABLED || 'false').toLowerCase() === 'true',
+  telemetryPipelineErrorsSlackChannelId: process.env.TELEMETRY_PIPELINE_ERRORS_SLACK_CHANNEL_ID || '',
+  telemetryPipelineErrorsSlackWebhookUrl: process.env.TELEMETRY_PIPELINE_ERRORS_SLACK_WEBHOOK_URL || '',
+  telemetryPipelineErrorsMention: process.env.TELEMETRY_PIPELINE_ERRORS_MENTION || ''
 };
 
 export function hasSupabaseConfig() {
