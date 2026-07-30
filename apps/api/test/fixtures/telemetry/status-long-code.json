@@ -1,0 +1,21 @@
+{
+  "system": "genie_rss",
+  "run_id": "genie_rss:2026-07-26",
+  "date": "2026-07-26",
+  "feeds_active": 18,
+  "ingest": {
+    "ok": 17,
+    "degraded": 0,
+    "failed": 1
+  },
+  "last_run": "2026-07-26T18:00:00.000Z",
+  "failures": [
+    {
+      "feed": "https://example.com/feed.xml",
+      "code": "failed to ingest RSS items: Bharag ingest rejected payload after repeated retries with a very long upstream error detail that exceeds the Slack Block Kit display truncation limit used by the daily status card builder so the JSON retains the full message while Slack shows an ellipsis",
+      "count": 1,
+      "first_seen": "2026-07-26T17:55:00.000Z"
+    }
+  ],
+  "link": "genie_rss:2026-07-26"
+}

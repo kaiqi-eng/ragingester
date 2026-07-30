@@ -2,6 +2,7 @@ import { RUN_STATUS, TRIGGER_MODE } from '@ragingester/shared';
 import { computeNextRun } from './cron.js';
 import { resolveCollector } from '../collectors/index.js';
 import { recordFailureAlert } from '../services/alerts/index.js';
+import { emitRssPipelineError } from '../telemetry/index.js';
 
 async function withTimeout(promise, timeoutMs) {
   let timeoutHandle;
@@ -182,7 +183,8 @@ async function executeRunRecord({ repository, card, run, triggerMode, timeoutMs,
           card: {
             id: card.id,
             owner_id: card.owner_id,
-            source_type: card.source_type
+            source_type: card.source_type,
+            source_input: card.source_input
           },
           error: errorPayload,
           context: {
@@ -192,6 +194,21 @@ async function executeRunRecord({ repository, card, run, triggerMode, timeoutMs,
             maxRetries: effectiveMaxRetries
           }
         });
+
+        try {
+          await emitRssPipelineError({
+            card,
+            run: { id: run.id, error: errorPayload.message },
+            error: errorPayload,
+            timestamp: endedAt
+          });
+        } catch (pipelineErrorEmitError) {
+          // eslint-disable-next-line no-console
+          console.warn('telemetry.pipeline_error_emit_uncaught', {
+            runId: run.id,
+            error: pipelineErrorEmitError?.message || String(pipelineErrorEmitError)
+          });
+        }
 
         return repository.getRunById(run.id, card.owner_id);
       }
