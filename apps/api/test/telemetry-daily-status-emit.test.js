@@ -6,15 +6,19 @@ import { config } from '../src/config.js';
 import { createMemoryRepository } from '../src/repository/memory-repository.js';
 import { resetRepositoryForTests, setRepositoryForTests } from '../src/repository/index.js';
 import {
+  flushAllDailyStatuses,
   flushRssDailyStatus,
   _resetDailyStatusFlushStateForTests,
-  yesterdayUtcDate
+  _resetTelemetryMetricsForTests,
+  getTelemetryMetrics
 } from '../src/telemetry/index.js';
 
 const OWNER = 'telemetry-emit-owner';
 
 const ORIGINALS = {
   telemetryDailyStatusEnabled: config.telemetryDailyStatusEnabled,
+  telemetryStatusYoutubeEnabled: config.telemetryStatusYoutubeEnabled,
+  telemetryStatusLinkedinEnabled: config.telemetryStatusLinkedinEnabled,
   telemetryStatusSlackChannelId: config.telemetryStatusSlackChannelId,
   telemetryStatusSlackWebhookUrl: config.telemetryStatusSlackWebhookUrl,
   slackBotToken: config.slackBotToken,
@@ -23,11 +27,14 @@ const ORIGINALS = {
 
 function resetTelemetryConfig() {
   config.telemetryDailyStatusEnabled = ORIGINALS.telemetryDailyStatusEnabled;
+  config.telemetryStatusYoutubeEnabled = ORIGINALS.telemetryStatusYoutubeEnabled;
+  config.telemetryStatusLinkedinEnabled = ORIGINALS.telemetryStatusLinkedinEnabled;
   config.telemetryStatusSlackChannelId = ORIGINALS.telemetryStatusSlackChannelId;
   config.telemetryStatusSlackWebhookUrl = ORIGINALS.telemetryStatusSlackWebhookUrl;
   config.slackBotToken = ORIGINALS.slackBotToken;
   config.alertsSlackTimeoutMs = ORIGINALS.alertsSlackTimeoutMs;
   _resetDailyStatusFlushStateForTests();
+  _resetTelemetryMetricsForTests();
 }
 
 async function withServer(fn) {
@@ -293,6 +300,184 @@ test('POST /telemetry/rss-daily-status/emit: flag on posts to Slack', async () =
     });
   } finally {
     global.fetch = originalFetch;
+    resetRepositoryForTests();
+    resetTelemetryConfig();
+  }
+});
+
+test('durable idempotency: recordDailyStatusPost then flush skips', async () => {
+  resetTelemetryConfig();
+  config.telemetryDailyStatusEnabled = true;
+  config.telemetryStatusSlackWebhookUrl = 'https://hooks.slack.test/services/status';
+  config.slackBotToken = '';
+  config.telemetryStatusSlackChannelId = '';
+
+  let calls = 0;
+  const originalFetch = global.fetch;
+  global.fetch = async () => {
+    calls += 1;
+    return new Response('ok', { status: 200 });
+  };
+
+  try {
+    const repository = createMemoryRepository();
+    await seedFailedYesterday(repository, '2026-07-26');
+    await repository.recordDailyStatusPost({
+      system: 'genie_rss',
+      date: '2026-07-26',
+      run_id: 'genie_rss:2026-07-26'
+    });
+    _resetDailyStatusFlushStateForTests();
+
+    const result = await flushRssDailyStatus({
+      repository,
+      now: new Date('2026-07-27T01:00:00.000Z')
+    });
+    assert.equal(result.posted, false);
+    assert.equal(result.skippedReason, 'already_posted');
+    assert.equal(calls, 0);
+  } finally {
+    global.fetch = originalFetch;
+    resetTelemetryConfig();
+  }
+});
+
+test('flushAllDailyStatuses posts youtube and linkedin when enabled', async () => {
+  resetTelemetryConfig();
+  config.telemetryDailyStatusEnabled = true;
+  config.telemetryStatusYoutubeEnabled = true;
+  config.telemetryStatusLinkedinEnabled = true;
+  config.telemetryStatusSlackWebhookUrl = 'https://hooks.slack.test/services/status';
+  config.slackBotToken = '';
+  config.telemetryStatusSlackChannelId = '';
+
+  const calls = [];
+  const originalFetch = global.fetch;
+  global.fetch = async (url, init) => {
+    calls.push({ url: String(url), body: JSON.parse(init.body) });
+    return new Response('ok', { status: 200 });
+  };
+
+  try {
+    const repository = createMemoryRepository();
+    await seedFailedYesterday(repository, '2026-07-26');
+    await repository.createCard({
+      owner_id: OWNER,
+      source_type: 'youtube',
+      source_input: 'UCyt',
+      params: {},
+      schedule_enabled: false,
+      cron_expression: null,
+      timezone: 'UTC',
+      next_run_at: null,
+      last_run_at: null,
+      run_timeout_ms: null,
+      run_max_retries: null,
+      active: true
+    });
+    await repository.createCard({
+      owner_id: OWNER,
+      source_type: 'linkedin',
+      source_input: 'https://www.linkedin.com/in/test',
+      params: {},
+      schedule_enabled: false,
+      cron_expression: null,
+      timezone: 'UTC',
+      next_run_at: null,
+      last_run_at: null,
+      run_timeout_ms: null,
+      run_max_retries: null,
+      active: true
+    });
+
+    const { results } = await flushAllDailyStatuses({
+      repository,
+      now: new Date('2026-07-27T01:00:00.000Z')
+    });
+    assert.equal(results.length, 3);
+    assert.ok(results.every((row) => row.posted === true));
+    assert.deepEqual(
+      results.map((row) => row.system).sort(),
+      ['genie_linkedin', 'genie_rss', 'genie_youtube']
+    );
+    // 3 systems × (blocks + json) = 6 webhook posts
+    assert.equal(calls.length, 6);
+    assert.equal(getTelemetryMetrics().status_posted, 3);
+  } finally {
+    global.fetch = originalFetch;
+    resetTelemetryConfig();
+  }
+});
+
+test('POST /telemetry/daily-status/emit?system=genie_youtube posts YouTube card', async () => {
+  resetTelemetryConfig();
+  config.telemetryDailyStatusEnabled = true;
+  config.telemetryStatusSlackWebhookUrl = 'https://hooks.slack.test/services/status';
+  config.slackBotToken = '';
+  config.telemetryStatusSlackChannelId = '';
+
+  const repository = createMemoryRepository();
+  setRepositoryForTests(repository);
+  await repository.createCard({
+    owner_id: OWNER,
+    source_type: 'youtube',
+    source_input: 'UCemit',
+    params: {},
+    schedule_enabled: false,
+    cron_expression: null,
+    timezone: 'UTC',
+    next_run_at: null,
+    last_run_at: null,
+    run_timeout_ms: null,
+    run_max_retries: null,
+    active: true
+  });
+
+  const calls = [];
+  const originalFetch = global.fetch;
+  global.fetch = async (url, init) => {
+    const urlText = String(url);
+    if (urlText.includes('hooks.slack.test')) {
+      calls.push({ url: urlText, body: JSON.parse(init.body) });
+      return new Response('ok', { status: 200 });
+    }
+    return originalFetch(url, init);
+  };
+
+  try {
+    await withServer(async (baseUrl) => {
+      const response = await fetch(
+        `${baseUrl}/telemetry/daily-status/emit?system=genie_youtube&date=2026-07-26`,
+        { method: 'POST', headers: authHeaders() }
+      );
+      assert.equal(response.status, 200);
+      const body = await response.json();
+      assert.equal(body.posted, true);
+      assert.equal(body.system, 'genie_youtube');
+      assert.match(calls[0].body.text, /YouTube Daily Status/);
+    });
+  } finally {
+    global.fetch = originalFetch;
+    resetRepositoryForTests();
+    resetTelemetryConfig();
+  }
+});
+
+test('GET /telemetry/metrics returns counters', async () => {
+  resetTelemetryConfig();
+  setRepositoryForTests(createMemoryRepository());
+
+  try {
+    await withServer(async (baseUrl) => {
+      const response = await fetch(`${baseUrl}/telemetry/metrics`, {
+        headers: authHeaders()
+      });
+      assert.equal(response.status, 200);
+      const body = await response.json();
+      assert.equal(typeof body.status_posted, 'number');
+      assert.equal(typeof body.pipeline_error_posted, 'number');
+    });
+  } finally {
     resetRepositoryForTests();
     resetTelemetryConfig();
   }

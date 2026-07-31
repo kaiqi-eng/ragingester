@@ -1,8 +1,14 @@
 import { RUN_STATUS } from '@ragingester/shared';
-import { TELEMETRY_SYSTEM, buildDailyRunId } from './constants.js';
+import {
+  TELEMETRY_SYSTEM,
+  SYSTEM_BY_SOURCE_TYPE,
+  buildDailyRunId,
+  sourceTypeForSystem,
+  systemForSourceType
+} from './constants.js';
 import { classifyRun } from './classify.js';
 import { groupFailures } from './group-failures.js';
-import { validateRssDailyStatus } from './validate.js';
+import { validateDailyStatus } from './validate.js';
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -34,14 +40,29 @@ export function yesterdayUtcDate(now = new Date()) {
 }
 
 /**
- * Build RssDailyStatus for a UTC calendar day from repository data.
+ * Build DailyStatus for a UTC calendar day from repository data.
  *
- * @param {{ repository: object, date: string }} input
- * @returns {Promise<import('./validate.js').RssDailyStatus>}
+ * @param {{
+ *   repository: object,
+ *   date: string,
+ *   sourceType?: string,
+ *   system?: string
+ * }} input
+ * @returns {Promise<import('./validate.js').DailyStatus>}
  */
-export async function buildRssDailyStatus({ repository, date }) {
+export async function buildDailyStatus({
+  repository,
+  date,
+  sourceType,
+  system
+}) {
+  const resolvedSystem = system
+    || (sourceType ? systemForSourceType(sourceType) : TELEMETRY_SYSTEM);
+  const resolvedSourceType = sourceType
+    || sourceTypeForSystem(resolvedSystem);
+
   const { fromIso, toIso } = utcDayWindow(date);
-  const cards = await repository.listActiveRssFeedCards();
+  const cards = await repository.listActiveCardsBySourceType(resolvedSourceType);
   const cardIds = cards.map((card) => card.id);
   const sourceByCardId = new Map(cards.map((card) => [card.id, card.source_input]));
 
@@ -88,9 +109,9 @@ export async function buildRssDailyStatus({ repository, date }) {
     }
   }
 
-  const runId = buildDailyRunId(date);
+  const runId = buildDailyRunId(date, resolvedSystem);
   const status = {
-    system: TELEMETRY_SYSTEM,
+    system: resolvedSystem,
     run_id: runId,
     date,
     feeds_active: cards.length,
@@ -100,8 +121,23 @@ export async function buildRssDailyStatus({ repository, date }) {
     link: runId
   };
 
-  validateRssDailyStatus(status);
+  validateDailyStatus(status);
   return status;
+}
+
+/**
+ * Build RssDailyStatus for a UTC calendar day (RSS-only wrapper).
+ *
+ * @param {{ repository: object, date: string }} input
+ * @returns {Promise<import('./validate.js').DailyStatus>}
+ */
+export async function buildRssDailyStatus({ repository, date }) {
+  return buildDailyStatus({
+    repository,
+    date,
+    sourceType: 'rss_feed',
+    system: SYSTEM_BY_SOURCE_TYPE.rss_feed
+  });
 }
 
 /**

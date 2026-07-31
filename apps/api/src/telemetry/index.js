@@ -1,25 +1,45 @@
 export {
   TELEMETRY_SYSTEM,
+  TELEMETRY_SYSTEMS,
+  TELEMETRY_SYSTEM_LIST,
+  TELEMETRY_SOURCE_TYPES,
+  SYSTEM_BY_SOURCE_TYPE,
+  SOURCE_TYPE_BY_SYSTEM,
   BAYS_WORKFLOW_NAME,
+  BAYS_WORKFLOW_BY_SOURCE_TYPE,
+  STATUS_HEADER_BY_SYSTEM,
   SLACK_FAILURE_CODE_MAX_LENGTH,
   TELEMETRY_ENV,
-  buildDailyRunId
+  buildDailyRunId,
+  isTelemetrySourceType,
+  isAllowedTelemetrySystem,
+  systemForSourceType,
+  sourceTypeForSystem,
+  workflowForSourceType
 } from './constants.js';
 
 export { classifyRun } from './classify.js';
 export { groupFailures } from './group-failures.js';
-export { validateRssDailyStatus } from './validate.js';
 export {
+  validateDailyStatus,
+  validateRssDailyStatus
+} from './validate.js';
+export {
+  buildDailyStatusBlocks,
   buildRssDailyStatusBlocks,
   truncateFailureCodeForSlack
 } from './block-kit.js';
 export {
+  buildDailyStatus,
   buildRssDailyStatus,
   utcDayWindow,
   yesterdayUtcDate
 } from './build-daily-status.js';
 export {
+  flushDailyStatus,
   flushRssDailyStatus,
+  flushAllDailyStatuses,
+  enabledDailyStatusSystems,
   _resetDailyStatusFlushStateForTests
 } from './flush-daily-status.js';
 export {
@@ -42,6 +62,12 @@ export {
   postPipelineErrorBot
 } from './slack-pipeline-errors.js';
 export {
+  emitPipelineError,
   emitRssPipelineError,
   formatPipelineErrorTime
 } from './emit-pipeline-error.js';
+export {
+  getTelemetryMetrics,
+  incrementTelemetryCounter,
+  _resetTelemetryMetricsForTests
+} from './metrics.js';

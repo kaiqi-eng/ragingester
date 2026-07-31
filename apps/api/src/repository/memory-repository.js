@@ -10,8 +10,14 @@ export function createMemoryRepository() {
   const store = {
     cards: new Map(),
     runs: new Map(),
-    collectedData: new Map()
+    collectedData: new Map(),
+    /** @type {Map<string, { system: string, date: string, posted_at: string, run_id: string }>} */
+    dailyStatusPosts: new Map()
   };
+
+  function dailyStatusPostKey(system, date) {
+    return `${system}|${date}`;
+  }
 
   return {
     async listCards(ownerId) {
@@ -192,10 +198,30 @@ export function createMemoryRepository() {
       });
     },
 
-    async listActiveRssFeedCards() {
+    async listActiveCardsBySourceType(sourceType) {
       return [...store.cards.values()].filter(
-        (card) => card.active === true && card.source_type === 'rss_feed'
+        (card) => card.active === true && card.source_type === sourceType
       );
+    },
+
+    async listActiveRssFeedCards() {
+      return this.listActiveCardsBySourceType('rss_feed');
+    },
+
+    async hasDailyStatusPost(system, date) {
+      return store.dailyStatusPosts.has(dailyStatusPostKey(system, date));
+    },
+
+    async recordDailyStatusPost({ system, date, run_id }) {
+      const key = dailyStatusPostKey(system, date);
+      const row = {
+        system,
+        date,
+        run_id,
+        posted_at: new Date().toISOString()
+      };
+      store.dailyStatusPosts.set(key, row);
+      return row;
     },
 
     async listRunsForCardsInWindow({ cardIds, fromIso, toIso }) {

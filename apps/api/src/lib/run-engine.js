@@ -2,7 +2,7 @@ import { RUN_STATUS, TRIGGER_MODE } from '@ragingester/shared';
 import { computeNextRun } from './cron.js';
 import { resolveCollector } from '../collectors/index.js';
 import { recordFailureAlert } from '../services/alerts/index.js';
-import { emitRssPipelineError } from '../telemetry/index.js';
+import { emitPipelineError } from '../telemetry/index.js';
 
 async function withTimeout(promise, timeoutMs) {
   let timeoutHandle;
@@ -196,7 +196,7 @@ async function executeRunRecord({ repository, card, run, triggerMode, timeoutMs,
         });
 
         try {
-          await emitRssPipelineError({
+          await emitPipelineError({
             card,
             run: { id: run.id, error: errorPayload.message },
             error: errorPayload,

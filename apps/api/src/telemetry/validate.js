@@ -1,9 +1,9 @@
-import { TELEMETRY_SYSTEM } from './constants.js';
+import { isAllowedTelemetrySystem } from './constants.js';
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
- * @typedef {Object} RssDailyStatusFailure
+ * @typedef {Object} DailyStatusFailure
  * @property {string} feed
  * @property {string} code
  * @property {number} count
@@ -11,33 +11,36 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
  */
 
 /**
- * @typedef {Object} RssDailyStatus
+ * @typedef {Object} DailyStatus
  * @property {string} system
  * @property {string} run_id
  * @property {string} date
  * @property {number} feeds_active
  * @property {{ ok: number, degraded: number, failed: number }} ingest
  * @property {string} last_run
- * @property {RssDailyStatusFailure[]} failures
+ * @property {DailyStatusFailure[]} failures
  * @property {string} link
  */
 
+/** @typedef {DailyStatus} RssDailyStatus */
+/** @typedef {DailyStatusFailure} RssDailyStatusFailure */
+
 /**
- * Validate RssDailyStatus shape. Throws on first violation.
+ * Validate daily status shape. Throws on first violation.
  *
  * @param {unknown} obj
- * @returns {asserts obj is RssDailyStatus}
+ * @returns {asserts obj is DailyStatus}
  */
-export function validateRssDailyStatus(obj) {
+export function validateDailyStatus(obj) {
   if (!obj || typeof obj !== 'object' || Array.isArray(obj)) {
-    throw new Error('RssDailyStatus must be an object');
+    throw new Error('DailyStatus must be an object');
   }
 
   /** @type {Record<string, unknown>} */
   const status = obj;
 
-  if (status.system !== TELEMETRY_SYSTEM) {
-    throw new Error(`system must be "${TELEMETRY_SYSTEM}"`);
+  if (typeof status.system !== 'string' || !isAllowedTelemetrySystem(status.system)) {
+    throw new Error('system must be one of genie_rss, genie_youtube, genie_linkedin');
   }
   assertNonEmptyString(status.run_id, 'run_id');
   assertDate(status.date, 'date');
@@ -66,6 +69,9 @@ export function validateRssDailyStatus(obj) {
 
   assertNonEmptyString(status.link, 'link');
 }
+
+/** @deprecated Prefer validateDailyStatus */
+export const validateRssDailyStatus = validateDailyStatus;
 
 /**
  * @param {unknown} failure

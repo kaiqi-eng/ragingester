@@ -309,22 +309,24 @@ Render as Slack **Block Kit** (same channel UX family as the Phase 2 status card
 
 ## Phase 4 — Telemetry hardening
 
-**Outcome:** Operable, observable, twin-ready.
+**Outcome:** Operable, observable, twin-ready. Multi-system daily status + pipeline errors for RSS / YouTube / LinkedIn.
 
 ### Work
 
 1. Structured internal logs on emit paths: status built, Slack ok/fail, pipeline-error Slack ok/fail (never swallow without a log line).
-2. Idempotency: one status card per `(system, date)`; safe re-flush.
-3. Retention: how long daily status JSON is kept; how `link` resolves historically.
-4. Metrics counters (optional): `telemetry.status_posted`, `telemetry.pipeline_error_posted`, `telemetry.pipeline_error_failed`.
-5. Docs: update `docs/ingestion-stack.md` + this plan’s “done” checklist; note `Genie_RSS` naming mapping.
-6. (Optional stretch) Extend same pattern to `youtube` / `linkedin` with distinct `system` tags.
+2. Idempotency: one status card per `(system, date)` via durable `telemetry_daily_status_posts`; safe re-flush.
+3. Metrics counters: `GET /telemetry/metrics` (`status_posted` / `status_failed` / `pipeline_error_posted` / `pipeline_error_failed`).
+4. **Manual pipeline-error emit:** `POST /telemetry/pipeline-error/emit` gated by `TELEMETRY_PIPELINE_ERRORS_ENABLED`.
+5. Extend daily status + **auto** pipeline-error emit to `youtube` / `linkedin` with systems `genie_youtube` / `genie_linkedin` and Workflows `Genie_YouTube` / `Genie_LinkedIn`.
+6. Docs: `docs/telemetry-contracts.md`, this plan, `docs/ingestion-stack.md`.
 
 ### Exit criteria
 
-- [ ] Re-run of flush does not double-post
-- [ ] Failed Slack delivery is logged with enough fields to debug
-- [ ] Twin consumer can join status `run_id` ↔ error `execution_id` on a sample day
+- [x] Re-run of flush does not double-post (durable + in-process)
+- [x] Failed Slack delivery is logged with enough fields to debug
+- [x] Twin consumer can join status `run_id` ↔ error `execution_id` on a sample day
+- [x] Manual pipeline-error emit posts a Bays-shaped card without requiring a terminal collector failure
+- [x] YouTube / LinkedIn status cards and auto pipeline-error emit work alongside RSS
 
 ---
 

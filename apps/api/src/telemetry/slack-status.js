@@ -1,3 +1,5 @@
+import { STATUS_HEADER_BY_SYSTEM, TELEMETRY_SYSTEM } from './constants.js';
+
 function withTimeout(promise, timeoutMs) {
   let timer;
   const timeout = new Promise((_, reject) => {
@@ -7,11 +9,12 @@ function withTimeout(promise, timeoutMs) {
 }
 
 /**
- * @param {import('./validate.js').RssDailyStatus} status
+ * @param {import('./validate.js').DailyStatus} status
  * @returns {string}
  */
 export function statusFallbackText(status) {
-  return `RSS Daily Status, ${status.date}`;
+  const headerPrefix = STATUS_HEADER_BY_SYSTEM[status?.system] || STATUS_HEADER_BY_SYSTEM[TELEMETRY_SYSTEM];
+  return `${headerPrefix}, ${status.date}`;
 }
 
 /**

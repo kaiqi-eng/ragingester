@@ -6,9 +6,11 @@ import { createMemoryRepository } from '../src/repository/memory-repository.js';
 import { resetRepositoryForTests, setRepositoryForTests } from '../src/repository/index.js';
 import {
   buildDailyRunId,
+  buildDailyStatus,
   buildRssDailyStatus,
   validateRssDailyStatus
 } from '../src/telemetry/index.js';
+
 
 const DAY = '2026-07-26';
 const OWNER = 'telemetry-owner';
@@ -208,6 +210,104 @@ test('GET /telemetry/rss-daily-status rejects bad date', async () => {
       assert.equal(response.status, 400);
       const body = await response.json();
       assert.match(body.error, /YYYY-MM-DD/);
+    });
+  } finally {
+    resetRepositoryForTests();
+  }
+});
+
+test('buildDailyStatus: youtube system classifies failures', async () => {
+  const repository = createMemoryRepository();
+  const card = await repository.createCard({
+    owner_id: OWNER,
+    source_type: 'youtube',
+    source_input: 'https://www.youtube.com/channel/UCtest',
+    params: {},
+    schedule_enabled: false,
+    cron_expression: null,
+    timezone: 'UTC',
+    next_run_at: null,
+    last_run_at: null,
+    run_timeout_ms: null,
+    run_max_retries: null,
+    active: true
+  });
+  await seedRun(repository, card, {
+    status: RUN_STATUS.FAILED,
+    ended_at: '2026-07-26T10:00:00.000Z',
+    error: 'GENIE_RSS_API_KEY is required for youtube ingestion'
+  });
+
+  const status = await buildDailyStatus({
+    repository,
+    date: DAY,
+    system: 'genie_youtube'
+  });
+  validateRssDailyStatus(status);
+  assert.equal(status.system, 'genie_youtube');
+  assert.equal(status.run_id, 'genie_youtube:2026-07-26');
+  assert.equal(status.feeds_active, 1);
+  assert.deepEqual(status.ingest, { ok: 0, degraded: 0, failed: 1 });
+  assert.equal(status.failures[0].feed, 'https://www.youtube.com/channel/UCtest');
+});
+
+test('buildDailyStatus: linkedin system empty day validates', async () => {
+  const repository = createMemoryRepository();
+  await repository.createCard({
+    owner_id: OWNER,
+    source_type: 'linkedin',
+    source_input: 'https://www.linkedin.com/in/example',
+    params: {},
+    schedule_enabled: false,
+    cron_expression: null,
+    timezone: 'UTC',
+    next_run_at: null,
+    last_run_at: null,
+    run_timeout_ms: null,
+    run_max_retries: null,
+    active: true
+  });
+
+  const status = await buildDailyStatus({
+    repository,
+    date: DAY,
+    system: 'genie_linkedin'
+  });
+  validateRssDailyStatus(status);
+  assert.equal(status.system, 'genie_linkedin');
+  assert.equal(status.feeds_active, 1);
+  assert.deepEqual(status.ingest, { ok: 0, degraded: 0, failed: 0 });
+});
+
+test('GET /telemetry/daily-status?system=genie_youtube returns youtube status', async () => {
+  const repository = createMemoryRepository();
+  setRepositoryForTests(repository);
+  await repository.createCard({
+    owner_id: OWNER,
+    source_type: 'youtube',
+    source_input: 'UChttp',
+    params: {},
+    schedule_enabled: false,
+    cron_expression: null,
+    timezone: 'UTC',
+    next_run_at: null,
+    last_run_at: null,
+    run_timeout_ms: null,
+    run_max_retries: null,
+    active: true
+  });
+
+  try {
+    await withServer(async (baseUrl) => {
+      const response = await fetch(
+        `${baseUrl}/telemetry/daily-status?system=genie_youtube&date=${DAY}`,
+        { headers: authHeaders() }
+      );
+      assert.equal(response.status, 200);
+      const body = await response.json();
+      validateRssDailyStatus(body);
+      assert.equal(body.system, 'genie_youtube');
+      assert.equal(body.feeds_active, 1);
     });
   } finally {
     resetRepositoryForTests();

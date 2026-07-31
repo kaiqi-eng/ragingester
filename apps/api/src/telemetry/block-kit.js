@@ -1,4 +1,8 @@
-import { SLACK_FAILURE_CODE_MAX_LENGTH } from './constants.js';
+import {
+  SLACK_FAILURE_CODE_MAX_LENGTH,
+  STATUS_HEADER_BY_SYSTEM,
+  TELEMETRY_SYSTEM
+} from './constants.js';
 
 /**
  * Truncate failure code for Slack display only. Full code stays in JSON payload.
@@ -15,12 +19,13 @@ export function truncateFailureCodeForSlack(code, maxLength = SLACK_FAILURE_CODE
 }
 
 /**
- * Build Slack Block Kit blocks for an RSS daily status card.
+ * Build Slack Block Kit blocks for a daily status card.
  *
- * @param {import('./validate.js').RssDailyStatus} status
+ * @param {import('./validate.js').DailyStatus} status
  * @returns {{ blocks: object[] }}
  */
-export function buildRssDailyStatusBlocks(status) {
+export function buildDailyStatusBlocks(status) {
+  const headerPrefix = STATUS_HEADER_BY_SYSTEM[status?.system] || STATUS_HEADER_BY_SYSTEM[TELEMETRY_SYSTEM];
   const failures = Array.isArray(status?.failures) ? status.failures : [];
   const failuresText = failures.length === 0
     ? '*Failures:*\n_None_'
@@ -36,7 +41,7 @@ export function buildRssDailyStatusBlocks(status) {
         type: 'header',
         text: {
           type: 'plain_text',
-          text: `RSS Daily Status, ${status.date}`
+          text: `${headerPrefix}, ${status.date}`
         }
       },
       {
@@ -81,3 +86,6 @@ export function buildRssDailyStatusBlocks(status) {
     ]
   };
 }
+
+/** @deprecated Prefer buildDailyStatusBlocks */
+export const buildRssDailyStatusBlocks = buildDailyStatusBlocks;

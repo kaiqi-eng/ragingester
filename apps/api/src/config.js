@@ -30,6 +30,13 @@ export const config = {
   slackBotToken: process.env.SLACK_BOT_TOKEN || '',
   slackChannelId: process.env.SLACK_CHANNEL_ID || '',
   telemetryDailyStatusEnabled: String(process.env.TELEMETRY_DAILY_STATUS_ENABLED || 'false').toLowerCase() === 'true',
+  // Per-system status gates default ON when unset (master TELEMETRY_DAILY_STATUS_ENABLED still required).
+  telemetryStatusYoutubeEnabled: process.env.TELEMETRY_STATUS_YOUTUBE_ENABLED == null
+    ? true
+    : String(process.env.TELEMETRY_STATUS_YOUTUBE_ENABLED).toLowerCase() === 'true',
+  telemetryStatusLinkedinEnabled: process.env.TELEMETRY_STATUS_LINKEDIN_ENABLED == null
+    ? true
+    : String(process.env.TELEMETRY_STATUS_LINKEDIN_ENABLED).toLowerCase() === 'true',
   telemetryStatusSlackChannelId: process.env.TELEMETRY_STATUS_SLACK_CHANNEL_ID || '',
   telemetryStatusSlackWebhookUrl: process.env.TELEMETRY_STATUS_SLACK_WEBHOOK_URL || '',
   telemetryPipelineErrorsEnabled: String(process.env.TELEMETRY_PIPELINE_ERRORS_ENABLED || 'false').toLowerCase() === 'true',
