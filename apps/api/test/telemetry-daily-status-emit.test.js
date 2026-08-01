@@ -22,7 +22,7 @@ const ORIGINALS = {
   telemetryStatusSlackChannelId: config.telemetryStatusSlackChannelId,
   telemetryStatusSlackWebhookUrl: config.telemetryStatusSlackWebhookUrl,
   slackBotToken: config.slackBotToken,
-  alertsSlackTimeoutMs: config.alertsSlackTimeoutMs
+  telemetrySlackTimeoutMs: config.telemetrySlackTimeoutMs
 };
 
 function resetTelemetryConfig() {
@@ -32,7 +32,7 @@ function resetTelemetryConfig() {
   config.telemetryStatusSlackChannelId = ORIGINALS.telemetryStatusSlackChannelId;
   config.telemetryStatusSlackWebhookUrl = ORIGINALS.telemetryStatusSlackWebhookUrl;
   config.slackBotToken = ORIGINALS.slackBotToken;
-  config.alertsSlackTimeoutMs = ORIGINALS.alertsSlackTimeoutMs;
+  config.telemetrySlackTimeoutMs = ORIGINALS.telemetrySlackTimeoutMs;
   _resetDailyStatusFlushStateForTests();
   _resetTelemetryMetricsForTests();
 }

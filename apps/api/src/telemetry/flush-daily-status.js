@@ -188,7 +188,7 @@ export async function flushAllDailyStatuses({
  * @param {{ status: object, blocks: object[] }} input
  */
 async function deliverStatus({ status, blocks }) {
-  const timeoutMs = config.alertsSlackTimeoutMs;
+  const timeoutMs = config.telemetrySlackTimeoutMs;
   const primary = canUseWebhook() ? 'webhook' : 'bot';
   const fallback = primary === 'webhook' ? 'bot' : 'webhook';
 

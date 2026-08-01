@@ -109,24 +109,24 @@ Post **directly** to `#bha-pipeline-errors` as Block Kit matching existing Bays 
 
 Do **not** invoke the Bays Error Handler or write via Bays to `engine_errors`.
 
-## Baseline (today)
+## Baseline (historical)
 
-| Capability | Current state |
-|------------|---------------|
+| Capability | State before telemetry Phases 0–4 |
+|------------|-----------------------------------|
 | Per-run DB | `collection_runs` with `success` / `failed`, `error`, `error_payload`, `logs` |
 | RSS metrics | Per-run item counts: `fetched`, `selected`, `ingested`, `failed` |
-| Slack alerts | Optional plain-text **Daily Failure Digest** only (`ALERTS_ENABLED` default `false`) |
-| Block Kit / status card | None |
-| Fleet `run_id` | None (only per-card run UUIDs) |
-| Bays / `#bha-pipeline-errors` / `engine_errors` | None in this repo |
+| Slack alerts | Optional plain-text **Daily Failure Digest** (`ALERTS_ENABLED`, in-memory) — **removed**; superseded by telemetry daily status + pipeline-error Slack |
+| Block Kit / status card | None (now Phase 2+) |
+| Fleet `run_id` | None (now `{system}:{date}`) |
+| Bays / `#bha-pipeline-errors` / `engine_errors` | None in this repo (local Bays-shaped Slack in Phase 3) |
 | Friendly feed name | None (URL only) |
 
-Relevant code:
+Relevant code today:
 
-- `apps/api/src/services/alerts/` — digest queue + Slack text
-- `apps/api/src/lib/run-engine.js` — run lifecycle + `recordFailureAlert`
+- `apps/api/src/telemetry/` — daily status + pipeline-error Slack
+- `apps/api/src/lib/run-engine.js` — run lifecycle + `emitPipelineError`
 - `apps/api/src/collectors/rss-feed.js` — item metrics / partial failure behavior
-- `apps/api/src/config.js` — alert env knobs
+- `apps/api/src/config.js` — `TELEMETRY_*` env knobs
 
 ---
 
@@ -194,7 +194,7 @@ Relevant code:
 
 ### Non-goals
 
-- No Block Kit post yet; keep existing digest behavior until Phase 2 cuts over
+- No Block Kit post yet (Phase 2)
 
 ---
 
@@ -205,15 +205,14 @@ Relevant code:
 **Flush:** [`apps/api/src/telemetry/flush-daily-status.js`](../apps/api/src/telemetry/flush-daily-status.js)  
 **Manual emit:** `POST /telemetry/rss-daily-status/emit?date=YYYY-MM-DD`
 
-**Outcome:** One structured daily card posts to the status channel (additive; plain-text digest unchanged). Pipeline errors / Bays are out of scope for this path.
+**Outcome:** One structured daily card posts to the status channel. Pipeline errors / Bays are out of scope for this path. The plain-text daily failure digest was later removed (superseded by telemetry).
 
 ### Work
 
-1. Scheduler hook: after UTC day rolls (same flush cadence as `flushDailyFailureAlerts`, or a dedicated daily job).
+1. Scheduler hook: after UTC day rolls (dedicated flush via `flushAllDailyStatuses`).
 2. Build status → Block Kit → post to the **status** channel (config separate from pipeline-errors).
 3. Also attach/log the raw JSON payload (thread, file, or twin webhook) so Research Twin does not scrape Slack mrkdwn.
 4. Feature flag: e.g. `TELEMETRY_DAILY_STATUS_ENABLED` (default off until smoke-tested).
-5. Migrate off RSS-relevant plain-text digest once status card is trusted (keep digest for non-RSS sources if needed, or generalize later).
 
 ### Config
 
@@ -223,7 +222,7 @@ Relevant code:
 | `TELEMETRY_STATUS_SLACK_CHANNEL_ID` | Status channel for bot path |
 | `TELEMETRY_STATUS_SLACK_WEBHOOK_URL` | Preferred status webhook |
 | `SLACK_BOT_TOKEN` | Bot path token |
-| Existing `ALERTS_*` / digest `SLACK_*` | Unchanged digest |
+| `TELEMETRY_SLACK_TIMEOUT_MS` | Shared Slack HTTP timeout (legacy alias `ALERTS_SLACK_TIMEOUT_MS`) |
 
 ### Exit criteria
 
@@ -303,7 +302,6 @@ Render as Slack **Block Kit** (same channel UX family as the Phase 2 status card
 
 - Invoking Bays classification or auto-action engine
 - Logging via Bays to the `engine_errors` sheet (out of scope unless added later)
-- Replacing or suppressing the plain-text daily failure digest in this phase
 
 ---
 

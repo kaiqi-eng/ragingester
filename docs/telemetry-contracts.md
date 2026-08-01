@@ -23,6 +23,7 @@
   "date": "YYYY-MM-DD",
   "feeds_active": 0,
   "ingest": { "ok": 0, "degraded": 0, "failed": 0 },
+  "items": { "fetched": 0, "selected": 0, "ingested": 0, "failed": 0 },
   "last_run": "<ISO 8601 timestamp>",
   "failures": [
     {
@@ -70,8 +71,10 @@ Golden fixtures: [`apps/api/test/fixtures/telemetry/`](../apps/api/test/fixtures
 |-------|------|
 | Window | UTC calendar day `[dateT00:00:00.000Z, nextDayT00:00:00.000Z)` |
 | Run timestamp | Prefer `ended_at`; fallback `created_at` |
-| Scope | Active cards for the chosen `source_type` (fleet-wide) |
+| Scope | Active cards for the chosen `source_type` (fleet-wide inventory for looking up `source_input`) |
+| `feeds_active` | Distinct cards with **≥1 terminal run** that UTC day (idle active cards excluded) |
 | Ingest unit | Each terminal run in the window counts once |
+| `items` | Sum of collector `metadata.metrics` (`fetched` / `selected` / `ingested` / `failed`) across terminal runs with collected_data |
 | `failedCount` | `collected_data.metadata.metrics.failed`; missing → `0` |
 | `failures[]` | `status=failed` only; `feed=source_input`; `code=run.error` |
 | `last_run` | Max terminal `ended_at` in window; if none, day start ISO |
@@ -89,7 +92,7 @@ Omit `date` → yesterday UTC. Invalid `date` / `system` → `400`.
 |-------|------|
 | Gate | `TELEMETRY_DAILY_STATUS_ENABLED` (default `false`) |
 | Per-system | `TELEMETRY_STATUS_YOUTUBE_ENABLED` / `TELEMETRY_STATUS_LINKEDIN_ENABLED` (default **on** when unset; RSS always included when master on) |
-| Auto day | Yesterday UTC via `flushAllDailyStatuses` after digest flush |
+| Auto day | Yesterday UTC via `flushAllDailyStatuses` from the scheduler |
 | Transport | Prefer `TELEMETRY_STATUS_SLACK_WEBHOOK_URL`; else `SLACK_BOT_TOKEN` + `TELEMETRY_STATUS_SLACK_CHANNEL_ID` |
 | Twin JSON | `console.info('telemetry.daily_status', …)`; bot thread / webhook follow-up with fenced JSON |
 | Idempotency | Durable table `telemetry_daily_status_posts` PK `(system, date)` + in-process cache |
@@ -172,12 +175,11 @@ telemetry_daily_status_posts (
 | Status Slack channel | `TELEMETRY_STATUS_SLACK_CHANNEL_ID` | Twin-facing daily card (bot path) |
 | Status Slack webhook | `TELEMETRY_STATUS_SLACK_WEBHOOK_URL` | Preferred transport when set |
 | Bot token | `SLACK_BOT_TOKEN` | Reused for status + pipeline-error bot paths |
-| Timeout | `ALERTS_SLACK_TIMEOUT_MS` | Shared Slack timeout |
+| Timeout | `TELEMETRY_SLACK_TIMEOUT_MS` | Shared Slack HTTP timeout; legacy alias `ALERTS_SLACK_TIMEOUT_MS` still accepted |
 | Pipeline errors gate | `TELEMETRY_PIPELINE_ERRORS_ENABLED` | Default off |
 | Pipeline errors channel | `TELEMETRY_PIPELINE_ERRORS_SLACK_CHANNEL_ID` | `#bha-pipeline-errors` (bot path) |
 | Pipeline errors webhook | `TELEMETRY_PIPELINE_ERRORS_SLACK_WEBHOOK_URL` | Preferred when set |
 | Pipeline errors mention | `TELEMETRY_PIPELINE_ERRORS_MENTION` | Optional footer mention |
-| Existing digest | `ALERTS_ENABLED`, `SLACK_*` | Plain-text failure digest; unchanged |
 
 ## ADR: `failures[].code` vs pipeline `Error Class`
 

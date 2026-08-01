@@ -19,6 +19,25 @@ export function truncateFailureCodeForSlack(code, maxLength = SLACK_FAILURE_CODE
 }
 
 /**
+ * Short prose summary of item volume for the Slack card.
+ *
+ * @param {{ fetched?: number, selected?: number, ingested?: number, failed?: number } | null | undefined} items
+ * @returns {string}
+ */
+export function formatItemsSummary(items) {
+  const fetched = Number(items?.fetched) || 0;
+  const selected = Number(items?.selected) || 0;
+  const ingested = Number(items?.ingested) || 0;
+  const failed = Number(items?.failed) || 0;
+
+  if (fetched === 0 && selected === 0 && ingested === 0 && failed === 0) {
+    return 'No items fetched or ingested this day.';
+  }
+
+  return `Ingested ${ingested} of ${selected} selected items (${fetched} fetched, ${failed} item failures).`;
+}
+
+/**
  * Build Slack Block Kit blocks for a daily status card.
  *
  * @param {import('./validate.js').DailyStatus} status
@@ -49,13 +68,20 @@ export function buildDailyStatusBlocks(status) {
         fields: [
           {
             type: 'mrkdwn',
-            text: `*Feeds active:*\n${status.feeds_active}`
+            text: `*Feeds ran:*\n${status.feeds_active}`
           },
           {
             type: 'mrkdwn',
             text: `*Ingest:*\nOK ${status.ingest.ok} | Degraded ${status.ingest.degraded} | Failed ${status.ingest.failed}`
           }
         ]
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `*Items:*\n${formatItemsSummary(status.items)}`
+        }
       },
       {
         type: 'context',

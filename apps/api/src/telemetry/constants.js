@@ -51,10 +51,7 @@ export const STATUS_HEADER_BY_SYSTEM = Object.freeze({
 /** Max length of failure `code` text shown in Slack Block Kit (full text stays in JSON). */
 export const SLACK_FAILURE_CODE_MAX_LENGTH = 120;
 
-/**
- * Env names for telemetry config.
- * Status channel is separate from `#bha-pipeline-errors` / existing ALERTS_*.
- */
+/** Env names for telemetry config. Status channel is separate from `#bha-pipeline-errors`. */
 export const TELEMETRY_ENV = {
   DAILY_STATUS_ENABLED: 'TELEMETRY_DAILY_STATUS_ENABLED',
   STATUS_YOUTUBE_ENABLED: 'TELEMETRY_STATUS_YOUTUBE_ENABLED',
@@ -64,7 +61,8 @@ export const TELEMETRY_ENV = {
   PIPELINE_ERRORS_ENABLED: 'TELEMETRY_PIPELINE_ERRORS_ENABLED',
   PIPELINE_ERRORS_SLACK_CHANNEL_ID: 'TELEMETRY_PIPELINE_ERRORS_SLACK_CHANNEL_ID',
   PIPELINE_ERRORS_SLACK_WEBHOOK_URL: 'TELEMETRY_PIPELINE_ERRORS_SLACK_WEBHOOK_URL',
-  PIPELINE_ERRORS_MENTION: 'TELEMETRY_PIPELINE_ERRORS_MENTION'
+  PIPELINE_ERRORS_MENTION: 'TELEMETRY_PIPELINE_ERRORS_MENTION',
+  SLACK_TIMEOUT_MS: 'TELEMETRY_SLACK_TIMEOUT_MS'
 };
 
 /**

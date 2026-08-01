@@ -7,6 +7,7 @@ import {
   buildDailyRunId,
   buildRssDailyStatusBlocks,
   classifyRun,
+  formatItemsSummary,
   groupFailures,
   SLACK_FAILURE_CODE_MAX_LENGTH,
   TELEMETRY_SYSTEM,
@@ -151,6 +152,17 @@ test('buildRssDailyStatusBlocks: empty failures render None', () => {
     (block) => block.type === 'section' && block.text?.text?.startsWith('*Failures:*')
   );
   assert.equal(failuresBlock.text.text, '*Failures:*\n_None_');
+});
+
+test('formatItemsSummary: describes volume or empty day', () => {
+  assert.equal(
+    formatItemsSummary({ fetched: 0, selected: 0, ingested: 0, failed: 0 }),
+    'No items fetched or ingested this day.'
+  );
+  assert.equal(
+    formatItemsSummary({ fetched: 200, selected: 80, ingested: 72, failed: 8 }),
+    'Ingested 72 of 80 selected items (200 fetched, 8 item failures).'
+  );
 });
 
 test('buildRssDailyStatusBlocks: long code truncated in Slack, full in JSON', () => {

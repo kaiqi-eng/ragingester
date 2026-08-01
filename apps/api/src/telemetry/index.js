@@ -27,7 +27,8 @@ export {
 export {
   buildDailyStatusBlocks,
   buildRssDailyStatusBlocks,
-  truncateFailureCodeForSlack
+  truncateFailureCodeForSlack,
+  formatItemsSummary
 } from './block-kit.js';
 export {
   buildDailyStatus,

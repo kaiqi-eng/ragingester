@@ -24,7 +24,7 @@ const ORIGINALS = {
   telemetryPipelineErrorsSlackWebhookUrl: config.telemetryPipelineErrorsSlackWebhookUrl,
   telemetryPipelineErrorsMention: config.telemetryPipelineErrorsMention,
   slackBotToken: config.slackBotToken,
-  alertsSlackTimeoutMs: config.alertsSlackTimeoutMs
+  telemetrySlackTimeoutMs: config.telemetrySlackTimeoutMs
 };
 
 function resetPipelineConfig() {
@@ -33,7 +33,7 @@ function resetPipelineConfig() {
   config.telemetryPipelineErrorsSlackWebhookUrl = ORIGINALS.telemetryPipelineErrorsSlackWebhookUrl;
   config.telemetryPipelineErrorsMention = ORIGINALS.telemetryPipelineErrorsMention;
   config.slackBotToken = ORIGINALS.slackBotToken;
-  config.alertsSlackTimeoutMs = ORIGINALS.alertsSlackTimeoutMs;
+  config.telemetrySlackTimeoutMs = ORIGINALS.telemetrySlackTimeoutMs;
   _resetTelemetryMetricsForTests();
 }
 

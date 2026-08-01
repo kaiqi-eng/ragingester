@@ -11,12 +11,21 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
  */
 
 /**
+ * @typedef {Object} DailyStatusItems
+ * @property {number} fetched
+ * @property {number} selected
+ * @property {number} ingested
+ * @property {number} failed
+ */
+
+/**
  * @typedef {Object} DailyStatus
  * @property {string} system
  * @property {string} run_id
  * @property {string} date
- * @property {number} feeds_active
+ * @property {number} feeds_active Distinct cards with ≥1 terminal run that UTC day
  * @property {{ ok: number, degraded: number, failed: number }} ingest
+ * @property {DailyStatusItems} items Aggregated collector item metrics for that day
  * @property {string} last_run
  * @property {DailyStatusFailure[]} failures
  * @property {string} link
@@ -54,6 +63,16 @@ export function validateDailyStatus(obj) {
   assertNonNegativeInt(ingest.ok, 'ingest.ok');
   assertNonNegativeInt(ingest.degraded, 'ingest.degraded');
   assertNonNegativeInt(ingest.failed, 'ingest.failed');
+
+  if (!status.items || typeof status.items !== 'object' || Array.isArray(status.items)) {
+    throw new Error('items must be an object');
+  }
+  /** @type {Record<string, unknown>} */
+  const items = status.items;
+  assertNonNegativeInt(items.fetched, 'items.fetched');
+  assertNonNegativeInt(items.selected, 'items.selected');
+  assertNonNegativeInt(items.ingested, 'items.ingested');
+  assertNonNegativeInt(items.failed, 'items.failed');
 
   assertNonEmptyString(status.last_run, 'last_run');
   if (Number.isNaN(Date.parse(String(status.last_run)))) {

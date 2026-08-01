@@ -23,12 +23,13 @@ export const config = {
   rssPrewarmWindowMs: Number(process.env.RSS_PREWARM_WINDOW_MS || 120000),
   runTimeoutMs: Number(process.env.RUN_TIMEOUT_MS || 180000),
   runMaxRetries: Number(process.env.RUN_MAX_RETRIES || 1),
-  alertsEnabled: String(process.env.ALERTS_ENABLED || 'false').toLowerCase() === 'true',
-  alertsSlackPrimary: String(process.env.ALERTS_SLACK_PRIMARY || 'webhook').toLowerCase(),
-  alertsSlackTimeoutMs: Number(process.env.ALERTS_SLACK_TIMEOUT_MS || 5000),
-  slackWebhookUrl: process.env.SLACK_WEBHOOK_URL || '',
+  // Prefer TELEMETRY_SLACK_TIMEOUT_MS; keep ALERTS_SLACK_TIMEOUT_MS as legacy alias.
+  telemetrySlackTimeoutMs: Number(
+    process.env.TELEMETRY_SLACK_TIMEOUT_MS
+    || process.env.ALERTS_SLACK_TIMEOUT_MS
+    || 5000
+  ),
   slackBotToken: process.env.SLACK_BOT_TOKEN || '',
-  slackChannelId: process.env.SLACK_CHANNEL_ID || '',
   telemetryDailyStatusEnabled: String(process.env.TELEMETRY_DAILY_STATUS_ENABLED || 'false').toLowerCase() === 'true',
   // Per-system status gates default ON when unset (master TELEMETRY_DAILY_STATUS_ENABLED still required).
   telemetryStatusYoutubeEnabled: process.env.TELEMETRY_STATUS_YOUTUBE_ENABLED == null

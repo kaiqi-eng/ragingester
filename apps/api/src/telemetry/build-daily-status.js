@@ -40,7 +40,19 @@ export function yesterdayUtcDate(now = new Date()) {
 }
 
 /**
+ * @param {unknown} value
+ * @returns {number}
+ */
+function nonNegativeMetric(value) {
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+}
+
+/**
  * Build DailyStatus for a UTC calendar day from repository data.
+ *
+ * `feeds_active` counts distinct cards with at least one terminal run that day
+ * (idle active cards are excluded).
  *
  * @param {{
  *   repository: object,
@@ -69,13 +81,22 @@ export async function buildDailyStatus({
   const runs = await repository.listRunsForCardsInWindow({ cardIds, fromIso, toIso });
   const runIds = runs.map((run) => run.id);
   const collectedRows = await repository.listCollectedDataByRunIds(runIds);
-  const failedCountByRunId = new Map();
+  /** @type {Map<string, { fetched: number, selected: number, ingested: number, failed: number }>} */
+  const metricsByRunId = new Map();
   for (const row of collectedRows) {
-    const failed = Number(row?.metadata?.metrics?.failed);
-    failedCountByRunId.set(row.run_id, Number.isFinite(failed) ? failed : 0);
+    const metrics = row?.metadata?.metrics || {};
+    metricsByRunId.set(row.run_id, {
+      fetched: nonNegativeMetric(metrics.fetched),
+      selected: nonNegativeMetric(metrics.selected),
+      ingested: nonNegativeMetric(metrics.ingested),
+      failed: nonNegativeMetric(metrics.failed)
+    });
   }
 
   const ingest = { ok: 0, degraded: 0, failed: 0 };
+  const items = { fetched: 0, selected: 0, ingested: 0, failed: 0 };
+  /** @type {Set<string>} */
+  const cardsRan = new Set();
   /** @type {{ feed: string, code: string, timestamp: string | null }[]} */
   const failureEvents = [];
   let lastRunMs = null;
@@ -85,8 +106,20 @@ export async function buildDailyStatus({
       continue;
     }
 
-    const failedCount = failedCountByRunId.get(run.id) || 0;
-    const bucket = classifyRun({ status: run.status, failedCount });
+    cardsRan.add(run.card_id);
+
+    const runMetrics = metricsByRunId.get(run.id) || {
+      fetched: 0,
+      selected: 0,
+      ingested: 0,
+      failed: 0
+    };
+    items.fetched += runMetrics.fetched;
+    items.selected += runMetrics.selected;
+    items.ingested += runMetrics.ingested;
+    items.failed += runMetrics.failed;
+
+    const bucket = classifyRun({ status: run.status, failedCount: runMetrics.failed });
     ingest[bucket] += 1;
 
     const endedAt = run.ended_at || run.created_at || null;
@@ -114,8 +147,9 @@ export async function buildDailyStatus({
     system: resolvedSystem,
     run_id: runId,
     date,
-    feeds_active: cards.length,
+    feeds_active: cardsRan.size,
     ingest,
+    items,
     last_run: lastRunMs == null ? fromIso : new Date(lastRunMs).toISOString(),
     failures: groupFailures(failureEvents),
     link: runId
