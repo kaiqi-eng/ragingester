@@ -1,5 +1,11 @@
 import { config } from '../config.js';
-import { BAYS_WORKFLOW_NAME, buildDailyRunId } from './constants.js';
+import {
+  buildDailyRunId,
+  isTelemetrySourceType,
+  systemForSourceType,
+  workflowForSourceType
+} from './constants.js';
+import { incrementTelemetryCounter } from './metrics.js';
 import {
   autoActionForClass,
   classifyErrorClass
@@ -47,22 +53,44 @@ export function formatPipelineErrorTime(timestamp) {
 }
 
 /**
- * @param {{ card: object, run: object, error: { name?: string, message?: string, code?: string }, timestamp: string }} input
+ * Emit a Bays-shaped pipeline-error Slack card for rss_feed / youtube / linkedin.
+ *
+ * Supports either a live card+run or a synthetic manual payload via failedNode/error/sourceType.
+ *
+ * @param {{
+ *   card?: object,
+ *   run?: object,
+ *   error?: { name?: string, message?: string, code?: string, errorClass?: string },
+ *   timestamp?: string,
+ *   failedNode?: string,
+ *   sourceType?: string,
+ *   errorClass?: string
+ * }} input
  * @returns {Promise<{ posted: boolean, skippedReason?: string, payload?: object }>}
  */
-export async function emitRssPipelineError({ card, run, error, timestamp }) {
+export async function emitPipelineError({
+  card,
+  run,
+  error,
+  timestamp,
+  failedNode,
+  sourceType,
+  errorClass: errorClassOverride
+} = {}) {
   if (!config.telemetryPipelineErrorsEnabled) {
     return { posted: false, skippedReason: 'disabled' };
   }
 
-  if (card?.source_type !== 'rss_feed') {
-    return { posted: false, skippedReason: 'not_rss_feed' };
+  const resolvedSourceType = sourceType || card?.source_type || 'rss_feed';
+  if (!isTelemetrySourceType(resolvedSourceType)) {
+    return { posted: false, skippedReason: 'unsupported_source_type' };
   }
 
   if (!canUseWebhook() && !canUseBot()) {
     // eslint-disable-next-line no-console
     console.warn('telemetry.pipeline_error_skipped', {
       skippedReason: 'not_configured',
+      sourceType: resolvedSourceType,
       runId: run?.id
     });
     return { posted: false, skippedReason: 'not_configured' };
@@ -70,13 +98,16 @@ export async function emitRssPipelineError({ card, run, error, timestamp }) {
 
   const failureTime = timestamp || new Date().toISOString();
   const day = new Date(failureTime).toISOString().slice(0, 10);
-  const errorClass = classifyErrorClass(error || {});
+  const system = systemForSourceType(resolvedSourceType);
+  const errorClass = errorClassOverride
+    || error?.errorClass
+    || classifyErrorClass(error || {});
   const payload = {
-    workflow: BAYS_WORKFLOW_NAME,
-    failedNode: String(card.source_input || 'unknown'),
+    workflow: workflowForSourceType(resolvedSourceType),
+    failedNode: String(failedNode || card?.source_input || 'unknown'),
     errorClass,
     error: String(error?.message || run?.error || 'unknown error'),
-    executionId: buildDailyRunId(day),
+    executionId: buildDailyRunId(day, system),
     time: formatPipelineErrorTime(failureTime),
     autoAction: autoActionForClass(errorClass),
     mention: config.telemetryPipelineErrorsMention || undefined
@@ -87,8 +118,11 @@ export async function emitRssPipelineError({ card, run, error, timestamp }) {
 
   try {
     await deliverPipelineError({ text, blocks });
+    incrementTelemetryCounter('pipeline_error_posted');
     // eslint-disable-next-line no-console
     console.info('telemetry.pipeline_error', {
+      system,
+      sourceType: resolvedSourceType,
       executionId: payload.executionId,
       failedNode: payload.failedNode,
       errorClass: payload.errorClass,
@@ -96,8 +130,11 @@ export async function emitRssPipelineError({ card, run, error, timestamp }) {
     });
     return { posted: true, payload };
   } catch (deliveryError) {
+    incrementTelemetryCounter('pipeline_error_failed');
     // eslint-disable-next-line no-console
     console.warn('telemetry.pipeline_error_failed', {
+      system,
+      sourceType: resolvedSourceType,
       executionId: payload.executionId,
       runId: run?.id,
       error: deliveryError?.message || String(deliveryError)
@@ -110,11 +147,16 @@ export async function emitRssPipelineError({ card, run, error, timestamp }) {
   }
 }
 
+/** @deprecated Prefer emitPipelineError */
+export async function emitRssPipelineError(input) {
+  return emitPipelineError(input);
+}
+
 /**
  * @param {{ text: string, blocks: object[] }} input
  */
 async function deliverPipelineError({ text, blocks }) {
-  const timeoutMs = config.alertsSlackTimeoutMs;
+  const timeoutMs = config.telemetrySlackTimeoutMs;
   const primary = canUseWebhook() ? 'webhook' : 'bot';
   const fallback = primary === 'webhook' ? 'bot' : 'webhook';
 

@@ -7,6 +7,7 @@ import {
   buildDailyRunId,
   buildRssDailyStatusBlocks,
   classifyRun,
+  formatItemsSummary,
   groupFailures,
   SLACK_FAILURE_CODE_MAX_LENGTH,
   TELEMETRY_SYSTEM,
@@ -106,6 +107,36 @@ test('validateRssDailyStatus: missing field fails', () => {
 
 test('buildDailyRunId uses system prefix', () => {
   assert.equal(buildDailyRunId('2026-07-26'), `${TELEMETRY_SYSTEM}:2026-07-26`);
+  assert.equal(buildDailyRunId('2026-07-26', 'genie_youtube'), 'genie_youtube:2026-07-26');
+  assert.equal(buildDailyRunId('2026-07-26', 'genie_linkedin'), 'genie_linkedin:2026-07-26');
+});
+
+test('validateDailyStatus: youtube and linkedin systems pass', () => {
+  const youtube = {
+    ...loadFixture('status-all-ok.json'),
+    system: 'genie_youtube',
+    run_id: 'genie_youtube:2026-07-26',
+    link: 'genie_youtube:2026-07-26'
+  };
+  const linkedin = {
+    ...loadFixture('status-all-ok.json'),
+    system: 'genie_linkedin',
+    run_id: 'genie_linkedin:2026-07-26',
+    link: 'genie_linkedin:2026-07-26'
+  };
+  assert.doesNotThrow(() => validateRssDailyStatus(youtube));
+  assert.doesNotThrow(() => validateRssDailyStatus(linkedin));
+});
+
+test('buildRssDailyStatusBlocks: youtube header uses YouTube Daily Status', () => {
+  const status = {
+    ...loadFixture('status-empty-failures.json'),
+    system: 'genie_youtube',
+    run_id: 'genie_youtube:2026-07-26',
+    link: 'genie_youtube:2026-07-26'
+  };
+  const payload = buildRssDailyStatusBlocks(status);
+  assert.equal(payload.blocks[0].text.text, 'YouTube Daily Status, 2026-07-26');
 });
 
 test('buildRssDailyStatusBlocks: mixed fixture matches expected blocks', () => {
@@ -121,6 +152,17 @@ test('buildRssDailyStatusBlocks: empty failures render None', () => {
     (block) => block.type === 'section' && block.text?.text?.startsWith('*Failures:*')
   );
   assert.equal(failuresBlock.text.text, '*Failures:*\n_None_');
+});
+
+test('formatItemsSummary: describes volume or empty day', () => {
+  assert.equal(
+    formatItemsSummary({ fetched: 0, selected: 0, ingested: 0, failed: 0 }),
+    'No items fetched or ingested this day.'
+  );
+  assert.equal(
+    formatItemsSummary({ fetched: 200, selected: 80, ingested: 72, failed: 8 }),
+    'Ingested 72 of 80 selected items (200 fetched, 8 item failures).'
+  );
 });
 
 test('buildRssDailyStatusBlocks: long code truncated in Slack, full in JSON', () => {

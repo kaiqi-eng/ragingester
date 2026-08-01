@@ -12,13 +12,20 @@
       "fields": [
         {
           "type": "mrkdwn",
-          "text": "*Feeds active:*\n18"
+          "text": "*Feeds ran:*\n18"
         },
         {
           "type": "mrkdwn",
           "text": "*Ingest:*\nOK 15 | Degraded 2 | Failed 1"
         }
       ]
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*Items:*\nIngested 72 of 80 selected items (200 fetched, 8 item failures)."
+      }
     },
     {
       "type": "context",

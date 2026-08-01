@@ -5,7 +5,8 @@ import { RunOverlapError } from '../lib/errors.js';
 const defaultTables = {
   cards: 'cards',
   collectionRuns: 'collection_runs',
-  collectedData: 'collected_data'
+  collectedData: 'collected_data',
+  telemetryDailyStatusPosts: 'telemetry_daily_status_posts'
 };
 
 export function createSupabaseRepository({ supabaseUrl, serviceRoleKey, tables = {} }) {
@@ -180,13 +181,47 @@ export function createSupabaseRepository({ supabaseUrl, serviceRoleKey, tables =
       );
     },
 
-    async listActiveRssFeedCards() {
+    async listActiveCardsBySourceType(sourceType) {
       return unwrap(
         await supabase
           .from(table.cards)
           .select('*')
           .eq('active', true)
-          .eq('source_type', 'rss_feed')
+          .eq('source_type', sourceType)
+      );
+    },
+
+    async listActiveRssFeedCards() {
+      return this.listActiveCardsBySourceType('rss_feed');
+    },
+
+    async hasDailyStatusPost(system, date) {
+      const row = unwrap(
+        await supabase
+          .from(table.telemetryDailyStatusPosts)
+          .select('system')
+          .eq('system', system)
+          .eq('date', date)
+          .maybeSingle()
+      );
+      return Boolean(row);
+    },
+
+    async recordDailyStatusPost({ system, date, run_id }) {
+      return unwrap(
+        await supabase
+          .from(table.telemetryDailyStatusPosts)
+          .upsert(
+            {
+              system,
+              date,
+              run_id,
+              posted_at: new Date().toISOString()
+            },
+            { onConflict: 'system,date' }
+          )
+          .select('*')
+          .single()
       );
     },
 

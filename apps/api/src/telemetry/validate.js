@@ -1,9 +1,9 @@
-import { TELEMETRY_SYSTEM } from './constants.js';
+import { isAllowedTelemetrySystem } from './constants.js';
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
- * @typedef {Object} RssDailyStatusFailure
+ * @typedef {Object} DailyStatusFailure
  * @property {string} feed
  * @property {string} code
  * @property {number} count
@@ -11,33 +11,45 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
  */
 
 /**
- * @typedef {Object} RssDailyStatus
- * @property {string} system
- * @property {string} run_id
- * @property {string} date
- * @property {number} feeds_active
- * @property {{ ok: number, degraded: number, failed: number }} ingest
- * @property {string} last_run
- * @property {RssDailyStatusFailure[]} failures
- * @property {string} link
+ * @typedef {Object} DailyStatusItems
+ * @property {number} fetched
+ * @property {number} selected
+ * @property {number} ingested
+ * @property {number} failed
  */
 
 /**
- * Validate RssDailyStatus shape. Throws on first violation.
+ * @typedef {Object} DailyStatus
+ * @property {string} system
+ * @property {string} run_id
+ * @property {string} date
+ * @property {number} feeds_active Distinct cards with ≥1 terminal run that UTC day
+ * @property {{ ok: number, degraded: number, failed: number }} ingest
+ * @property {DailyStatusItems} items Aggregated collector item metrics for that day
+ * @property {string} last_run
+ * @property {DailyStatusFailure[]} failures
+ * @property {string} link
+ */
+
+/** @typedef {DailyStatus} RssDailyStatus */
+/** @typedef {DailyStatusFailure} RssDailyStatusFailure */
+
+/**
+ * Validate daily status shape. Throws on first violation.
  *
  * @param {unknown} obj
- * @returns {asserts obj is RssDailyStatus}
+ * @returns {asserts obj is DailyStatus}
  */
-export function validateRssDailyStatus(obj) {
+export function validateDailyStatus(obj) {
   if (!obj || typeof obj !== 'object' || Array.isArray(obj)) {
-    throw new Error('RssDailyStatus must be an object');
+    throw new Error('DailyStatus must be an object');
   }
 
   /** @type {Record<string, unknown>} */
   const status = obj;
 
-  if (status.system !== TELEMETRY_SYSTEM) {
-    throw new Error(`system must be "${TELEMETRY_SYSTEM}"`);
+  if (typeof status.system !== 'string' || !isAllowedTelemetrySystem(status.system)) {
+    throw new Error('system must be one of genie_rss, genie_youtube, genie_linkedin');
   }
   assertNonEmptyString(status.run_id, 'run_id');
   assertDate(status.date, 'date');
@@ -51,6 +63,16 @@ export function validateRssDailyStatus(obj) {
   assertNonNegativeInt(ingest.ok, 'ingest.ok');
   assertNonNegativeInt(ingest.degraded, 'ingest.degraded');
   assertNonNegativeInt(ingest.failed, 'ingest.failed');
+
+  if (!status.items || typeof status.items !== 'object' || Array.isArray(status.items)) {
+    throw new Error('items must be an object');
+  }
+  /** @type {Record<string, unknown>} */
+  const items = status.items;
+  assertNonNegativeInt(items.fetched, 'items.fetched');
+  assertNonNegativeInt(items.selected, 'items.selected');
+  assertNonNegativeInt(items.ingested, 'items.ingested');
+  assertNonNegativeInt(items.failed, 'items.failed');
 
   assertNonEmptyString(status.last_run, 'last_run');
   if (Number.isNaN(Date.parse(String(status.last_run)))) {
@@ -66,6 +88,9 @@ export function validateRssDailyStatus(obj) {
 
   assertNonEmptyString(status.link, 'link');
 }
+
+/** @deprecated Prefer validateDailyStatus */
+export const validateRssDailyStatus = validateDailyStatus;
 
 /**
  * @param {unknown} failure

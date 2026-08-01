@@ -1,8 +1,14 @@
 import { RUN_STATUS } from '@ragingester/shared';
-import { TELEMETRY_SYSTEM, buildDailyRunId } from './constants.js';
+import {
+  TELEMETRY_SYSTEM,
+  SYSTEM_BY_SOURCE_TYPE,
+  buildDailyRunId,
+  sourceTypeForSystem,
+  systemForSourceType
+} from './constants.js';
 import { classifyRun } from './classify.js';
 import { groupFailures } from './group-failures.js';
-import { validateRssDailyStatus } from './validate.js';
+import { validateDailyStatus } from './validate.js';
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -34,27 +40,63 @@ export function yesterdayUtcDate(now = new Date()) {
 }
 
 /**
- * Build RssDailyStatus for a UTC calendar day from repository data.
- *
- * @param {{ repository: object, date: string }} input
- * @returns {Promise<import('./validate.js').RssDailyStatus>}
+ * @param {unknown} value
+ * @returns {number}
  */
-export async function buildRssDailyStatus({ repository, date }) {
+function nonNegativeMetric(value) {
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+}
+
+/**
+ * Build DailyStatus for a UTC calendar day from repository data.
+ *
+ * `feeds_active` counts distinct cards with at least one terminal run that day
+ * (idle active cards are excluded).
+ *
+ * @param {{
+ *   repository: object,
+ *   date: string,
+ *   sourceType?: string,
+ *   system?: string
+ * }} input
+ * @returns {Promise<import('./validate.js').DailyStatus>}
+ */
+export async function buildDailyStatus({
+  repository,
+  date,
+  sourceType,
+  system
+}) {
+  const resolvedSystem = system
+    || (sourceType ? systemForSourceType(sourceType) : TELEMETRY_SYSTEM);
+  const resolvedSourceType = sourceType
+    || sourceTypeForSystem(resolvedSystem);
+
   const { fromIso, toIso } = utcDayWindow(date);
-  const cards = await repository.listActiveRssFeedCards();
+  const cards = await repository.listActiveCardsBySourceType(resolvedSourceType);
   const cardIds = cards.map((card) => card.id);
   const sourceByCardId = new Map(cards.map((card) => [card.id, card.source_input]));
 
   const runs = await repository.listRunsForCardsInWindow({ cardIds, fromIso, toIso });
   const runIds = runs.map((run) => run.id);
   const collectedRows = await repository.listCollectedDataByRunIds(runIds);
-  const failedCountByRunId = new Map();
+  /** @type {Map<string, { fetched: number, selected: number, ingested: number, failed: number }>} */
+  const metricsByRunId = new Map();
   for (const row of collectedRows) {
-    const failed = Number(row?.metadata?.metrics?.failed);
-    failedCountByRunId.set(row.run_id, Number.isFinite(failed) ? failed : 0);
+    const metrics = row?.metadata?.metrics || {};
+    metricsByRunId.set(row.run_id, {
+      fetched: nonNegativeMetric(metrics.fetched),
+      selected: nonNegativeMetric(metrics.selected),
+      ingested: nonNegativeMetric(metrics.ingested),
+      failed: nonNegativeMetric(metrics.failed)
+    });
   }
 
   const ingest = { ok: 0, degraded: 0, failed: 0 };
+  const items = { fetched: 0, selected: 0, ingested: 0, failed: 0 };
+  /** @type {Set<string>} */
+  const cardsRan = new Set();
   /** @type {{ feed: string, code: string, timestamp: string | null }[]} */
   const failureEvents = [];
   let lastRunMs = null;
@@ -64,8 +106,20 @@ export async function buildRssDailyStatus({ repository, date }) {
       continue;
     }
 
-    const failedCount = failedCountByRunId.get(run.id) || 0;
-    const bucket = classifyRun({ status: run.status, failedCount });
+    cardsRan.add(run.card_id);
+
+    const runMetrics = metricsByRunId.get(run.id) || {
+      fetched: 0,
+      selected: 0,
+      ingested: 0,
+      failed: 0
+    };
+    items.fetched += runMetrics.fetched;
+    items.selected += runMetrics.selected;
+    items.ingested += runMetrics.ingested;
+    items.failed += runMetrics.failed;
+
+    const bucket = classifyRun({ status: run.status, failedCount: runMetrics.failed });
     ingest[bucket] += 1;
 
     const endedAt = run.ended_at || run.created_at || null;
@@ -88,20 +142,36 @@ export async function buildRssDailyStatus({ repository, date }) {
     }
   }
 
-  const runId = buildDailyRunId(date);
+  const runId = buildDailyRunId(date, resolvedSystem);
   const status = {
-    system: TELEMETRY_SYSTEM,
+    system: resolvedSystem,
     run_id: runId,
     date,
-    feeds_active: cards.length,
+    feeds_active: cardsRan.size,
     ingest,
+    items,
     last_run: lastRunMs == null ? fromIso : new Date(lastRunMs).toISOString(),
     failures: groupFailures(failureEvents),
     link: runId
   };
 
-  validateRssDailyStatus(status);
+  validateDailyStatus(status);
   return status;
+}
+
+/**
+ * Build RssDailyStatus for a UTC calendar day (RSS-only wrapper).
+ *
+ * @param {{ repository: object, date: string }} input
+ * @returns {Promise<import('./validate.js').DailyStatus>}
+ */
+export async function buildRssDailyStatus({ repository, date }) {
+  return buildDailyStatus({
+    repository,
+    date,
+    sourceType: 'rss_feed',
+    system: SYSTEM_BY_SOURCE_TYPE.rss_feed
+  });
 }
 
 /**

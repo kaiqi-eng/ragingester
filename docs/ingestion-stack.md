@@ -127,6 +127,18 @@ Applies to `rss_feed`, `youtube`, `linkedin`:
 - Cursor advances to max `pubDate` among **successfully ingested** items only.
 - Partial failure: run succeeds if at least one item ingests; fails only if all new items fail.
 
+### Telemetry (daily status + pipeline errors)
+
+Ops Slack cards for fleet health live in [`apps/api/src/telemetry/`](../apps/api/src/telemetry/). See [`telemetry-contracts.md`](./telemetry-contracts.md).
+
+| Lane | Status `system` | Pipeline Workflow |
+|------|-----------------|-------------------|
+| RSS | `genie_rss` | `Genie_RSS` |
+| YouTube | `genie_youtube` | `Genie_YouTube` |
+| LinkedIn | `genie_linkedin` | `Genie_LinkedIn` |
+
+Daily status posts are idempotent per `(system, date)` via `telemetry_daily_status_posts`. Pipeline-error Slack posts on terminal failures for those three source types (and via `POST /telemetry/pipeline-error/emit` for smoke).
+
 ---
 
 ## Shared: Bharag (BHA RAG)

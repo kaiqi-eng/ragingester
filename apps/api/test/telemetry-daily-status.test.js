@@ -6,9 +6,11 @@ import { createMemoryRepository } from '../src/repository/memory-repository.js';
 import { resetRepositoryForTests, setRepositoryForTests } from '../src/repository/index.js';
 import {
   buildDailyRunId,
+  buildDailyStatus,
   buildRssDailyStatus,
   validateRssDailyStatus
 } from '../src/telemetry/index.js';
+
 
 const DAY = '2026-07-26';
 const OWNER = 'telemetry-owner';
@@ -94,7 +96,10 @@ test('buildRssDailyStatus: classifies ok, degraded, failed; ignores running; gro
     owner_id: OWNER,
     raw_data: {},
     normalized_data: {},
-    metadata: { metrics: { failed: 0 }, source_type: 'rss_feed' }
+    metadata: {
+      metrics: { fetched: 5, selected: 4, ingested: 4, failed: 0 },
+      source_type: 'rss_feed'
+    }
   });
 
   const degradedRun = await seedRun(repository, degradedCard, {
@@ -106,7 +111,10 @@ test('buildRssDailyStatus: classifies ok, degraded, failed; ignores running; gro
     owner_id: OWNER,
     raw_data: {},
     normalized_data: {},
-    metadata: { metrics: { failed: 2 }, source_type: 'rss_feed' }
+    metadata: {
+      metrics: { fetched: 5, selected: 4, ingested: 2, failed: 2 },
+      source_type: 'rss_feed'
+    }
   });
 
   await seedRun(repository, failedCard, {
@@ -148,6 +156,7 @@ test('buildRssDailyStatus: classifies ok, degraded, failed; ignores running; gro
   assert.equal(status.link, buildDailyRunId(DAY));
   assert.equal(status.feeds_active, 3);
   assert.deepEqual(status.ingest, { ok: 1, degraded: 1, failed: 2 });
+  assert.deepEqual(status.items, { fetched: 10, selected: 8, ingested: 6, failed: 2 });
   assert.equal(status.last_run, '2026-07-26T12:00:00.000Z');
   assert.equal(status.failures.length, 1);
   assert.deepEqual(status.failures[0], {
@@ -164,10 +173,25 @@ test('buildRssDailyStatus: empty day still validates', async () => {
 
   const status = await buildRssDailyStatus({ repository, date: DAY });
   validateRssDailyStatus(status);
-  assert.equal(status.feeds_active, 1);
+  assert.equal(status.feeds_active, 0);
   assert.deepEqual(status.ingest, { ok: 0, degraded: 0, failed: 0 });
+  assert.deepEqual(status.items, { fetched: 0, selected: 0, ingested: 0, failed: 0 });
   assert.deepEqual(status.failures, []);
   assert.equal(status.last_run, '2026-07-26T00:00:00.000Z');
+});
+
+test('buildRssDailyStatus: idle active cards are excluded from feeds_active', async () => {
+  const repository = createMemoryRepository();
+  const ran = await seedCard(repository, { source_input: 'https://ran.example/feed.xml' });
+  await seedCard(repository, { source_input: 'https://idle.example/feed.xml' });
+  await seedRun(repository, ran, {
+    status: RUN_STATUS.SUCCESS,
+    ended_at: '2026-07-26T10:00:00.000Z'
+  });
+
+  const status = await buildRssDailyStatus({ repository, date: DAY });
+  assert.equal(status.feeds_active, 1);
+  assert.deepEqual(status.ingest, { ok: 1, degraded: 0, failed: 0 });
 });
 
 test('GET /telemetry/rss-daily-status returns schema-valid JSON', async () => {
@@ -208,6 +232,108 @@ test('GET /telemetry/rss-daily-status rejects bad date', async () => {
       assert.equal(response.status, 400);
       const body = await response.json();
       assert.match(body.error, /YYYY-MM-DD/);
+    });
+  } finally {
+    resetRepositoryForTests();
+  }
+});
+
+test('buildDailyStatus: youtube system classifies failures', async () => {
+  const repository = createMemoryRepository();
+  const card = await repository.createCard({
+    owner_id: OWNER,
+    source_type: 'youtube',
+    source_input: 'https://www.youtube.com/channel/UCtest',
+    params: {},
+    schedule_enabled: false,
+    cron_expression: null,
+    timezone: 'UTC',
+    next_run_at: null,
+    last_run_at: null,
+    run_timeout_ms: null,
+    run_max_retries: null,
+    active: true
+  });
+  await seedRun(repository, card, {
+    status: RUN_STATUS.FAILED,
+    ended_at: '2026-07-26T10:00:00.000Z',
+    error: 'GENIE_RSS_API_KEY is required for youtube ingestion'
+  });
+
+  const status = await buildDailyStatus({
+    repository,
+    date: DAY,
+    system: 'genie_youtube'
+  });
+  validateRssDailyStatus(status);
+  assert.equal(status.system, 'genie_youtube');
+  assert.equal(status.run_id, 'genie_youtube:2026-07-26');
+  assert.equal(status.feeds_active, 1);
+  assert.deepEqual(status.ingest, { ok: 0, degraded: 0, failed: 1 });
+  assert.equal(status.failures[0].feed, 'https://www.youtube.com/channel/UCtest');
+});
+
+test('buildDailyStatus: linkedin system empty day validates', async () => {
+  const repository = createMemoryRepository();
+  await repository.createCard({
+    owner_id: OWNER,
+    source_type: 'linkedin',
+    source_input: 'https://www.linkedin.com/in/example',
+    params: {},
+    schedule_enabled: false,
+    cron_expression: null,
+    timezone: 'UTC',
+    next_run_at: null,
+    last_run_at: null,
+    run_timeout_ms: null,
+    run_max_retries: null,
+    active: true
+  });
+
+  const status = await buildDailyStatus({
+    repository,
+    date: DAY,
+    system: 'genie_linkedin'
+  });
+  validateRssDailyStatus(status);
+  assert.equal(status.system, 'genie_linkedin');
+  assert.equal(status.feeds_active, 0);
+  assert.deepEqual(status.ingest, { ok: 0, degraded: 0, failed: 0 });
+});
+
+test('GET /telemetry/daily-status?system=genie_youtube returns youtube status', async () => {
+  const repository = createMemoryRepository();
+  setRepositoryForTests(repository);
+  const card = await repository.createCard({
+    owner_id: OWNER,
+    source_type: 'youtube',
+    source_input: 'UChttp',
+    params: {},
+    schedule_enabled: false,
+    cron_expression: null,
+    timezone: 'UTC',
+    next_run_at: null,
+    last_run_at: null,
+    run_timeout_ms: null,
+    run_max_retries: null,
+    active: true
+  });
+  await seedRun(repository, card, {
+    status: RUN_STATUS.SUCCESS,
+    ended_at: '2026-07-26T10:00:00.000Z'
+  });
+
+  try {
+    await withServer(async (baseUrl) => {
+      const response = await fetch(
+        `${baseUrl}/telemetry/daily-status?system=genie_youtube&date=${DAY}`,
+        { headers: authHeaders() }
+      );
+      assert.equal(response.status, 200);
+      const body = await response.json();
+      validateRssDailyStatus(body);
+      assert.equal(body.system, 'genie_youtube');
+      assert.equal(body.feeds_active, 1);
     });
   } finally {
     resetRepositoryForTests();

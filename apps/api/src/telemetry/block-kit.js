@@ -1,4 +1,8 @@
-import { SLACK_FAILURE_CODE_MAX_LENGTH } from './constants.js';
+import {
+  SLACK_FAILURE_CODE_MAX_LENGTH,
+  STATUS_HEADER_BY_SYSTEM,
+  TELEMETRY_SYSTEM
+} from './constants.js';
 
 /**
  * Truncate failure code for Slack display only. Full code stays in JSON payload.
@@ -15,12 +19,32 @@ export function truncateFailureCodeForSlack(code, maxLength = SLACK_FAILURE_CODE
 }
 
 /**
- * Build Slack Block Kit blocks for an RSS daily status card.
+ * Short prose summary of item volume for the Slack card.
  *
- * @param {import('./validate.js').RssDailyStatus} status
+ * @param {{ fetched?: number, selected?: number, ingested?: number, failed?: number } | null | undefined} items
+ * @returns {string}
+ */
+export function formatItemsSummary(items) {
+  const fetched = Number(items?.fetched) || 0;
+  const selected = Number(items?.selected) || 0;
+  const ingested = Number(items?.ingested) || 0;
+  const failed = Number(items?.failed) || 0;
+
+  if (fetched === 0 && selected === 0 && ingested === 0 && failed === 0) {
+    return 'No items fetched or ingested this day.';
+  }
+
+  return `Ingested ${ingested} of ${selected} selected items (${fetched} fetched, ${failed} item failures).`;
+}
+
+/**
+ * Build Slack Block Kit blocks for a daily status card.
+ *
+ * @param {import('./validate.js').DailyStatus} status
  * @returns {{ blocks: object[] }}
  */
-export function buildRssDailyStatusBlocks(status) {
+export function buildDailyStatusBlocks(status) {
+  const headerPrefix = STATUS_HEADER_BY_SYSTEM[status?.system] || STATUS_HEADER_BY_SYSTEM[TELEMETRY_SYSTEM];
   const failures = Array.isArray(status?.failures) ? status.failures : [];
   const failuresText = failures.length === 0
     ? '*Failures:*\n_None_'
@@ -36,7 +60,7 @@ export function buildRssDailyStatusBlocks(status) {
         type: 'header',
         text: {
           type: 'plain_text',
-          text: `RSS Daily Status, ${status.date}`
+          text: `${headerPrefix}, ${status.date}`
         }
       },
       {
@@ -44,13 +68,20 @@ export function buildRssDailyStatusBlocks(status) {
         fields: [
           {
             type: 'mrkdwn',
-            text: `*Feeds active:*\n${status.feeds_active}`
+            text: `*Feeds ran:*\n${status.feeds_active}`
           },
           {
             type: 'mrkdwn',
             text: `*Ingest:*\nOK ${status.ingest.ok} | Degraded ${status.ingest.degraded} | Failed ${status.ingest.failed}`
           }
         ]
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `*Items:*\n${formatItemsSummary(status.items)}`
+        }
       },
       {
         type: 'context',
@@ -81,3 +112,6 @@ export function buildRssDailyStatusBlocks(status) {
     ]
   };
 }
+
+/** @deprecated Prefer buildDailyStatusBlocks */
+export const buildRssDailyStatusBlocks = buildDailyStatusBlocks;
