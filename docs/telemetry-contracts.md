@@ -153,7 +153,7 @@ Hook: [`run-engine.js`](../apps/api/src/lib/run-engine.js). Slack delivery failu
 
 ## Durable table
 
-Migration: [`supabase/migrations/20260731_001_telemetry_daily_status_posts.sql`](../supabase/migrations/20260731_001_telemetry_daily_status_posts.sql)
+Migration: [`supabase/migrations/20260801_007_telemetry_daily_status_posts.sql`](../supabase/migrations/20260801_007_telemetry_daily_status_posts.sql)
 
 ```sql
 telemetry_daily_status_posts (
