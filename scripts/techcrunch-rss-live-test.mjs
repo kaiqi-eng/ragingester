@@ -11,8 +11,6 @@ const projectRoot = path.resolve(__dirname, '..');
 
 const FEED_URL = 'https://techcrunch.com/feed/';
 const DEV_USER_ID = process.env.DEV_USER_ID || 'dev-user-1';
-const BHARAG_BASE_URL = process.env.BHARAG_BASE_URL || '';
-const BHARAG_MASTER_API_KEY = process.env.BHARAG_MASTER_API_KEY || '';
 
 function authHeaders() {
   return {
@@ -29,18 +27,19 @@ function safeJsonParse(text) {
   }
 }
 
+function sanitizeHeaders(headers = {}) {
+  return Object.fromEntries(
+    Object.entries(headers).map(([key, value]) => (
+      key.toLowerCase() === 'x-api-key' ? [key, '[redacted]'] : [key, value]
+    ))
+  );
+}
+
 async function run() {
   setRepositoryForTests(createMemoryRepository());
 
   const outboundPayloads = [];
-  const cleanup = {
-    attempted: 0,
-    deleted: 0,
-    failed: 0,
-    deleted_ids: [],
-    failures: []
-  };
-  const ingestedDocs = new Map();
+  const cleanup = { attempted: false, reason: 'BHARAG2 Ledger events are retained for inspection' };
   let createCardResponse;
   let createCardBody = null;
   let runResponse;
@@ -64,7 +63,7 @@ async function run() {
       started_at: startedAt,
       url: String(url),
       method,
-      request_headers: requestHeaders,
+      request_headers: sanitizeHeaders(requestHeaders),
       request_body_raw: requestBody,
       request_body_json: requestBody ? safeJsonParse(requestBody) : null,
       response_status: response.status,
@@ -72,16 +71,6 @@ async function run() {
       response_body_raw: rawBody,
       response_body_json: safeJsonParse(rawBody)
     });
-
-    const responseJson = safeJsonParse(rawBody);
-    if (
-      String(url).includes('/api/v1/ingest')
-      && response.status === 201
-      && responseJson?.document?.id
-    ) {
-      const workspaceId = requestHeaders['x-workspace-id'] || requestHeaders['X-Workspace-ID'] || null;
-      ingestedDocs.set(responseJson.document.id, workspaceId);
-    }
 
     return response;
   };
@@ -118,40 +107,22 @@ async function run() {
       headers: authHeaders()
     });
     listRunsBody = await listRunsResponse.json();
+
+    const successfulLanes = new Set(
+      outboundPayloads
+        .filter((payload) => (
+          payload.url.includes('/api/v1/ingest')
+          && payload.response_status >= 200
+          && payload.response_status < 300
+        ))
+        .map((payload) => payload.request_headers['payload-type'])
+    );
+    if (!successfulLanes.has('rag') || !successfulLanes.has('ledger')) {
+      throw new Error('expected successful BHARAG2 Book and Ledger writes');
+    }
   } catch (error) {
     testError = error;
   } finally {
-    if (BHARAG_BASE_URL && BHARAG_MASTER_API_KEY && ingestedDocs.size > 0) {
-      for (const [documentId, workspaceId] of ingestedDocs.entries()) {
-        cleanup.attempted += 1;
-        try {
-          if (!workspaceId) throw new Error(`missing workspace id for document ${documentId}`);
-
-          const response = await fetch(`${BHARAG_BASE_URL}/api/v1/documents/${documentId}`, {
-            method: 'DELETE',
-            headers: {
-              'x-api-key': BHARAG_MASTER_API_KEY,
-              'x-workspace-id': workspaceId
-            }
-          });
-
-          if (!response.ok) {
-            const body = await response.text();
-            throw new Error(`delete failed (${response.status}): ${body}`);
-          }
-
-          cleanup.deleted += 1;
-          cleanup.deleted_ids.push(documentId);
-        } catch (error) {
-          cleanup.failed += 1;
-          cleanup.failures.push({
-            document_id: documentId,
-            error: error instanceof Error ? error.message : String(error)
-          });
-        }
-      }
-    }
-
     global.fetch = originalFetch;
     resetRepositoryForTests();
     await new Promise((resolve, reject) => {
@@ -182,10 +153,6 @@ async function run() {
 
   if (testError) {
     throw Object.assign(new Error(testError.message), { artifactPath });
-  }
-
-  if (cleanup.failed > 0) {
-    throw Object.assign(new Error(`cleanup failed for ${cleanup.failed} documents`), { artifactPath });
   }
 
   // eslint-disable-next-line no-console

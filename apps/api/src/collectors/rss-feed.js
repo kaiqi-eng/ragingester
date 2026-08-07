@@ -1,11 +1,10 @@
 import { config } from '../config.js';
 
-const WORKSPACE_SLUG = 'rss-feed';
-const WORKSPACE_NAME = 'RSS Feed';
 const GENIE_RSS_READY_WAIT_MS = 60 * 1000;
 const GENIE_RSS_READY_RETRY_MS = 5 * 1000;
 const RATE_LIMIT_INITIAL_RETRY_MS = 5 * 1000;
 const RATE_LIMIT_MAX_RETRY_MS = 30 * 1000;
+const MIN_BOOK_CONTENT_LENGTH = 10;
 
 class RequestError extends Error {
   constructor(message, { status, retryAfterMs }) {
@@ -40,12 +39,13 @@ function resolveIntegrationConfig(params = {}) {
     genieRssBaseUrl: trimTrailingSlash(pickParam(params, 'genie_rss_base_url', config.genieRssBaseUrl)),
     genieRssApiKey: pickParam(params, 'genie_rss_api_key', config.genieRssApiKey),
     bharagBaseUrl: trimTrailingSlash(pickParam(params, 'bharag_base_url', config.bharagBaseUrl)),
-    bharagMasterApiKey: pickParam(params, 'bharag_master_api_key', config.bharagMasterApiKey),
-    bharagOwnerBuilderId: pickParam(params, 'bharag_owner_builder_id', config.bharagOwnerBuilderId),
-    bharagOwnerName: pickParam(params, 'bharag_owner_name', config.bharagOwnerName),
-    bharagOwnerEmail: pickParam(params, 'bharag_owner_email', config.bharagOwnerEmail),
-    workspaceId: pickParam(params, 'rss_workspace_id', null),
-    cursor: asIsoDate(params.rss_cursor_pub_date)
+    workspaceId: pickParam(params, 'bharag_rss_workspace_id', config.bharagRssWorkspaceId),
+    workspaceApiKey: config.bharagRssWorkspaceApiKey,
+    ledgerSchema: pickParam(params, 'bharag_rss_ledger_schema', config.bharagRssLedgerSchema),
+    cursor: asIsoDate(params.rss_cursor_pub_date),
+    cursorItemGuids: Array.isArray(params.rss_cursor_item_guids)
+      ? params.rss_cursor_item_guids.filter((guid) => typeof guid === 'string' && guid.trim()).map((guid) => guid.trim())
+      : []
   };
 }
 
@@ -58,18 +58,6 @@ function parseFeedItems(feed) {
     guid: item.guid || item.link || null,
     pubDate: asIsoDate(item.pubDate || item.isoDate)
   }));
-}
-
-function buildDocumentContent({ runTimestamp, previousRun, item }) {
-  return [
-    'TAGs: [RSS]',
-    `Timestamp ran: ${runTimestamp}`,
-    `Previous run: ${previousRun || 'none'}`,
-    `Post timestamp: ${item.pubDate || 'unknown'}`,
-    `Title: ${item.title}`,
-    `Content: ${item.content}`,
-    `Link: ${item.link}`
-  ].join('\n');
 }
 
 async function fetchJson(url, options = {}) {
@@ -170,185 +158,71 @@ async function fetchRssFeedWithRateLimitBackoff({
   return fetchRssFeed({ sourceInput, cfg, since });
 }
 
-async function listBharagWorkspaces({ cfg, limit = 100, offset = 0 }) {
-  if (!cfg.bharagMasterApiKey) {
-    throw new Error('BHARAG_MASTER_API_KEY is required for rss_feed ingestion');
+function assertBharagRssConfig(cfg) {
+  if (!cfg.workspaceId) throw new Error('BHARAG_RSS_WORKSPACE_ID is required for rss_feed ingestion');
+  if (!cfg.workspaceApiKey) throw new Error('BHARAG_RSS_WORKSPACE_API_KEY is required for rss_feed ingestion');
+  if (!cfg.ledgerSchema) throw new Error('BHARAG_RSS_LEDGER_SCHEMA is required for rss_feed ingestion');
+}
+
+function validateItem(item) {
+  if (!item.guid) return 'missing stable item GUID';
+  if (!item.pubDate) return 'missing valid publication date';
+  if (item.content.trim().length < MIN_BOOK_CONTENT_LENGTH) {
+    return `article content must contain at least ${MIN_BOOK_CONTENT_LENGTH} characters`;
   }
-
-  return fetchJson(`${cfg.bharagBaseUrl}/api/v1/workspaces?limit=${limit}&offset=${offset}`, {
-    headers: {
-      'x-api-key': cfg.bharagMasterApiKey
-    }
-  });
+  return null;
 }
 
-async function createBharagWorkspace({ cfg }) {
-  return fetchJson(`${cfg.bharagBaseUrl}/api/v1/workspaces`, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': cfg.bharagMasterApiKey
-    },
-    body: JSON.stringify({
-      name: WORKSPACE_NAME,
-      slug: WORKSPACE_SLUG
-    })
-  });
-}
-
-async function listBharagWorkspaceMembers({ cfg, workspaceId }) {
-  return fetchJson(`${cfg.bharagBaseUrl}/api/v1/workspaces/${workspaceId}/members`, {
-    headers: {
-      'x-api-key': cfg.bharagMasterApiKey
-    }
-  });
-}
-
-async function listBharagBuilders({ cfg, limit = 100, offset = 0 }) {
-  return fetchJson(`${cfg.bharagBaseUrl}/api/v1/builders?limit=${limit}&offset=${offset}`, {
-    headers: {
-      'x-api-key': cfg.bharagMasterApiKey
-    }
-  });
-}
-
-async function createBharagBuilder({ cfg }) {
-  return fetchJson(`${cfg.bharagBaseUrl}/api/v1/builders`, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': cfg.bharagMasterApiKey
-    },
-    body: JSON.stringify({
-      name: cfg.bharagOwnerName || 'Ragingester RSS Owner',
-      ...(cfg.bharagOwnerEmail ? { email: cfg.bharagOwnerEmail } : {}),
-      role: 'admin'
-    })
-  });
-}
-
-async function addWorkspaceOwner({ cfg, workspaceId, builderId }) {
-  try {
-    await fetchJson(`${cfg.bharagBaseUrl}/api/v1/workspaces/${workspaceId}/members`, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-api-key': cfg.bharagMasterApiKey
-      },
-      body: JSON.stringify({
-        builder_id: builderId,
-        role: 'owner'
-      })
-    });
-  } catch (error) {
-    // If already a member, promote via update endpoint.
-    const message = error instanceof Error ? error.message : String(error);
-    if (!message.includes('409')) throw error;
-
-    await fetchJson(`${cfg.bharagBaseUrl}/api/v1/workspaces/${workspaceId}/members/${builderId}`, {
-      method: 'PUT',
-      headers: {
-        'content-type': 'application/json',
-        'x-api-key': cfg.bharagMasterApiKey
-      },
-      body: JSON.stringify({ role: 'owner' })
-    });
-  }
-}
-
-async function resolveOwnerBuilderId(cfg) {
-  if (cfg.bharagOwnerBuilderId) return cfg.bharagOwnerBuilderId;
-
-  let offset = 0;
-  while (offset < 1000) {
-    const listResponse = await listBharagBuilders({ cfg, offset });
-    const builders = Array.isArray(listResponse.builders) ? listResponse.builders : [];
-
-    const matched = builders.find((builder) => (
-      (cfg.bharagOwnerEmail && builder.email && builder.email.toLowerCase() === cfg.bharagOwnerEmail.toLowerCase())
-      || (cfg.bharagOwnerName && builder.name === cfg.bharagOwnerName)
-    ));
-    if (matched?.id) return matched.id;
-
-    if (!listResponse.pagination || builders.length === 0 || builders.length < (listResponse.pagination.limit || 20)) break;
-    offset += listResponse.pagination.limit || builders.length;
-  }
-
-  const created = await createBharagBuilder({ cfg });
-  if (!created.builder?.id) {
-    throw new Error('failed to create Bharag owner builder');
-  }
-  return created.builder.id;
-}
-
-async function ensureWorkspaceHasOwner({ cfg, workspaceId }) {
-  const membersResponse = await listBharagWorkspaceMembers({ cfg, workspaceId });
-  const members = Array.isArray(membersResponse.members) ? membersResponse.members : [];
-  const hasOwner = members.some((member) => member.role === 'owner');
-  if (hasOwner) return null;
-
-  const ownerBuilderId = await resolveOwnerBuilderId(cfg);
-  await addWorkspaceOwner({ cfg, workspaceId, builderId: ownerBuilderId });
-  return ownerBuilderId;
-}
-
-async function resolveWorkspaceId(cfg) {
-  if (cfg.workspaceId) {
-    const ownerBuilderId = await ensureWorkspaceHasOwner({ cfg, workspaceId: cfg.workspaceId });
-    return { workspaceId: cfg.workspaceId, ownerBuilderId };
-  }
-
-  let offset = 0;
-  while (offset < 1000) {
-    const listResponse = await listBharagWorkspaces({ cfg, offset });
-    const workspaces = Array.isArray(listResponse.workspaces) ? listResponse.workspaces : [];
-    const matched = workspaces.find((workspace) => workspace.slug === WORKSPACE_SLUG);
-    if (matched?.id) {
-      const ownerBuilderId = await ensureWorkspaceHasOwner({ cfg, workspaceId: matched.id });
-      return { workspaceId: matched.id, ownerBuilderId };
-    }
-
-    if (!listResponse.pagination?.hasMore) break;
-    offset += listResponse.pagination.limit || workspaces.length || 100;
-  }
-
-  const created = await createBharagWorkspace({ cfg });
-  if (!created.workspace?.id) {
-    throw new Error('failed to create Bharag workspace for rss-feed ingestion');
-  }
-  const ownerBuilderId = await ensureWorkspaceHasOwner({ cfg, workspaceId: created.workspace.id });
-  return { workspaceId: created.workspace.id, ownerBuilderId };
-}
-
-async function ingestDocument({ cfg, workspaceId, sourceInput, item, runTimestamp, previousRun }) {
-  const body = {
-    title: item.title,
-    content: buildDocumentContent({
-      runTimestamp,
-      previousRun,
-      item
-    }),
-    source_type: 'manual',
-    content_type: 'doc',
-    source_url: item.link || sourceInput,
-    project_tags: ['rss'],
-    metadata: {
-      ingestion_type: 'rss_feed',
-      feed_source: sourceInput,
-      item_guid: item.guid,
-      item_pub_date: item.pubDate
-    }
+function ingestHeaders(cfg, workspaceId, payloadType, payloadSchema) {
+  return {
+    'content-type': 'application/json',
+    'x-api-key': cfg.workspaceApiKey,
+    'x-workspace-id': workspaceId,
+    'payload-type': payloadType,
+    ...(payloadSchema ? { 'payload-schema': payloadSchema } : {})
   };
+}
 
+async function ingestBookDocument({ cfg, workspaceId, item }) {
   return fetchJson(`${cfg.bharagBaseUrl}/api/v1/ingest`, {
     method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': cfg.bharagMasterApiKey,
-      'x-workspace-id': workspaceId
-    },
-    body: JSON.stringify(body)
+    headers: ingestHeaders(cfg, workspaceId, 'rag'),
+    body: JSON.stringify({
+      title: item.title,
+      content: item.content.trim(),
+      source_type: 'manual'
+    })
   });
+}
+
+async function ingestLedgerEvent({ cfg, workspaceId, sourceInput, item }) {
+  const sourceUrl = item.link || sourceInput;
+  return fetchJson(`${cfg.bharagBaseUrl}/api/v1/ingest`, {
+    method: 'POST',
+    headers: ingestHeaders(cfg, workspaceId, 'ledger', cfg.ledgerSchema),
+    body: JSON.stringify({
+      occurred_at: item.pubDate,
+      entity_type: 'document',
+      entity_id: item.guid,
+      source: sourceInput,
+      summary: `RSS item: ${item.title}`,
+      payload: {
+        source_type: 'manual',
+        content_type: 'doc',
+        source_url: sourceUrl,
+        project_tags: ['rss'],
+        ingestion_type: 'rss_feed',
+        feed_source: sourceInput,
+        item_guid: item.guid,
+        item_pub_date: item.pubDate
+      }
+    })
+  });
+}
+
+async function ingestRssItem({ cfg, workspaceId, sourceInput, item }) {
+  await ingestBookDocument({ cfg, workspaceId, item });
+  await ingestLedgerEvent({ cfg, workspaceId, sourceInput, item });
 }
 
 export async function prewarmRssFeed({
@@ -388,7 +262,7 @@ export const rssFeedCollector = {
   async collect({ source_input, params = {}, context = {} }) {
     const cfg = resolveIntegrationConfig(params);
     const previousRun = cfg.cursor;
-    const runTimestamp = new Date().toISOString();
+    assertBharagRssConfig(cfg);
 
     await prewarmRssFeed({ params });
 
@@ -402,44 +276,83 @@ export const rssFeedCollector = {
     });
 
     const parsedItems = parseFeedItems(feedResponse.feed);
+    const cursorItemGuids = new Set(cfg.cursorItemGuids);
     const newItems = previousRun
-      ? parsedItems.filter((item) => item.pubDate && item.pubDate > previousRun)
+      ? parsedItems.filter((item) => (
+        item.pubDate
+        && (item.pubDate > previousRun || (item.pubDate === previousRun && !cursorItemGuids.has(item.guid)))
+      ))
       : parsedItems;
-
-    const { workspaceId, ownerBuilderId } = await resolveWorkspaceId(cfg);
+    newItems.sort((left, right) => (
+      (left.pubDate || '').localeCompare(right.pubDate || '')
+      || (left.guid || '').localeCompare(right.guid || '')
+    ));
 
     const failedItems = [];
     const ingestedItems = [];
+    let bookIngestedCount = 0;
+    let ledgerIngestedCount = 0;
+    let nextCursor = previousRun;
+    let nextCursorItemGuids = new Set(previousRun ? cfg.cursorItemGuids : []);
 
     for (const item of newItems) {
-      try {
-        await ingestDocument({
-          cfg,
-          workspaceId,
-          sourceInput: source_input,
-          item,
-          runTimestamp,
-          previousRun
+      const validationError = validateItem(item);
+      if (validationError) {
+        failedItems.push({
+          title: item.title,
+          link: item.link,
+          guid: item.guid,
+          lane: 'validation',
+          error: validationError
         });
+        break;
+      }
+
+      try {
+        await ingestBookDocument({ cfg, workspaceId: cfg.workspaceId, item });
+        bookIngestedCount += 1;
+      } catch (error) {
+        failedItems.push({
+          title: item.title,
+          link: item.link,
+          guid: item.guid,
+          lane: 'book',
+          error: error instanceof Error ? error.message : String(error)
+        });
+        break;
+      }
+
+      try {
+        await ingestLedgerEvent({
+          cfg,
+          workspaceId: cfg.workspaceId,
+          sourceInput: source_input,
+          item
+        });
+        ledgerIngestedCount += 1;
         ingestedItems.push(item);
       } catch (error) {
         failedItems.push({
           title: item.title,
           link: item.link,
+          guid: item.guid,
+          lane: 'ledger',
           error: error instanceof Error ? error.message : String(error)
         });
+        break;
+      }
+
+      if (!nextCursor || item.pubDate > nextCursor) {
+        nextCursor = item.pubDate;
+        nextCursorItemGuids = new Set([item.guid]);
+      } else if (item.pubDate === nextCursor) {
+        nextCursorItemGuids.add(item.guid);
       }
     }
 
     if (failedItems.length > 0 && ingestedItems.length === 0 && newItems.length > 0) {
       throw new Error(`failed to ingest RSS items: ${failedItems[0].error}`);
     }
-
-    const maxIngestedPubDate = ingestedItems
-      .map((item) => item.pubDate)
-      .filter(Boolean)
-      .sort()
-      .at(-1) || previousRun;
 
     return {
       raw: {
@@ -451,26 +364,31 @@ export const rssFeedCollector = {
       normalized: {
         source_type: 'rss_feed',
         trigger_mode: context.triggerMode || null,
-        workspace_slug: WORKSPACE_SLUG,
-        workspace_id: workspaceId,
-        owner_builder_id: ownerBuilderId || null,
+        workspace_id: cfg.workspaceId,
+        ledger_schema: cfg.ledgerSchema,
         fetched_count: parsedItems.length,
         ingested_count: ingestedItems.length,
+        book_ingested_count: bookIngestedCount,
+        ledger_ingested_count: ledgerIngestedCount,
         skipped_count: parsedItems.length - newItems.length,
         failed_count: failedItems.length,
         previous_cursor: previousRun,
-        next_cursor: maxIngestedPubDate
+        next_cursor: nextCursor,
+        next_cursor_item_guids: [...nextCursorItemGuids]
       },
       metrics: {
         fetched: parsedItems.length,
         selected: newItems.length,
         ingested: ingestedItems.length,
-        failed: failedItems.length
+        failed: failedItems.length,
+        book_ingested: bookIngestedCount,
+        ledger_ingested: ledgerIngestedCount
       },
       card_updates: {
         params: {
-          rss_cursor_pub_date: maxIngestedPubDate,
-          rss_workspace_id: workspaceId
+          rss_cursor_pub_date: nextCursor,
+          rss_cursor_item_guids: [...nextCursorItemGuids],
+          rss_workspace_id: cfg.workspaceId
         }
       },
       logs: [
@@ -482,8 +400,10 @@ export const rssFeedCollector = {
             selected: newItems.length,
             ingested: ingestedItems.length,
             failed: failedItems.length,
-            workspaceId,
-            ownerBuilderId: ownerBuilderId || null
+            bookIngested: bookIngestedCount,
+            ledgerIngested: ledgerIngestedCount,
+            workspaceId: cfg.workspaceId,
+            ledgerSchema: cfg.ledgerSchema
           }
         },
         ...failedItems.map((item) => ({

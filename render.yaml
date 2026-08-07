@@ -44,6 +44,12 @@ services:
         value: Ragingester RSS Owner
       - key: BHARAG_OWNER_EMAIL
         sync: false
+      - key: BHARAG_RSS_WORKSPACE_ID
+        sync: false
+      - key: BHARAG_RSS_WORKSPACE_API_KEY
+        sync: false
+      - key: BHARAG_RSS_LEDGER_SCHEMA
+        value: ingest.rss
       - key: VITE_SUPABASE_URL
         sync: false
       - key: VITE_SUPABASE_ANON_KEY

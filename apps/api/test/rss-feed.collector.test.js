@@ -1,8 +1,27 @@
-import test from 'node:test';
+import test, { afterEach, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { rssFeedCollector } from '../src/collectors/rss-feed.js';
+import { config } from '../src/config.js';
 
-test('rssFeedCollector ingests only items beyond cursor and writes post timestamp template', async () => {
+const originalRssConfig = {
+  bharagRssWorkspaceId: config.bharagRssWorkspaceId,
+  bharagRssWorkspaceApiKey: config.bharagRssWorkspaceApiKey,
+  bharagRssLedgerSchema: config.bharagRssLedgerSchema
+};
+
+beforeEach(() => {
+  Object.assign(config, {
+    bharagRssWorkspaceId: 'ws-rss',
+    bharagRssWorkspaceApiKey: 'rss-workspace-key',
+    bharagRssLedgerSchema: 'ingest.rss'
+  });
+});
+
+afterEach(() => {
+  Object.assign(config, originalRssConfig);
+});
+
+test('rssFeedCollector dual-writes clean Book prose and strict RSS Ledger metadata', async () => {
   const calls = [];
   const originalFetch = global.fetch;
 
@@ -131,8 +150,7 @@ test('rssFeedCollector ingests only items beyond cursor and writes post timestam
         rss_cursor_pub_date: '2026-04-21T00:00:00Z',
         genie_rss_base_url: 'https://genie.example',
         genie_rss_api_key: 'genie-key',
-        bharag_base_url: 'https://bharag.example',
-        bharag_master_api_key: 'bharag-key'
+        bharag_base_url: 'https://bharag.example'
       },
       context: {
         triggerMode: 'scheduled'
@@ -142,9 +160,11 @@ test('rssFeedCollector ingests only items beyond cursor and writes post timestam
     assert.equal(result.metrics.fetched, 2);
     assert.equal(result.metrics.selected, 1);
     assert.equal(result.metrics.ingested, 1);
+    assert.equal(result.metrics.book_ingested, 1);
+    assert.equal(result.metrics.ledger_ingested, 1);
     assert.equal(result.card_updates.params.rss_workspace_id, 'ws-rss');
     assert.equal(result.card_updates.params.rss_cursor_pub_date, '2026-04-22T09:00:00.000Z');
-    assert.equal(result.normalized.owner_builder_id, 'builder-owner');
+    assert.deepEqual(result.card_updates.params.rss_cursor_item_guids, ['https://example.com/new']);
 
     const healthCall = calls.find((call) => call.url.endsWith('/health'));
     assert.ok(healthCall, 'genie rss health should be checked before fetching');
@@ -153,22 +173,40 @@ test('rssFeedCollector ingests only items beyond cursor and writes post timestam
     const healthCallIndex = calls.findIndex((call) => call.url.endsWith('/health'));
     assert.ok(healthCallIndex > -1 && feedCallIndex > healthCallIndex);
 
-    const ingestCall = calls.find((call) => call.url.endsWith('/api/v1/ingest'));
-    assert.ok(ingestCall, 'ingest endpoint should be called');
+    const ingestCalls = calls.filter((call) => call.url.endsWith('/api/v1/ingest'));
+    assert.equal(ingestCalls.length, 2, 'one Book and one Ledger write expected');
 
-    const ingestBody = JSON.parse(ingestCall.options.body);
-    assert.match(ingestBody.content, /TAGs: \[RSS\]/);
-    assert.match(ingestBody.content, /Previous run: 2026-04-21T00:00:00.000Z/);
-    assert.match(ingestBody.content, /Post timestamp: 2026-04-22T09:00:00.000Z/);
-    assert.match(ingestBody.content, /Title: new post/);
-    assert.match(ingestBody.content, /Content: new content/);
-    assert.match(ingestBody.content, /Link: https:\/\/example.com\/new/);
+    const bookCall = ingestCalls[0];
+    const bookBody = JSON.parse(bookCall.options.body);
+    assert.equal(bookCall.options.headers['payload-type'], 'rag');
+    assert.equal(bookCall.options.headers['x-api-key'], 'rss-workspace-key');
+    assert.deepEqual(bookBody, {
+      title: 'new post',
+      content: 'new content',
+      source_type: 'manual'
+    });
 
-    const addOwnerCall = calls.find((call) => call.url.endsWith('/api/v1/workspaces/ws-rss/members') && (call.options.method || 'GET') === 'POST');
-    assert.ok(addOwnerCall, 'workspace owner should be added');
-    const addOwnerBody = JSON.parse(addOwnerCall.options.body);
-    assert.equal(addOwnerBody.builder_id, 'builder-owner');
-    assert.equal(addOwnerBody.role, 'owner');
+    const ledgerCall = ingestCalls[1];
+    const ledgerBody = JSON.parse(ledgerCall.options.body);
+    assert.equal(ledgerCall.options.headers['payload-type'], 'ledger');
+    assert.equal(ledgerCall.options.headers['payload-schema'], 'ingest.rss');
+    assert.deepEqual(ledgerBody, {
+      occurred_at: '2026-04-22T09:00:00.000Z',
+      entity_type: 'document',
+      entity_id: 'https://example.com/new',
+      source: 'https://example.com/feed.xml',
+      summary: 'RSS item: new post',
+      payload: {
+        source_type: 'manual',
+        content_type: 'doc',
+        source_url: 'https://example.com/new',
+        project_tags: ['rss'],
+        ingestion_type: 'rss_feed',
+        feed_source: 'https://example.com/feed.xml',
+        item_guid: 'https://example.com/new',
+        item_pub_date: '2026-04-22T09:00:00.000Z'
+      }
+    });
   } finally {
     global.fetch = originalFetch;
   }
@@ -266,6 +304,196 @@ test('rssFeedCollector retries Genie RSS 429 responses with backoff until fetch 
 
     const fetchCalls = calls.filter((call) => call.url.endsWith('/api/rss/fetch'));
     assert.equal(fetchCalls.length, 3);
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
+
+test('rssFeedCollector stops at a Ledger failure and preserves a same-timestamp GUID checkpoint', async () => {
+  const calls = [];
+  const originalFetch = global.fetch;
+  const response = (body, ok = true, status = 200) => ({
+    ok,
+    status,
+    headers: { get: () => 'application/json' },
+    json: async () => body,
+    text: async () => JSON.stringify(body)
+  });
+
+  global.fetch = async (url, options = {}) => {
+    calls.push({ url, options });
+    if (url.endsWith('/health')) return response({ status: 'ok' });
+    if (url.endsWith('/api/rss/fetch')) {
+      return response({
+        feed: {
+          items: [
+            {
+              title: 'first post',
+              guid: 'first-guid',
+              link: 'https://example.com/first',
+              content: 'first article prose',
+              pubDate: '2026-04-22T09:00:00Z'
+            },
+            {
+              title: 'second post',
+              guid: 'second-guid',
+              link: 'https://example.com/second',
+              content: 'second article prose',
+              pubDate: '2026-04-22T09:00:00Z'
+            },
+            {
+              title: 'later post',
+              guid: 'later-guid',
+              link: 'https://example.com/later',
+              content: 'later article prose',
+              pubDate: '2026-04-23T09:00:00Z'
+            }
+          ]
+        }
+      });
+    }
+
+    if (url.endsWith('/api/v1/ingest') && options.headers['payload-type'] === 'ledger' && calls.filter((call) => (
+      call.url.endsWith('/api/v1/ingest') && call.options.headers['payload-type'] === 'ledger'
+    )).length === 2) {
+      return response({ error: 'ledger unavailable' }, false, 503);
+    }
+    if (url.endsWith('/api/v1/ingest')) return response({ success: true }, true, 201);
+    throw new Error(`Unexpected fetch call: ${url}`);
+  };
+
+  try {
+    const result = await rssFeedCollector.collect({
+      source_input: 'https://example.com/feed.xml',
+      params: {
+        genie_rss_base_url: 'https://genie.example',
+        genie_rss_api_key: 'genie-key',
+        bharag_base_url: 'https://bharag.example'
+      }
+    });
+
+    assert.equal(result.metrics.ingested, 1);
+    assert.equal(result.metrics.book_ingested, 2);
+    assert.equal(result.metrics.ledger_ingested, 1);
+    assert.equal(result.metrics.failed, 1);
+    assert.equal(result.card_updates.params.rss_cursor_pub_date, '2026-04-22T09:00:00.000Z');
+    assert.deepEqual(result.card_updates.params.rss_cursor_item_guids, ['first-guid']);
+    assert.equal(calls.filter((call) => call.url.endsWith('/api/v1/ingest')).length, 4);
+    assert.equal(result.logs.at(-1).data.lane, 'ledger');
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
+
+test('rssFeedCollector does not call Ledger when the Book write fails', async () => {
+  const originalFetch = global.fetch;
+  const response = (body, ok = true, status = 200) => ({
+    ok,
+    status,
+    headers: { get: () => 'application/json' },
+    json: async () => body,
+    text: async () => JSON.stringify(body)
+  });
+  let ingestCalls = 0;
+
+  global.fetch = async (url, options = {}) => {
+    if (url.endsWith('/health')) return response({ status: 'ok' });
+    if (url.endsWith('/api/rss/fetch')) {
+      return response({
+        feed: {
+          items: [{
+            title: 'book failure',
+            guid: 'book-failure-guid',
+            content: 'enough article prose',
+            pubDate: '2026-04-22T09:00:00Z'
+          }]
+        }
+      });
+    }
+    if (url.endsWith('/api/v1/ingest')) {
+      ingestCalls += 1;
+      assert.equal(options.headers['payload-type'], 'rag');
+      return response({ error: 'Book unavailable' }, false, 503);
+    }
+    throw new Error(`Unexpected fetch call: ${url}`);
+  };
+
+  try {
+    await assert.rejects(
+      rssFeedCollector.collect({
+        source_input: 'https://example.com/feed.xml',
+        params: {
+          genie_rss_base_url: 'https://genie.example',
+          genie_rss_api_key: 'genie-key',
+          bharag_base_url: 'https://bharag.example'
+        }
+      }),
+      /failed to ingest RSS items:/
+    );
+    assert.equal(ingestCalls, 1);
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
+
+test('rssFeedCollector resumes unseen GUIDs at the existing cursor timestamp', async () => {
+  const originalFetch = global.fetch;
+  const response = (body, ok = true, status = 200) => ({
+    ok,
+    status,
+    headers: { get: () => 'application/json' },
+    json: async () => body,
+    text: async () => JSON.stringify(body)
+  });
+  const ingestedGuids = [];
+
+  global.fetch = async (url, options = {}) => {
+    if (url.endsWith('/health')) return response({ status: 'ok' });
+    if (url.endsWith('/api/rss/fetch')) {
+      return response({
+        feed: {
+          items: [
+            {
+              title: 'already checkpointed',
+              guid: 'first-guid',
+              content: 'first article prose',
+              pubDate: '2026-04-22T09:00:00Z'
+            },
+            {
+              title: 'resume this item',
+              guid: 'second-guid',
+              content: 'second article prose',
+              pubDate: '2026-04-22T09:00:00Z'
+            }
+          ]
+        }
+      });
+    }
+    if (url.endsWith('/api/v1/ingest')) {
+      if (options.headers['payload-type'] === 'ledger') {
+        ingestedGuids.push(JSON.parse(options.body).entity_id);
+      }
+      return response({ success: true }, true, 201);
+    }
+    throw new Error(`Unexpected fetch call: ${url}`);
+  };
+
+  try {
+    const result = await rssFeedCollector.collect({
+      source_input: 'https://example.com/feed.xml',
+      params: {
+        rss_cursor_pub_date: '2026-04-22T09:00:00Z',
+        rss_cursor_item_guids: ['first-guid'],
+        genie_rss_base_url: 'https://genie.example',
+        genie_rss_api_key: 'genie-key',
+        bharag_base_url: 'https://bharag.example'
+      }
+    });
+
+    assert.equal(result.metrics.selected, 1);
+    assert.equal(result.metrics.ingested, 1);
+    assert.deepEqual(ingestedGuids, ['second-guid']);
+    assert.deepEqual(result.card_updates.params.rss_cursor_item_guids, ['first-guid', 'second-guid']);
   } finally {
     global.fetch = originalFetch;
   }
