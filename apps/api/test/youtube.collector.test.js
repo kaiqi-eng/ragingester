@@ -1,6 +1,23 @@
-import test from 'node:test';
+import test, { afterEach, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { youtubeCollector } from '../src/collectors/youtube.js';
+import { config } from '../src/config.js';
+
+const originalYoutubeConfig = {
+  bharagYoutubeWorkspaceId: config.bharagYoutubeWorkspaceId,
+  bharagYoutubeWorkspaceApiKey: config.bharagYoutubeWorkspaceApiKey,
+  bharagYoutubeLedgerSchema: config.bharagYoutubeLedgerSchema
+};
+
+beforeEach(() => {
+  Object.assign(config, {
+    bharagYoutubeWorkspaceId: 'ws-youtube',
+    bharagYoutubeWorkspaceApiKey: 'youtube-workspace-key',
+    bharagYoutubeLedgerSchema: 'ingest.youtube'
+  });
+});
+
+afterEach(() => Object.assign(config, originalYoutubeConfig));
 
 test('youtubeCollector normalizes channel ID and ingests only items beyond cursor', async () => {
   const calls = [];
@@ -129,6 +146,8 @@ test('youtubeCollector normalizes channel ID and ingests only items beyond curso
     assert.equal(result.metrics.fetched, 2);
     assert.equal(result.metrics.selected, 1);
     assert.equal(result.metrics.ingested, 1);
+    assert.equal(result.metrics.book_ingested, 1);
+    assert.equal(result.metrics.ledger_ingested, 1);
     assert.equal(result.card_updates.params.youtube_workspace_id, 'ws-youtube');
     assert.equal(result.card_updates.params.youtube_cursor_pub_date, '2026-04-22T09:00:00.000Z');
 
@@ -137,6 +156,12 @@ test('youtubeCollector normalizes channel ID and ingests only items beyond curso
     const fetchPayload = JSON.parse(fetchCall.options.body);
     assert.equal(fetchPayload.url, 'https://www.youtube.com/feeds/videos.xml?channel_id=UCqzK60-oUOEq36uU9B1MMUg');
     assert.equal(fetchPayload.since, '2026-04-21T00:00:00.000Z');
+
+    const ingestCalls = calls.filter((call) => call.url.endsWith('/api/v1/ingest'));
+    assert.equal(ingestCalls.length, 2);
+    assert.equal(ingestCalls[0].options.headers['payload-type'], 'rag');
+    assert.equal(ingestCalls[1].options.headers['payload-type'], 'ledger');
+    assert.equal(ingestCalls[1].options.headers['payload-schema'], 'ingest.youtube');
   } finally {
     global.fetch = originalFetch;
   }

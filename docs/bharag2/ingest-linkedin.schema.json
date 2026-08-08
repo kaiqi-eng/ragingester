@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BHARAG2 LinkedIn ledger event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source_type",
+    "content_type",
+    "source_url",
+    "project_tags",
+    "ingestion_type",
+    "linkedin_mode",
+    "feed_source",
+    "author",
+    "reaction_count",
+    "item_guid",
+    "item_pub_date"
+  ],
+  "properties": {
+    "source_type": { "type": "string" },
+    "content_type": { "type": "string" },
+    "source_url": { "type": "string" },
+    "project_tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "ingestion_type": { "type": "string" },
+    "linkedin_mode": {
+      "type": "string",
+      "enum": ["profile", "topic"]
+    },
+    "feed_source": { "type": "string" },
+    "author": { "type": "string" },
+    "reaction_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "item_guid": { "type": "string" },
+    "item_pub_date": { "type": "string" }
+  }
+}

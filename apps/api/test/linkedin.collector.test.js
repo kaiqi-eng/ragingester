@@ -1,6 +1,23 @@
-import test from 'node:test';
+import test, { afterEach, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { linkedinCollector } from '../src/collectors/linkedin.js';
+import { config } from '../src/config.js';
+
+const originalLinkedinConfig = {
+  bharagLinkedinWorkspaceId: config.bharagLinkedinWorkspaceId,
+  bharagLinkedinWorkspaceApiKey: config.bharagLinkedinWorkspaceApiKey,
+  bharagLinkedinLedgerSchema: config.bharagLinkedinLedgerSchema
+};
+
+beforeEach(() => {
+  Object.assign(config, {
+    bharagLinkedinWorkspaceId: 'ws-linkedin',
+    bharagLinkedinWorkspaceApiKey: 'linkedin-workspace-key',
+    bharagLinkedinLedgerSchema: 'ingest.linkedin'
+  });
+});
+
+afterEach(() => Object.assign(config, originalLinkedinConfig));
 
 function jsonResponse(body, ok = true) {
   return {
@@ -123,14 +140,12 @@ test('linkedinCollector fetches profile posts and ingests only items beyond curs
     assert.equal(fetchPayload.profileUrl, 'https://www.linkedin.com/in/satyanadella/');
     assert.equal(fetchPayload.maxPosts, 10);
 
-    const ingestCall = calls.find((call) => call.url.endsWith('/api/v1/ingest'));
-    assert.ok(ingestCall);
-    assert.equal(ingestCall.options.headers['x-workspace-id'], 'ws-linkedin');
-    const ingestPayload = JSON.parse(ingestCall.options.body);
-    assert.equal(ingestPayload.source_type, 'manual');
-    assert.equal(ingestPayload.project_tags[0], 'linkedin');
-    assert.equal(ingestPayload.metadata.ingestion_type, 'linkedin');
-    assert.equal(ingestPayload.metadata.item_guid, 'new-post');
+    const ingestCalls = calls.filter((call) => call.url.endsWith('/api/v1/ingest'));
+    assert.equal(ingestCalls.length, 2);
+    assert.equal(ingestCalls[0].options.headers['payload-type'], 'rag');
+    assert.equal(ingestCalls[1].options.headers['payload-type'], 'ledger');
+    assert.equal(ingestCalls[1].options.headers['payload-schema'], 'ingest.linkedin');
+    assert.equal(JSON.parse(ingestCalls[1].options.body).payload.item_guid, 'new-post');
   } finally {
     global.fetch = originalFetch;
   }
@@ -191,7 +206,7 @@ test('linkedinCollector builds topic payload and reports partial ingest failures
 
     if (url.endsWith('/api/v1/ingest')) {
       ingestCount += 1;
-      if (ingestCount === 2) {
+      if (ingestCount === 4) {
         return jsonResponse({ error: 'ingest failed' }, false);
       }
       return jsonResponse({ success: true });

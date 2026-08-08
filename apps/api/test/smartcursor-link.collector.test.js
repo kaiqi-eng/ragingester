@@ -1,6 +1,23 @@
-import test from 'node:test';
+import test, { afterEach, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { smartcursorLinkCollector } from '../src/collectors/smartcursor-link.js';
+import { config } from '../src/config.js';
+
+const originalSmartcursorConfig = {
+  bharagSmartcursorWorkspaceId: config.bharagSmartcursorWorkspaceId,
+  bharagSmartcursorWorkspaceApiKey: config.bharagSmartcursorWorkspaceApiKey,
+  bharagSmartcursorLedgerSchema: config.bharagSmartcursorLedgerSchema
+};
+
+beforeEach(() => {
+  Object.assign(config, {
+    bharagSmartcursorWorkspaceId: 'ws-smart',
+    bharagSmartcursorWorkspaceApiKey: 'smartcursor-workspace-key',
+    bharagSmartcursorLedgerSchema: 'ingest.smartcursor'
+  });
+});
+
+afterEach(() => Object.assign(config, originalSmartcursorConfig));
 
 test('smartcursorLinkCollector creates job, waits, ingests extracted content, and stores workspace', async () => {
   const calls = [];
@@ -134,11 +151,12 @@ test('smartcursorLinkCollector creates job, waits, ingests extracted content, an
     assert.equal(createJobPayload.url, 'https://example.com/login');
     assert.equal(createJobPayload.maxSteps, 20);
 
-    const ingestCall = calls.find((call) => call.url.endsWith('/api/v1/ingest'));
-    assert.ok(ingestCall, 'ingest endpoint should be called');
-    const ingestPayload = JSON.parse(ingestCall.options.body);
-    assert.equal(ingestPayload.title, 'Example Dashboard');
-    assert.match(ingestPayload.content, /First line/);
+    const ingestCalls = calls.filter((call) => call.url.endsWith('/api/v1/ingest'));
+    assert.equal(ingestCalls.length, 2);
+    assert.equal(ingestCalls[0].options.headers['payload-type'], 'rag');
+    assert.equal(ingestCalls[1].options.headers['payload-type'], 'ledger');
+    assert.equal(ingestCalls[1].options.headers['payload-schema'], 'ingest.smartcursor');
+    assert.equal(JSON.parse(ingestCalls[0].options.body).title, 'Example Dashboard');
   } finally {
     global.fetch = originalFetch;
   }

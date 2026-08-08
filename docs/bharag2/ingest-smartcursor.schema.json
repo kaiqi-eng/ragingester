@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BHARAG2 SmartCursor ledger event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source_type",
+    "content_type",
+    "source_url",
+    "project_tags",
+    "ingestion_type",
+    "job_id",
+    "final_url",
+    "auth_mode"
+  ],
+  "properties": {
+    "source_type": { "type": "string" },
+    "content_type": { "type": "string" },
+    "source_url": { "type": "string" },
+    "project_tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "ingestion_type": { "type": "string" },
+    "job_id": { "type": "string" },
+    "final_url": { "type": "string" },
+    "auth_mode": {
+      "type": "string",
+      "enum": ["login_fields", "none"]
+    }
+  }
+}
