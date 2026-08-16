@@ -96,7 +96,7 @@ See [`render.yaml`](../render.yaml).
 
 ### Shared Bharag workspace pattern
 
-Production collectors that ingest to Bharag all follow the same workspace bootstrap:
+Non-RSS production collectors that ingest to legacy Bharag follow the same workspace bootstrap:
 
 1. Use cached `params.<type>_workspace_id` if present.
 2. List workspaces; match by fixed slug.
@@ -104,6 +104,8 @@ Production collectors that ingest to Bharag all follow the same workspace bootst
 4. Ensure an owner builder (find/create builder, add member).
 
 Auth: `x-api-key` + `x-workspace-id` on `POST /api/v1/ingest`.
+
+RSS is the exception: it uses a pre-provisioned BHARAG2 workspace and workspace API key. It never creates a workspace or owner at runtime.
 
 ### Shared per-card integration overrides
 
@@ -113,6 +115,8 @@ Auth: `x-api-key` + `x-workspace-id` on `POST /api/v1/ingest`.
 | `genie_rss_api_key` | `GENIE_RSS_API_KEY` |
 | `bharag_base_url` | `BHARAG_BASE_URL` |
 | `bharag_master_api_key` | `BHARAG_MASTER_API_KEY` |
+| `bharag_rss_workspace_id` | `BHARAG_RSS_WORKSPACE_ID` |
+| `bharag_rss_ledger_schema` | `BHARAG_RSS_LEDGER_SCHEMA` |
 | `smartcursor_base_url` | `SMARTCURSOR_BASE_URL` |
 | `smartcursor_api_key` | `SMARTCURSOR_API_KEY` |
 | `slack_engine_base_url` | `SLACK_ENGINE_BASE_URL` |
@@ -123,7 +127,7 @@ Auth: `x-api-key` + `x-workspace-id` on `POST /api/v1/ingest`.
 Applies to `rss_feed`, `youtube`, `linkedin`:
 
 - First run: no cursor → all items from upstream are candidates.
-- Later runs: only items with `pubDate > cursor` are ingested (client-side filter; Genie also accepts `since`).
+- Later runs: YouTube and LinkedIn ingest only items with `pubDate > cursor`. RSS additionally resumes unseen GUIDs at the same timestamp through `rss_cursor_item_guids`.
 - Cursor advances to max `pubDate` among **successfully ingested** items only.
 - Partial failure: run succeeds if at least one item ingests; fails only if all new items fail.
 
@@ -197,42 +201,53 @@ Swagger: `{GENIE_RSS_BASE_URL}/api-docs`
 | Property | Value |
 |----------|-------|
 | `source_input` | RSS feed URL or site URL |
-| Bharag workspace | `rss-feed` / "RSS Feed" |
-| `project_tags` | `["rss"]` |
-| Cursor | `rss_cursor_pub_date` |
-| Cached workspace | `rss_workspace_id` |
+| BHARAG2 workspace | Pre-provisioned `BHARAG_RSS_WORKSPACE_ID` + `BHARAG_RSS_WORKSPACE_API_KEY` |
+| Ledger corpus | `BHARAG_RSS_LEDGER_SCHEMA` (default `ingest.rss`) |
+| Cursor | `rss_cursor_pub_date` + `rss_cursor_item_guids` |
 | Card validation | [`rss-source-check.js`](../apps/api/src/lib/rss-source-check.js) on create |
 | Prewarm | Yes (scheduler + collector) |
 | Genie endpoint | `POST /api/rss/fetch` |
 
-### Flow
+### BHARAG2 Book + Ledger flow
 
 ```mermaid
 sequenceDiagram
   participant R as Ragingester
   participant G as GenieRSS
-  participant B as Bharag
+  participant B as BHARAG2Book
+  participant L as BHARAG2Ledger
 
   R->>G: GET /health (prewarm)
   R->>G: POST /api/rss/fetch since=cursor
   G-->>R: feed items
   loop each new item
-    R->>B: POST /api/v1/ingest
+    R->>B: POST /api/v1/ingest payload-type=rag
+    B-->>R: Book success
+    R->>L: POST /api/v1/ingest payload-type=ledger
+    L-->>R: Ledger success
+    R->>R: Advance timestamp and GUID checkpoint
   end
-  R->>R: Advance rss_cursor_pub_date
 ```
 
-### Document content template
+Each RSS item is a required pair:
+
+- **Book:** `payload-type: rag`, with only `title`, article `content`, and the required `source_type: manual`. Run timestamps, tags, URLs, GUIDs, and other metadata are never embedded into retrievable prose.
+- **Ledger:** `payload-type: ledger` plus `payload-schema: ingest.rss`; `occurred_at` is the item publication date and `entity_id` is the stable RSS GUID. The payload follows [`bharag2/ingest-rss.schema.json`](./bharag2/ingest-rss.schema.json).
+
+Book is written before Ledger. A failed Book write suppresses Ledger; a failed Ledger write stops the feed at that item. The timestamp/GUID cursor advances only for completed pairs, so later items never skip an unrecorded event. BHARAG2 has no caller-provided Ledger idempotency key, so a lost success response can produce a duplicate event when the item is retried.
+
+### One-time BHARAG2 setup and rollout
+
+Before deployment, register the strict `ingest.rss` schema from [`bharag2/ingest-rss.schema.json`](./bharag2/ingest-rss.schema.json) on the target BHARAG2 organization, provision a workspace-scoped API key, and set:
 
 ```text
-TAGs: [RSS]
-Timestamp ran: <run ISO>
-Previous run: <cursor or none>
-Post timestamp: <item pubDate>
-Title: <title>
-Content: <content>
-Link: <link>
+BHARAG_BASE_URL=https://bharag2.duckdns.org
+BHARAG_RSS_WORKSPACE_ID=<provisioned workspace UUID>
+BHARAG_RSS_WORKSPACE_API_KEY=<workspace key>
+BHARAG_RSS_LEDGER_SCHEMA=ingest.rss
 ```
+
+Smoke the `rag` and `ledger` lanes against the provisioned workspace before deploy. After deployment, manually run one RSS card and verify article prose through Book retrieval plus a Ledger query for the same GUID and publication timestamp. Roll back by redeploying the prior application and configuration; RSS has no automatic legacy fallback.
 
 ### Production feeds
 
@@ -249,10 +264,9 @@ Design rationale: [`STAGE_3_1_RSS_INGESTION_PLAN.md`](../STAGE_3_1_RSS_INGESTION
 | Property | Value |
 |----------|-------|
 | `source_input` | YouTube channel ID (`UC...`), channel URL, or feed URL |
-| Bharag workspace | `youtube-feed` / "YouTube Feed" |
-| `project_tags` | `["youtube"]` |
-| Cursor | `youtube_cursor_pub_date` |
-| Cached workspace | `youtube_workspace_id` |
+| BHARAG2 workspace | `BHARAG_YOUTUBE_WORKSPACE_ID` + workspace API key |
+| Ledger corpus | `BHARAG_YOUTUBE_LEDGER_SCHEMA` (`ingest.youtube`) |
+| Cursor | `youtube_cursor_pub_date` + `youtube_cursor_item_guids` |
 | Prewarm | No |
 | Genie endpoint | `POST /api/rss/fetch` (YouTube URL/channel resolved by Genie) |
 
@@ -265,28 +279,9 @@ Accepts:
 - Channel URL: `https://www.youtube.com/channel/UC...`
 - Other `https://` YouTube URLs (passed through to Genie)
 
-### Document content template
+### BHARAG2 lanes
 
-```text
-TAGs: [YOUTUBE]
-Timestamp ran: ...
-Previous run: ...
-Post timestamp: ...
-Title: ...
-Content: ...
-Link: ...
-```
-
-### Metadata
-
-```json
-{
-  "ingestion_type": "youtube",
-  "feed_source": "<normalized input>",
-  "item_guid": "...",
-  "item_pub_date": "..."
-}
-```
+Each video writes Book prose with `payload-type: rag` and a separate `ingest.youtube` Ledger event with `payload-type: ledger`. Book contains only title and video prose; `feed_source`, GUID, publication time, URL, tags, and ingestion type are schema-validated Ledger metadata. The cursor advances only after both writes succeed.
 
 ### Production channels
 
@@ -300,10 +295,9 @@ Link: ...
 
 | Property | Value |
 |----------|-------|
-| Bharag workspace | `linkedin-feed` / "LinkedIn Feed" |
-| `project_tags` | `["linkedin"]` |
-| Cursor | `linkedin_cursor_pub_date` |
-| Cached workspace | `linkedin_workspace_id` |
+| BHARAG2 workspace | `BHARAG_LINKEDIN_WORKSPACE_ID` + workspace API key |
+| Ledger corpus | `BHARAG_LINKEDIN_LEDGER_SCHEMA` (`ingest.linkedin`) |
+| Cursor | `linkedin_cursor_pub_date` + `linkedin_cursor_item_guids` |
 | Genie endpoints | Profile or topic (see below) |
 
 ### Modes (`params.linkedin_mode`)
@@ -336,23 +330,9 @@ Genie: `POST /api/linkedin/profile-posts` with `{ profileUrl, maxPosts }`.
 
 If `searchQueries` omitted, `source_input` is split on commas. Genie: `POST /api/linkedin/topic-posts`.
 
-### Document content template
+### BHARAG2 lanes
 
-```text
-TAGs: [LINKEDIN]
-Timestamp ran: ...
-Previous run: ...
-Post timestamp: ...
-Title: ...
-Author: ...
-Reactions: ...
-Content: ...
-Link: ...
-```
-
-### Metadata
-
-Includes `linkedin_mode`, `feed_source`, `item_guid`, `item_pub_date`, plus LinkedIn fields from Genie (`author`, `reactions`, etc.).
+Each post writes title and post prose to Book with `payload-type: rag`. A separate `ingest.linkedin` Ledger event holds mode, feed source, author, reaction count, GUID, publication time, URL, tags, and ingestion type. Missing author/reaction data is normalized to `unknown` and `0` before strict Ledger validation.
 
 ---
 
@@ -360,16 +340,16 @@ Includes `linkedin_mode`, `feed_source`, `item_guid`, `item_pub_date`, plus Link
 
 **Collector:** [`smartcursor-link.js`](../apps/api/src/collectors/smartcursor-link.js)
 
-Browser automation: SmartCursor navigates a URL (optionally logs in), extracts content, ingests one Bharag document per run.
+Browser automation: SmartCursor navigates a URL (optionally logs in), extracts content, then writes a Book document and a Ledger event per completed job.
 
 | Property | Value |
 |----------|-------|
 | `source_input` | Target page URL |
-| Bharag workspace | `smartcursor-link` / "SmartCursor Link" |
-| `project_tags` | `["smartcursor", "browser"]` |
+| BHARAG2 workspace | `BHARAG_SMARTCURSOR_WORKSPACE_ID` + workspace API key |
+| Ledger corpus | `BHARAG_SMARTCURSOR_LEDGER_SCHEMA` (`ingest.smartcursor`) |
 | Cursor | None (full capture each run) |
 | Cached workspace | `smartcursor_workspace_id` |
-| Requires | `SMARTCURSOR_BASE_URL`, `SMARTCURSOR_API_KEY`, `BHARAG_MASTER_API_KEY` |
+| Requires | `SMARTCURSOR_BASE_URL`, `SMARTCURSOR_API_KEY`, and BHARAG2 workspace credentials |
 
 ### Flow
 
@@ -377,14 +357,15 @@ Browser automation: SmartCursor navigates a URL (optionally logs in), extracts c
 sequenceDiagram
   participant R as Ragingester
   participant S as SmartCursor
-  participant B as Bharag
+  participant B as BHARAG2
 
   R->>S: POST /jobs
   loop poll until succeeded
     R->>S: GET /jobs/:id
   end
   R->>S: GET /jobs/:id/result
-  R->>B: POST /api/v1/ingest
+  R->>B: POST /api/v1/ingest payload-type=rag
+  R->>B: POST /api/v1/ingest payload-type=ledger
 ```
 
 - Job timeout: 4 minutes (poll every 3s).
@@ -401,16 +382,9 @@ sequenceDiagram
 
 Example: [`docs/adding-new-source-types.md`](adding-new-source-types.md#smartcursor_link-params-example-misclogin-links).
 
-### Metadata
+### BHARAG2 lanes
 
-```json
-{
-  "ingestion_type": "smartcursor_link",
-  "job_id": "...",
-  "final_url": "...",
-  "auth_mode": "login_fields" | "none"
-}
-```
+Book stores page title and extracted readable text with `payload-type: rag`. The `ingest.smartcursor` Ledger event uses the job completion time, job ID, final URL, and auth mode as structured capture state.
 
 ---
 
@@ -502,8 +476,17 @@ Returns synthetic `normalized.resolved: true` with the identifier echoed. Intend
 |----------|---------|---------|
 | `GENIE_RSS_BASE_URL` | `https://genie-rss-5i00.onrender.com` | rss, youtube, linkedin |
 | `GENIE_RSS_API_KEY` | *(secret)* | Genie auth |
-| `BHARAG_BASE_URL` | `https://bharag.duckdns.org` | All Bharag ingestors |
-| `BHARAG_MASTER_API_KEY` | *(secret)* | Bharag admin API |
+| `BHARAG_BASE_URL` | `https://bharag.duckdns.org` | Bharag endpoint (BHARAG2 for RSS) |
+| `BHARAG_RSS_WORKSPACE_ID` | — | Pre-provisioned BHARAG2 RSS workspace |
+| `BHARAG_RSS_WORKSPACE_API_KEY` | *(secret)* | BHARAG2 RSS workspace auth |
+| `BHARAG_RSS_LEDGER_SCHEMA` | `ingest.rss` | BHARAG2 RSS Ledger corpus |
+| `BHARAG_YOUTUBE_WORKSPACE_ID` / `BHARAG_YOUTUBE_WORKSPACE_API_KEY` | — / *(secret)* | BHARAG2 YouTube workspace auth |
+| `BHARAG_YOUTUBE_LEDGER_SCHEMA` | `ingest.youtube` | BHARAG2 YouTube Ledger corpus |
+| `BHARAG_LINKEDIN_WORKSPACE_ID` / `BHARAG_LINKEDIN_WORKSPACE_API_KEY` | — / *(secret)* | BHARAG2 LinkedIn workspace auth |
+| `BHARAG_LINKEDIN_LEDGER_SCHEMA` | `ingest.linkedin` | BHARAG2 LinkedIn Ledger corpus |
+| `BHARAG_SMARTCURSOR_WORKSPACE_ID` / `BHARAG_SMARTCURSOR_WORKSPACE_API_KEY` | — / *(secret)* | BHARAG2 SmartCursor workspace auth |
+| `BHARAG_SMARTCURSOR_LEDGER_SCHEMA` | `ingest.smartcursor` | BHARAG2 SmartCursor Ledger corpus |
+| `BHARAG_MASTER_API_KEY` | *(secret)* | Legacy Bharag admin API for non-RSS collectors |
 | `BHARAG_OWNER_BUILDER_ID` | — | Workspace owner bootstrap |
 | `BHARAG_OWNER_NAME` | `Ragingester RSS Owner` | Builder name |
 | `BHARAG_OWNER_EMAIL` | — | Builder email |

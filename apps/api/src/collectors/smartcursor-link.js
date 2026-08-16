@@ -1,9 +1,8 @@
 import { config } from '../config.js';
 
-const WORKSPACE_SLUG = 'smartcursor-link';
-const WORKSPACE_NAME = 'SmartCursor Link';
 const SMARTCURSOR_JOB_POLL_MS = 3000;
 const SMARTCURSOR_JOB_TIMEOUT_MS = 4 * 60 * 1000;
+const MIN_BOOK_CONTENT_LENGTH = 10;
 
 class RequestError extends Error {
   constructor(message, { status }) {
@@ -30,11 +29,9 @@ function resolveIntegrationConfig(params = {}) {
     smartcursorBaseUrl: trimTrailingSlash(pickParam(params, 'smartcursor_base_url', config.smartcursorBaseUrl)),
     smartcursorApiKey: pickParam(params, 'smartcursor_api_key', config.smartcursorApiKey),
     bharagBaseUrl: trimTrailingSlash(pickParam(params, 'bharag_base_url', config.bharagBaseUrl)),
-    bharagMasterApiKey: pickParam(params, 'bharag_master_api_key', config.bharagMasterApiKey),
-    bharagOwnerBuilderId: pickParam(params, 'bharag_owner_builder_id', config.bharagOwnerBuilderId),
-    bharagOwnerName: pickParam(params, 'bharag_owner_name', config.bharagOwnerName),
-    bharagOwnerEmail: pickParam(params, 'bharag_owner_email', config.bharagOwnerEmail),
-    workspaceId: pickParam(params, 'smartcursor_workspace_id', null)
+    workspaceId: pickParam(params, 'bharag_smartcursor_workspace_id', config.bharagSmartcursorWorkspaceId),
+    workspaceApiKey: config.bharagSmartcursorWorkspaceApiKey,
+    ledgerSchema: pickParam(params, 'bharag_smartcursor_ledger_schema', config.bharagSmartcursorLedgerSchema)
   };
 }
 
@@ -296,22 +293,54 @@ async function resolveWorkspaceId(cfg) {
   return { workspaceId: created.workspace.id, ownerBuilderId };
 }
 
-async function ingestDocument({ cfg, workspaceId, sourceInput, title, content, metadata }) {
+function assertBharagSmartcursorConfig(cfg) {
+  if (!cfg.workspaceId) throw new Error('BHARAG_SMARTCURSOR_WORKSPACE_ID is required for smartcursor_link ingestion');
+  if (!cfg.workspaceApiKey) throw new Error('BHARAG_SMARTCURSOR_WORKSPACE_API_KEY is required for smartcursor_link ingestion');
+  if (!cfg.ledgerSchema) throw new Error('BHARAG_SMARTCURSOR_LEDGER_SCHEMA is required for smartcursor_link ingestion');
+}
+
+function ingestHeaders(cfg, workspaceId, payloadType, payloadSchema) {
+  return {
+    'content-type': 'application/json',
+    'x-api-key': cfg.workspaceApiKey,
+    'x-workspace-id': workspaceId,
+    'payload-type': payloadType,
+    ...(payloadSchema ? { 'payload-schema': payloadSchema } : {})
+  };
+}
+
+async function ingestBookDocument({ cfg, workspaceId, title, content }) {
   return fetchJson(`${cfg.bharagBaseUrl}/api/v1/ingest`, {
     method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': cfg.bharagMasterApiKey,
-      'x-workspace-id': workspaceId
-    },
+    headers: ingestHeaders(cfg, workspaceId, 'rag'),
     body: JSON.stringify({
       title,
-      content,
-      source_type: 'manual',
-      content_type: 'doc',
-      source_url: sourceInput,
-      project_tags: ['smartcursor', 'browser'],
-      metadata
+      content: content.trim(),
+      source_type: 'manual'
+    })
+  });
+}
+
+async function ingestLedgerEvent({ cfg, workspaceId, sourceInput, jobId, finalUrl, authMode, title, occurredAt }) {
+  return fetchJson(`${cfg.bharagBaseUrl}/api/v1/ingest`, {
+    method: 'POST',
+    headers: ingestHeaders(cfg, workspaceId, 'ledger', cfg.ledgerSchema),
+    body: JSON.stringify({
+      occurred_at: occurredAt,
+      entity_type: 'document',
+      entity_id: jobId,
+      source: sourceInput,
+      summary: `SmartCursor capture: ${title}`,
+      payload: {
+        source_type: 'manual',
+        content_type: 'doc',
+        source_url: finalUrl,
+        project_tags: ['smartcursor', 'browser'],
+        ingestion_type: 'smartcursor_link',
+        job_id: jobId,
+        final_url: finalUrl,
+        auth_mode: authMode
+      }
     })
   });
 }
@@ -326,11 +355,7 @@ export const smartcursorLinkCollector = {
     if (!cfg.smartcursorApiKey) {
       throw new Error('SMARTCURSOR_API_KEY is required for smartcursor_link ingestion');
     }
-    if (!cfg.bharagMasterApiKey) {
-      throw new Error('BHARAG_MASTER_API_KEY is required for smartcursor_link ingestion');
-    }
-
-    const { workspaceId, ownerBuilderId } = await resolveWorkspaceId(cfg);
+    assertBharagSmartcursorConfig(cfg);
     const created = await createSmartcursorJob({ cfg, sourceInput: source_input, params });
     const status = await waitForSmartcursorJob({
       cfg,
@@ -341,18 +366,27 @@ export const smartcursorLinkCollector = {
 
     const extractedText = normalizeExtractedText(result);
     const pageTitle = result.pageTitle || status.result?.pageTitle || `SmartCursor capture: ${source_input}`;
-    await ingestDocument({
+    const finalUrl = result.finalUrl || status.result?.finalUrl || source_input;
+    const authMode = resolveLoginFields(params).length > 0 ? 'login_fields' : 'none';
+    if (extractedText.trim().length < MIN_BOOK_CONTENT_LENGTH) {
+      throw new Error(`SmartCursor extracted content must contain at least ${MIN_BOOK_CONTENT_LENGTH} characters`);
+    }
+
+    await ingestBookDocument({
       cfg,
-      workspaceId,
-      sourceInput: source_input,
+      workspaceId: cfg.workspaceId,
       title: pageTitle,
-      content: extractedText,
-      metadata: {
-        ingestion_type: 'smartcursor_link',
-        job_id: created.id,
-        final_url: result.finalUrl || status.result?.finalUrl || source_input,
-        auth_mode: resolveLoginFields(params).length > 0 ? 'login_fields' : 'none'
-      }
+      content: extractedText
+    });
+    await ingestLedgerEvent({
+      cfg,
+      workspaceId: cfg.workspaceId,
+      sourceInput: source_input,
+      jobId: created.id,
+      finalUrl,
+      authMode,
+      title: pageTitle,
+      occurredAt: new Date().toISOString()
     });
 
     return {
@@ -363,24 +397,25 @@ export const smartcursorLinkCollector = {
       normalized: {
         source_type: 'smartcursor_link',
         trigger_mode: context.triggerMode || null,
-        workspace_slug: WORKSPACE_SLUG,
-        workspace_id: workspaceId,
-        owner_builder_id: ownerBuilderId || null,
+        workspace_id: cfg.workspaceId,
+        ledger_schema: cfg.ledgerSchema,
         job_id: created.id,
-        final_url: result.finalUrl || status.result?.finalUrl || source_input,
+        final_url: finalUrl,
         page_title: result.pageTitle || status.result?.pageTitle || null,
-        auth_mode: resolveLoginFields(params).length > 0 ? 'login_fields' : 'none',
+        auth_mode: authMode,
         extracted_bytes: extractedText.length
       },
       metrics: {
         ingested: 1,
+        book_ingested: 1,
+        ledger_ingested: 1,
         extracted_bytes: extractedText.length,
         steps: status.progress?.step ?? null,
         max_steps: status.progress?.maxSteps ?? null
       },
       card_updates: {
         params: {
-          smartcursor_workspace_id: workspaceId
+          smartcursor_workspace_id: cfg.workspaceId
         }
       },
       logs: [
@@ -388,8 +423,8 @@ export const smartcursorLinkCollector = {
           level: 'info',
           message: `smartcursor link ingestion completed for ${source_input}`,
           data: {
-            workspaceId,
-            ownerBuilderId: ownerBuilderId || null,
+            workspaceId: cfg.workspaceId,
+            ledgerSchema: cfg.ledgerSchema,
             jobId: created.id,
             steps: status.progress?.step ?? null
           }

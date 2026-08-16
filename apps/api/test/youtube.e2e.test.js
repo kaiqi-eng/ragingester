@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import { createApp } from '../src/app.js';
+import { config } from '../src/config.js';
 import { createMemoryRepository } from '../src/repository/memory-repository.js';
 import { resetRepositoryForTests, setRepositoryForTests } from '../src/repository/index.js';
 
@@ -158,6 +159,16 @@ function authHeaders(userId) {
 
 test('youtube source type E2E across API + Genie RSS + Bharag services', async () => {
   setRepositoryForTests(createMemoryRepository());
+  const originalConfig = {
+    bharagYoutubeWorkspaceId: config.bharagYoutubeWorkspaceId,
+    bharagYoutubeWorkspaceApiKey: config.bharagYoutubeWorkspaceApiKey,
+    bharagYoutubeLedgerSchema: config.bharagYoutubeLedgerSchema
+  };
+  Object.assign(config, {
+    bharagYoutubeWorkspaceId: 'ws-youtube',
+    bharagYoutubeWorkspaceApiKey: 'youtube-e2e-key',
+    bharagYoutubeLedgerSchema: 'ingest.youtube'
+  });
 
   const genie = await startGenieMock();
   const bharag = await startBharagMock();
@@ -220,12 +231,11 @@ test('youtube source type E2E across API + Genie RSS + Bharag services', async (
     assert.equal(genieCall.payload.url, 'https://www.youtube.com/feeds/videos.xml?channel_id=UCqzK60-oUOEq36uU9B1MMUg');
     assert.equal(genieCall.payload.since, '2026-04-21T00:00:00.000Z');
 
-    assert.ok(bharag.state.workspace);
-    assert.equal(bharag.state.workspace.slug, 'youtube-feed');
-    assert.equal((bharag.state.membersByWorkspaceId['ws-youtube'] || []).length, 1);
-
-    assert.equal(bharag.state.ingests.length, 1);
+    assert.equal(bharag.state.ingests.length, 2);
     assert.equal(bharag.state.ingests[0].headers['x-workspace-id'], 'ws-youtube');
+    assert.equal(bharag.state.ingests[0].headers['payload-type'], 'rag');
+    assert.equal(bharag.state.ingests[1].headers['payload-type'], 'ledger');
+    assert.equal(bharag.state.ingests[1].headers['payload-schema'], 'ingest.youtube');
     assert.equal(bharag.state.ingests[0].payload.title, 'New video');
     assert.equal(bharag.state.ingests[0].payload.source_type, 'manual');
   } finally {
@@ -233,5 +243,6 @@ test('youtube source type E2E across API + Genie RSS + Bharag services', async (
     await genie.close();
     await bharag.close();
     resetRepositoryForTests();
+    Object.assign(config, originalConfig);
   }
 });

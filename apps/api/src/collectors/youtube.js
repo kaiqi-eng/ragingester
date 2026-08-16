@@ -1,7 +1,6 @@
 import { config } from '../config.js';
 
-const WORKSPACE_SLUG = 'youtube-feed';
-const WORKSPACE_NAME = 'YouTube Feed';
+const MIN_BOOK_CONTENT_LENGTH = 10;
 
 function trimTrailingSlash(value) {
   return value.endsWith('/') ? value.slice(0, -1) : value;
@@ -59,12 +58,13 @@ function resolveIntegrationConfig(params = {}) {
     genieRssBaseUrl: trimTrailingSlash(pickParam(params, 'genie_rss_base_url', config.genieRssBaseUrl)),
     genieRssApiKey: pickParam(params, 'genie_rss_api_key', config.genieRssApiKey),
     bharagBaseUrl: trimTrailingSlash(pickParam(params, 'bharag_base_url', config.bharagBaseUrl)),
-    bharagMasterApiKey: pickParam(params, 'bharag_master_api_key', config.bharagMasterApiKey),
-    bharagOwnerBuilderId: pickParam(params, 'bharag_owner_builder_id', config.bharagOwnerBuilderId),
-    bharagOwnerName: pickParam(params, 'bharag_owner_name', config.bharagOwnerName),
-    bharagOwnerEmail: pickParam(params, 'bharag_owner_email', config.bharagOwnerEmail),
-    workspaceId: pickParam(params, 'youtube_workspace_id', null),
-    cursor: asIsoDate(params.youtube_cursor_pub_date)
+    workspaceId: pickParam(params, 'bharag_youtube_workspace_id', config.bharagYoutubeWorkspaceId),
+    workspaceApiKey: config.bharagYoutubeWorkspaceApiKey,
+    ledgerSchema: pickParam(params, 'bharag_youtube_ledger_schema', config.bharagYoutubeLedgerSchema),
+    cursor: asIsoDate(params.youtube_cursor_pub_date),
+    cursorItemGuids: Array.isArray(params.youtube_cursor_item_guids)
+      ? params.youtube_cursor_item_guids.filter((guid) => typeof guid === 'string' && guid.trim()).map((guid) => guid.trim())
+      : []
   };
 }
 
@@ -77,18 +77,6 @@ function parseFeedItems(feed) {
     guid: item.guid || item.link || null,
     pubDate: asIsoDate(item.pubDate || item.isoDate)
   }));
-}
-
-function buildDocumentContent({ runTimestamp, previousRun, item }) {
-  return [
-    'TAGs: [YOUTUBE]',
-    `Timestamp ran: ${runTimestamp}`,
-    `Previous run: ${previousRun || 'none'}`,
-    `Post timestamp: ${item.pubDate || 'unknown'}`,
-    `Title: ${item.title}`,
-    `Content: ${item.content}`,
-    `Link: ${item.link}`
-  ].join('\n');
 }
 
 async function fetchJson(url, options = {}) {
@@ -270,34 +258,65 @@ async function resolveWorkspaceId(cfg) {
   return { workspaceId: created.workspace.id, ownerBuilderId };
 }
 
-async function ingestDocument({ cfg, workspaceId, sourceInput, item, runTimestamp, previousRun }) {
-  const body = {
-    title: item.title,
-    content: buildDocumentContent({
-      runTimestamp,
-      previousRun,
-      item
-    }),
-    source_type: 'manual',
-    content_type: 'doc',
-    source_url: item.link || sourceInput,
-    project_tags: ['youtube'],
-    metadata: {
-      ingestion_type: 'youtube',
-      feed_source: sourceInput,
-      item_guid: item.guid,
-      item_pub_date: item.pubDate
-    }
-  };
+function assertBharagYoutubeConfig(cfg) {
+  if (!cfg.workspaceId) throw new Error('BHARAG_YOUTUBE_WORKSPACE_ID is required for youtube ingestion');
+  if (!cfg.workspaceApiKey) throw new Error('BHARAG_YOUTUBE_WORKSPACE_API_KEY is required for youtube ingestion');
+  if (!cfg.ledgerSchema) throw new Error('BHARAG_YOUTUBE_LEDGER_SCHEMA is required for youtube ingestion');
+}
 
+function validateItem(item) {
+  if (!item.guid) return 'missing stable item GUID';
+  if (!item.pubDate) return 'missing valid publication date';
+  if (item.content.trim().length < MIN_BOOK_CONTENT_LENGTH) {
+    return `video content must contain at least ${MIN_BOOK_CONTENT_LENGTH} characters`;
+  }
+  return null;
+}
+
+function ingestHeaders(cfg, workspaceId, payloadType, payloadSchema) {
+  return {
+    'content-type': 'application/json',
+    'x-api-key': cfg.workspaceApiKey,
+    'x-workspace-id': workspaceId,
+    'payload-type': payloadType,
+    ...(payloadSchema ? { 'payload-schema': payloadSchema } : {})
+  };
+}
+
+async function ingestBookDocument({ cfg, workspaceId, item }) {
   return fetchJson(`${cfg.bharagBaseUrl}/api/v1/ingest`, {
     method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': cfg.bharagMasterApiKey,
-      'x-workspace-id': workspaceId
-    },
-    body: JSON.stringify(body)
+    headers: ingestHeaders(cfg, workspaceId, 'rag'),
+    body: JSON.stringify({
+      title: item.title,
+      content: item.content.trim(),
+      source_type: 'manual'
+    })
+  });
+}
+
+async function ingestLedgerEvent({ cfg, workspaceId, sourceInput, item }) {
+  const sourceUrl = item.link || sourceInput;
+  return fetchJson(`${cfg.bharagBaseUrl}/api/v1/ingest`, {
+    method: 'POST',
+    headers: ingestHeaders(cfg, workspaceId, 'ledger', cfg.ledgerSchema),
+    body: JSON.stringify({
+      occurred_at: item.pubDate,
+      entity_type: 'document',
+      entity_id: item.guid,
+      source: sourceInput,
+      summary: `YouTube item: ${item.title}`,
+      payload: {
+        source_type: 'manual',
+        content_type: 'doc',
+        source_url: sourceUrl,
+        project_tags: ['youtube'],
+        ingestion_type: 'youtube',
+        feed_source: sourceInput,
+        item_guid: item.guid,
+        item_pub_date: item.pubDate
+      }
+    })
   });
 }
 
@@ -307,7 +326,7 @@ export const youtubeCollector = {
     const normalizedInput = normalizeYoutubeSourceInput(source_input);
     const cfg = resolveIntegrationConfig(params);
     const previousRun = cfg.cursor;
-    const runTimestamp = new Date().toISOString();
+    assertBharagYoutubeConfig(cfg);
 
     const feedResponse = await fetchYoutubeFeed({
       sourceInput: normalizedInput,
@@ -316,44 +335,72 @@ export const youtubeCollector = {
     });
 
     const parsedItems = parseFeedItems(feedResponse.feed);
+    const cursorItemGuids = new Set(cfg.cursorItemGuids);
     const newItems = previousRun
-      ? parsedItems.filter((item) => item.pubDate && item.pubDate > previousRun)
+      ? parsedItems.filter((item) => (
+        item.pubDate
+        && (item.pubDate > previousRun || (item.pubDate === previousRun && !cursorItemGuids.has(item.guid)))
+      ))
       : parsedItems;
-
-    const { workspaceId, ownerBuilderId } = await resolveWorkspaceId(cfg);
+    newItems.sort((left, right) => (
+      (left.pubDate || '').localeCompare(right.pubDate || '')
+      || (left.guid || '').localeCompare(right.guid || '')
+    ));
 
     const failedItems = [];
     const ingestedItems = [];
+    let bookIngestedCount = 0;
+    let ledgerIngestedCount = 0;
+    let nextCursor = previousRun;
+    let nextCursorItemGuids = new Set(previousRun ? cfg.cursorItemGuids : []);
 
     for (const item of newItems) {
+      const validationError = validateItem(item);
+      if (validationError) {
+        failedItems.push({ title: item.title, link: item.link, guid: item.guid, lane: 'validation', error: validationError });
+        break;
+      }
+
       try {
-        await ingestDocument({
-          cfg,
-          workspaceId,
-          sourceInput: normalizedInput,
-          item,
-          runTimestamp,
-          previousRun
+        await ingestBookDocument({ cfg, workspaceId: cfg.workspaceId, item });
+        bookIngestedCount += 1;
+      } catch (error) {
+        failedItems.push({
+          title: item.title,
+          link: item.link,
+          guid: item.guid,
+          lane: 'book',
+          error: error instanceof Error ? error.message : String(error)
         });
+        break;
+      }
+
+      try {
+        await ingestLedgerEvent({ cfg, workspaceId: cfg.workspaceId, sourceInput: normalizedInput, item });
+        ledgerIngestedCount += 1;
         ingestedItems.push(item);
       } catch (error) {
         failedItems.push({
           title: item.title,
           link: item.link,
+          guid: item.guid,
+          lane: 'ledger',
           error: error instanceof Error ? error.message : String(error)
         });
+        break;
+      }
+
+      if (!nextCursor || item.pubDate > nextCursor) {
+        nextCursor = item.pubDate;
+        nextCursorItemGuids = new Set([item.guid]);
+      } else if (item.pubDate === nextCursor) {
+        nextCursorItemGuids.add(item.guid);
       }
     }
 
     if (failedItems.length > 0 && ingestedItems.length === 0 && newItems.length > 0) {
       throw new Error(`failed to ingest YouTube items: ${failedItems[0].error}`);
     }
-
-    const maxIngestedPubDate = ingestedItems
-      .map((item) => item.pubDate)
-      .filter(Boolean)
-      .sort()
-      .at(-1) || previousRun;
 
     return {
       raw: {
@@ -365,26 +412,31 @@ export const youtubeCollector = {
       normalized: {
         source_type: 'youtube',
         trigger_mode: context.triggerMode || null,
-        workspace_slug: WORKSPACE_SLUG,
-        workspace_id: workspaceId,
-        owner_builder_id: ownerBuilderId || null,
+        workspace_id: cfg.workspaceId,
+        ledger_schema: cfg.ledgerSchema,
         fetched_count: parsedItems.length,
         ingested_count: ingestedItems.length,
+        book_ingested_count: bookIngestedCount,
+        ledger_ingested_count: ledgerIngestedCount,
         skipped_count: parsedItems.length - newItems.length,
         failed_count: failedItems.length,
         previous_cursor: previousRun,
-        next_cursor: maxIngestedPubDate
+        next_cursor: nextCursor,
+        next_cursor_item_guids: [...nextCursorItemGuids]
       },
       metrics: {
         fetched: parsedItems.length,
         selected: newItems.length,
         ingested: ingestedItems.length,
-        failed: failedItems.length
+        failed: failedItems.length,
+        book_ingested: bookIngestedCount,
+        ledger_ingested: ledgerIngestedCount
       },
       card_updates: {
         params: {
-          youtube_cursor_pub_date: maxIngestedPubDate,
-          youtube_workspace_id: workspaceId
+          youtube_cursor_pub_date: nextCursor,
+          youtube_cursor_item_guids: [...nextCursorItemGuids],
+          youtube_workspace_id: cfg.workspaceId
         }
       },
       logs: [
@@ -396,8 +448,10 @@ export const youtubeCollector = {
             selected: newItems.length,
             ingested: ingestedItems.length,
             failed: failedItems.length,
-            workspaceId,
-            ownerBuilderId: ownerBuilderId || null
+            workspaceId: cfg.workspaceId,
+            ledgerSchema: cfg.ledgerSchema,
+            bookIngested: bookIngestedCount,
+            ledgerIngested: ledgerIngestedCount
           }
         },
         ...failedItems.map((item) => ({

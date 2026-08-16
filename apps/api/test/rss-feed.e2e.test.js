@@ -1,16 +1,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { randomUUID } from 'node:crypto';
 import { rssFeedCollector } from '../src/collectors/rss-feed.js';
+import { config } from '../src/config.js';
 
 const required = [
   'GENIE_RSS_API_KEY',
-  'BHARAG_MASTER_API_KEY'
+  'BHARAG_RSS_WORKSPACE_ID',
+  'BHARAG_RSS_WORKSPACE_API_KEY'
 ];
 const missing = required.filter((key) => !process.env[key]);
-const skipReason = missing.length
-  ? `missing required env vars: ${missing.join(', ')}`
-  : false;
+const runEnabled = ['1', 'true', 'yes', 'on'].includes(String(process.env.RUN_RSS_E2E || '').toLowerCase());
+const skipReason = !runEnabled
+  ? 'RUN_RSS_E2E is not enabled'
+  : missing.length
+    ? `missing required env vars: ${missing.join(', ')}`
+    : false;
 
 function trimTrailingSlash(value) {
   return value.endsWith('/') ? value.slice(0, -1) : value;
@@ -27,117 +31,64 @@ function isUpstreamBillingOrQuotaError(error) {
   );
 }
 
-async function fetchJson(url, options = {}) {
-  const response = await fetch(url, options);
-  const contentType = response.headers.get('content-type') || '';
-  const body = contentType.includes('application/json') ? await response.json() : await response.text();
-
-  if (!response.ok) {
-    throw new Error(`request failed (${response.status}) for ${url}: ${typeof body === 'string' ? body : JSON.stringify(body)}`);
-  }
-
-  return body;
-}
-
-async function tryDelete(url, headers) {
-  try {
-    await fetch(url, { method: 'DELETE', headers });
-  } catch {
-    // best effort cleanup
-  }
-}
-
 test(
-  'e2e: genie-rss -> ragingester -> bharag with temporary workspace owner and cleanup',
+  'e2e: Genie-RSS dual-writes Book and Ledger through the provisioned BHARAG2 workspace',
   { skip: skipReason },
   async (t) => {
-    const genieBaseUrl = trimTrailingSlash(process.env.GENIE_RSS_BASE_URL || 'https://genie-rss-5i00.onrender.com');
-    const bharagBaseUrl = trimTrailingSlash(process.env.BHARAG_BASE_URL || 'https://bharag.duckdns.org');
-    const genieApiKey = process.env.GENIE_RSS_API_KEY;
-    const bharagApiKey = process.env.BHARAG_MASTER_API_KEY;
+    const originalFetch = global.fetch;
+    const originalConfig = {
+      bharagRssWorkspaceId: config.bharagRssWorkspaceId,
+      bharagRssWorkspaceApiKey: config.bharagRssWorkspaceApiKey,
+      bharagRssLedgerSchema: config.bharagRssLedgerSchema
+    };
+    const laneResponses = [];
 
-    const suffix = randomUUID().slice(0, 8);
-    const workspaceSlug = `rss-e2e-${suffix}`;
-    const workspaceName = `RSS E2E ${suffix}`;
-    const ownerName = `Ragingester E2E Owner ${suffix}`;
-    const ownerEmail = `ragingester-e2e-${suffix}@example.com`;
-
-    const adminHeaders = {
-      'content-type': 'application/json',
-      'x-api-key': bharagApiKey
+    Object.assign(config, {
+      bharagRssWorkspaceId: process.env.BHARAG_RSS_WORKSPACE_ID,
+      bharagRssWorkspaceApiKey: process.env.BHARAG_RSS_WORKSPACE_API_KEY,
+      bharagRssLedgerSchema: process.env.BHARAG_RSS_LEDGER_SCHEMA || 'ingest.rss'
+    });
+    global.fetch = async (url, options = {}) => {
+      const response = await originalFetch(url, options);
+      if (String(url).endsWith('/api/v1/ingest')) {
+        laneResponses.push({
+          payloadType: options.headers?.['payload-type'],
+          status: response.status
+        });
+      }
+      return response;
     };
 
-    let builderId = null;
-    let workspaceId = null;
-
     try {
-      try {
-        const builderResponse = await fetchJson(`${bharagBaseUrl}/api/v1/builders`, {
-          method: 'POST',
-          headers: adminHeaders,
-          body: JSON.stringify({
-            name: ownerName,
-            email: ownerEmail,
-            role: 'admin'
-          })
-        });
-        builderId = builderResponse?.builder?.id || null;
-        assert.ok(builderId, 'expected created builder id');
+      const result = await rssFeedCollector.collect({
+        source_input: process.env.RSS_E2E_FEED_URL || 'https://techcrunch.com/feed/',
+        params: {
+          genie_rss_base_url: trimTrailingSlash(process.env.GENIE_RSS_BASE_URL || 'https://genie-rss-5i00.onrender.com'),
+          genie_rss_api_key: process.env.GENIE_RSS_API_KEY,
+          bharag_base_url: trimTrailingSlash(process.env.BHARAG_BASE_URL || 'https://bharag2.duckdns.org')
+        },
+        context: { triggerMode: 'manual' }
+      });
 
-        const workspaceResponse = await fetchJson(`${bharagBaseUrl}/api/v1/workspaces`, {
-          method: 'POST',
-          headers: adminHeaders,
-          body: JSON.stringify({
-            name: workspaceName,
-            slug: workspaceSlug
-          })
-        });
-        workspaceId = workspaceResponse?.workspace?.id || null;
-        assert.ok(workspaceId, 'expected created workspace id');
-
-        await fetchJson(`${bharagBaseUrl}/api/v1/workspaces/${workspaceId}/members`, {
-          method: 'POST',
-          headers: adminHeaders,
-          body: JSON.stringify({
-            builder_id: builderId,
-            role: 'owner'
-          })
-        });
-
-        const result = await rssFeedCollector.collect({
-          source_input: 'https://techcrunch.com/feed/',
-          params: {
-            genie_rss_base_url: genieBaseUrl,
-            genie_rss_api_key: genieApiKey,
-            bharag_base_url: bharagBaseUrl,
-            bharag_master_api_key: bharagApiKey,
-            bharag_owner_builder_id: builderId,
-            bharag_owner_name: ownerName,
-            bharag_owner_email: ownerEmail,
-            rss_workspace_id: workspaceId
-          },
-          context: { triggerMode: 'manual' }
-        });
-
-        assert.equal(result.normalized.workspace_id, workspaceId);
-        assert.equal(result.normalized.trigger_mode, 'manual');
-        assert.ok(result.metrics.fetched > 0, 'expected fetched rss items');
-        assert.ok(result.metrics.ingested > 0, 'expected at least one ingested item');
-        assert.ok(Array.isArray(result.logs), 'expected collector logs');
-      } catch (error) {
-        if (isUpstreamBillingOrQuotaError(error)) {
-          t.skip(`upstream billing/quota blocked live e2e: ${error.message}`);
-          return;
-        }
-        throw error;
+      assert.ok(result.metrics.fetched > 0, 'expected fetched RSS items');
+      assert.ok(result.metrics.ingested > 0, 'expected at least one completed Book/Ledger pair');
+      assert.equal(result.metrics.book_ingested, result.metrics.ingested);
+      assert.equal(result.metrics.ledger_ingested, result.metrics.ingested);
+      assert.equal(laneResponses.length, result.metrics.ingested * 2);
+      assert.ok(laneResponses.every((response) => response.status >= 200 && response.status < 300));
+      assert.deepEqual(
+        [...new Set(laneResponses.map((response) => response.payloadType))].sort(),
+        ['ledger', 'rag']
+      );
+    } catch (error) {
+      if (isUpstreamBillingOrQuotaError(error)) {
+        t.skip(`upstream billing/quota blocked live e2e: ${error.message}`);
+        return;
       }
+      throw error;
     } finally {
-      if (workspaceId) {
-        await tryDelete(`${bharagBaseUrl}/api/v1/workspaces/${workspaceId}`, adminHeaders);
-      }
-      if (builderId) {
-        await tryDelete(`${bharagBaseUrl}/api/v1/builders/${builderId}`, adminHeaders);
-      }
+      global.fetch = originalFetch;
+      Object.assign(config, originalConfig);
     }
   }
 );

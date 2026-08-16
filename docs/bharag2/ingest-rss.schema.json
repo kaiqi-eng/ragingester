@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BHARAG2 RSS ledger event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source_type",
+    "content_type",
+    "source_url",
+    "project_tags",
+    "ingestion_type",
+    "feed_source",
+    "item_guid",
+    "item_pub_date"
+  ],
+  "properties": {
+    "source_type": {
+      "type": "string"
+    },
+    "content_type": {
+      "type": "string"
+    },
+    "source_url": {
+      "type": "string"
+    },
+    "project_tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "ingestion_type": {
+      "type": "string"
+    },
+    "feed_source": {
+      "type": "string"
+    },
+    "item_guid": {
+      "type": "string"
+    },
+    "item_pub_date": {
+      "type": "string"
+    }
+  }
+}

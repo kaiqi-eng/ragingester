@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import { createApp } from '../src/app.js';
+import { config } from '../src/config.js';
 import { createMemoryRepository } from '../src/repository/memory-repository.js';
 import { resetRepositoryForTests, setRepositoryForTests } from '../src/repository/index.js';
 
@@ -124,6 +125,16 @@ function authHeaders(userId) {
 
 test('smartcursor_link true e2e across API + SmartCursor Browser + Bharag mock', { timeout: 240000 }, async () => {
   setRepositoryForTests(createMemoryRepository());
+  const originalConfig = {
+    bharagSmartcursorWorkspaceId: config.bharagSmartcursorWorkspaceId,
+    bharagSmartcursorWorkspaceApiKey: config.bharagSmartcursorWorkspaceApiKey,
+    bharagSmartcursorLedgerSchema: config.bharagSmartcursorLedgerSchema
+  };
+  Object.assign(config, {
+    bharagSmartcursorWorkspaceId: 'ws-smart-e2e',
+    bharagSmartcursorWorkspaceApiKey: 'smartcursor-e2e-key',
+    bharagSmartcursorLedgerSchema: 'ingest.smartcursor'
+  });
 
   const bharag = await startBharagMock();
   const appServer = await startServer(createApp());
@@ -171,12 +182,11 @@ test('smartcursor_link true e2e across API + SmartCursor Browser + Bharag mock',
     const cardAfterRun = await cardAfterRunRes.json();
     assert.equal(cardAfterRun.params.smartcursor_workspace_id, 'ws-smart-e2e');
 
-    assert.ok(bharag.state.workspace);
-    assert.equal(bharag.state.workspace.slug, 'smartcursor-link');
-    assert.equal((bharag.state.membersByWorkspaceId['ws-smart-e2e'] || []).length, 1);
-
-    assert.equal(bharag.state.ingests.length, 1);
+    assert.equal(bharag.state.ingests.length, 2);
     assert.equal(bharag.state.ingests[0].headers['x-workspace-id'], 'ws-smart-e2e');
+    assert.equal(bharag.state.ingests[0].headers['payload-type'], 'rag');
+    assert.equal(bharag.state.ingests[1].headers['payload-type'], 'ledger');
+    assert.equal(bharag.state.ingests[1].headers['payload-schema'], 'ingest.smartcursor');
     assert.equal(bharag.state.ingests[0].payload.source_type, 'manual');
     assert.ok(typeof bharag.state.ingests[0].payload.content === 'string');
     assert.ok(bharag.state.ingests[0].payload.content.length > 0);
@@ -184,5 +194,6 @@ test('smartcursor_link true e2e across API + SmartCursor Browser + Bharag mock',
     await appServer.close();
     await bharag.close();
     resetRepositoryForTests();
+    Object.assign(config, originalConfig);
   }
 });

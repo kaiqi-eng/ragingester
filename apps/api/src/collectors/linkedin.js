@@ -1,7 +1,6 @@
 import { config } from '../config.js';
 
-const WORKSPACE_SLUG = 'linkedin-feed';
-const WORKSPACE_NAME = 'LinkedIn Feed';
+const MIN_BOOK_CONTENT_LENGTH = 10;
 
 function trimTrailingSlash(value) {
   return value.endsWith('/') ? value.slice(0, -1) : value;
@@ -142,12 +141,13 @@ function resolveIntegrationConfig(params = {}) {
     genieRssBaseUrl: trimTrailingSlash(pickParam(params, 'genie_rss_base_url', config.genieRssBaseUrl)),
     genieRssApiKey: pickParam(params, 'genie_rss_api_key', config.genieRssApiKey),
     bharagBaseUrl: trimTrailingSlash(pickParam(params, 'bharag_base_url', config.bharagBaseUrl)),
-    bharagMasterApiKey: pickParam(params, 'bharag_master_api_key', config.bharagMasterApiKey),
-    bharagOwnerBuilderId: pickParam(params, 'bharag_owner_builder_id', config.bharagOwnerBuilderId),
-    bharagOwnerName: pickParam(params, 'bharag_owner_name', config.bharagOwnerName),
-    bharagOwnerEmail: pickParam(params, 'bharag_owner_email', config.bharagOwnerEmail),
-    workspaceId: pickParam(params, 'linkedin_workspace_id', null),
-    cursor: asIsoDate(params.linkedin_cursor_pub_date)
+    workspaceId: pickParam(params, 'bharag_linkedin_workspace_id', config.bharagLinkedinWorkspaceId),
+    workspaceApiKey: config.bharagLinkedinWorkspaceApiKey,
+    ledgerSchema: pickParam(params, 'bharag_linkedin_ledger_schema', config.bharagLinkedinLedgerSchema),
+    cursor: asIsoDate(params.linkedin_cursor_pub_date),
+    cursorItemGuids: Array.isArray(params.linkedin_cursor_item_guids)
+      ? params.linkedin_cursor_item_guids.filter((guid) => typeof guid === 'string' && guid.trim()).map((guid) => guid.trim())
+      : []
   };
 }
 
@@ -161,20 +161,6 @@ function parseLinkedinItems(items) {
     pubDate: asIsoDate(item.metadata?.pubDate),
     metadata: item.metadata || {}
   }));
-}
-
-function buildDocumentContent({ runTimestamp, previousRun, item }) {
-  return [
-    'TAGs: [LINKEDIN]',
-    `Timestamp ran: ${runTimestamp}`,
-    `Previous run: ${previousRun || 'none'}`,
-    `Post timestamp: ${item.pubDate || 'unknown'}`,
-    `Title: ${item.title}`,
-    `Author: ${item.metadata.author || 'unknown'}`,
-    `Reactions: ${item.metadata.reactions ?? 0}`,
-    `Content: ${item.content}`,
-    `Link: ${item.link}`
-  ].join('\n');
 }
 
 async function fetchJson(url, options = {}) {
@@ -363,36 +349,73 @@ async function resolveWorkspaceId(cfg) {
   return { workspaceId: created.workspace.id, ownerBuilderId };
 }
 
-async function ingestDocument({ cfg, workspaceId, request, item, runTimestamp, previousRun }) {
-  const body = {
-    title: item.title,
-    content: buildDocumentContent({
-      runTimestamp,
-      previousRun,
-      item
-    }),
-    source_type: 'manual',
-    content_type: 'doc',
-    source_url: item.link || request.sourceInput,
-    project_tags: ['linkedin'],
-    metadata: {
-      ...item.metadata,
-      ingestion_type: 'linkedin',
-      linkedin_mode: request.mode,
-      feed_source: request.sourceInput,
-      item_guid: item.guid,
-      item_pub_date: item.pubDate
-    }
-  };
+function assertBharagLinkedinConfig(cfg) {
+  if (!cfg.workspaceId) throw new Error('BHARAG_LINKEDIN_WORKSPACE_ID is required for linkedin ingestion');
+  if (!cfg.workspaceApiKey) throw new Error('BHARAG_LINKEDIN_WORKSPACE_API_KEY is required for linkedin ingestion');
+  if (!cfg.ledgerSchema) throw new Error('BHARAG_LINKEDIN_LEDGER_SCHEMA is required for linkedin ingestion');
+}
 
+function validateItem(item) {
+  if (!item.guid) return 'missing stable item GUID';
+  if (!item.pubDate) return 'missing valid publication date';
+  if (item.content.trim().length < MIN_BOOK_CONTENT_LENGTH) {
+    return `post content must contain at least ${MIN_BOOK_CONTENT_LENGTH} characters`;
+  }
+  return null;
+}
+
+function resolveReactionCount(metadata = {}) {
+  const value = Number(metadata.reactions);
+  return Number.isInteger(value) && value >= 0 ? value : 0;
+}
+
+function ingestHeaders(cfg, workspaceId, payloadType, payloadSchema) {
+  return {
+    'content-type': 'application/json',
+    'x-api-key': cfg.workspaceApiKey,
+    'x-workspace-id': workspaceId,
+    'payload-type': payloadType,
+    ...(payloadSchema ? { 'payload-schema': payloadSchema } : {})
+  };
+}
+
+async function ingestBookDocument({ cfg, workspaceId, item }) {
   return fetchJson(`${cfg.bharagBaseUrl}/api/v1/ingest`, {
     method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': cfg.bharagMasterApiKey,
-      'x-workspace-id': workspaceId
-    },
-    body: JSON.stringify(body)
+    headers: ingestHeaders(cfg, workspaceId, 'rag'),
+    body: JSON.stringify({
+      title: item.title,
+      content: item.content.trim(),
+      source_type: 'manual'
+    })
+  });
+}
+
+async function ingestLedgerEvent({ cfg, workspaceId, request, item }) {
+  const sourceUrl = item.link || request.sourceInput;
+  return fetchJson(`${cfg.bharagBaseUrl}/api/v1/ingest`, {
+    method: 'POST',
+    headers: ingestHeaders(cfg, workspaceId, 'ledger', cfg.ledgerSchema),
+    body: JSON.stringify({
+      occurred_at: item.pubDate,
+      entity_type: 'document',
+      entity_id: item.guid,
+      source: request.sourceInput,
+      summary: `LinkedIn post: ${item.title}`,
+      payload: {
+        source_type: 'manual',
+        content_type: 'doc',
+        source_url: sourceUrl,
+        project_tags: ['linkedin'],
+        ingestion_type: 'linkedin',
+        linkedin_mode: request.mode,
+        feed_source: request.sourceInput,
+        author: item.metadata.author || 'unknown',
+        reaction_count: resolveReactionCount(item.metadata),
+        item_guid: item.guid,
+        item_pub_date: item.pubDate
+      }
+    })
   });
 }
 
@@ -402,48 +425,76 @@ export const linkedinCollector = {
     const request = normalizeLinkedinRequest(source_input, params);
     const cfg = resolveIntegrationConfig(params);
     const previousRun = cfg.cursor;
-    const runTimestamp = new Date().toISOString();
+    assertBharagLinkedinConfig(cfg);
 
     const postsResponse = await fetchLinkedinPosts({ request, cfg });
     const parsedItems = parseLinkedinItems(postsResponse.data);
+    const cursorItemGuids = new Set(cfg.cursorItemGuids);
     const newItems = previousRun
-      ? parsedItems.filter((item) => item.pubDate && item.pubDate > previousRun)
+      ? parsedItems.filter((item) => (
+        item.pubDate
+        && (item.pubDate > previousRun || (item.pubDate === previousRun && !cursorItemGuids.has(item.guid)))
+      ))
       : parsedItems;
-
-    const { workspaceId, ownerBuilderId } = await resolveWorkspaceId(cfg);
+    newItems.sort((left, right) => (
+      (left.pubDate || '').localeCompare(right.pubDate || '')
+      || (left.guid || '').localeCompare(right.guid || '')
+    ));
 
     const failedItems = [];
     const ingestedItems = [];
+    let bookIngestedCount = 0;
+    let ledgerIngestedCount = 0;
+    let nextCursor = previousRun;
+    let nextCursorItemGuids = new Set(previousRun ? cfg.cursorItemGuids : []);
 
     for (const item of newItems) {
+      const validationError = validateItem(item);
+      if (validationError) {
+        failedItems.push({ title: item.title, link: item.link, guid: item.guid, lane: 'validation', error: validationError });
+        break;
+      }
+
       try {
-        await ingestDocument({
-          cfg,
-          workspaceId,
-          request,
-          item,
-          runTimestamp,
-          previousRun
+        await ingestBookDocument({ cfg, workspaceId: cfg.workspaceId, item });
+        bookIngestedCount += 1;
+      } catch (error) {
+        failedItems.push({
+          title: item.title,
+          link: item.link,
+          guid: item.guid,
+          lane: 'book',
+          error: error instanceof Error ? error.message : String(error)
         });
+        break;
+      }
+
+      try {
+        await ingestLedgerEvent({ cfg, workspaceId: cfg.workspaceId, request, item });
+        ledgerIngestedCount += 1;
         ingestedItems.push(item);
       } catch (error) {
         failedItems.push({
           title: item.title,
           link: item.link,
+          guid: item.guid,
+          lane: 'ledger',
           error: error instanceof Error ? error.message : String(error)
         });
+        break;
+      }
+
+      if (!nextCursor || item.pubDate > nextCursor) {
+        nextCursor = item.pubDate;
+        nextCursorItemGuids = new Set([item.guid]);
+      } else if (item.pubDate === nextCursor) {
+        nextCursorItemGuids.add(item.guid);
       }
     }
 
     if (failedItems.length > 0 && ingestedItems.length === 0 && newItems.length > 0) {
       throw new Error(`failed to ingest LinkedIn items: ${failedItems[0].error}`);
     }
-
-    const maxIngestedPubDate = ingestedItems
-      .map((item) => item.pubDate)
-      .filter(Boolean)
-      .sort()
-      .at(-1) || previousRun;
 
     return {
       raw: {
@@ -455,26 +506,31 @@ export const linkedinCollector = {
       normalized: {
         source_type: 'linkedin',
         trigger_mode: context.triggerMode || null,
-        workspace_slug: WORKSPACE_SLUG,
-        workspace_id: workspaceId,
-        owner_builder_id: ownerBuilderId || null,
+        workspace_id: cfg.workspaceId,
+        ledger_schema: cfg.ledgerSchema,
         fetched_count: parsedItems.length,
         ingested_count: ingestedItems.length,
+        book_ingested_count: bookIngestedCount,
+        ledger_ingested_count: ledgerIngestedCount,
         skipped_count: parsedItems.length - newItems.length,
         failed_count: failedItems.length,
         previous_cursor: previousRun,
-        next_cursor: maxIngestedPubDate
+        next_cursor: nextCursor,
+        next_cursor_item_guids: [...nextCursorItemGuids]
       },
       metrics: {
         fetched: parsedItems.length,
         selected: newItems.length,
         ingested: ingestedItems.length,
-        failed: failedItems.length
+        failed: failedItems.length,
+        book_ingested: bookIngestedCount,
+        ledger_ingested: ledgerIngestedCount
       },
       card_updates: {
         params: {
-          linkedin_cursor_pub_date: maxIngestedPubDate,
-          linkedin_workspace_id: workspaceId
+          linkedin_cursor_pub_date: nextCursor,
+          linkedin_cursor_item_guids: [...nextCursorItemGuids],
+          linkedin_workspace_id: cfg.workspaceId
         }
       },
       logs: [
@@ -487,8 +543,10 @@ export const linkedinCollector = {
             selected: newItems.length,
             ingested: ingestedItems.length,
             failed: failedItems.length,
-            workspaceId,
-            ownerBuilderId: ownerBuilderId || null
+            workspaceId: cfg.workspaceId,
+            ledgerSchema: cfg.ledgerSchema,
+            bookIngested: bookIngestedCount,
+            ledgerIngested: ledgerIngestedCount
           }
         },
         ...failedItems.map((item) => ({
