@@ -8,7 +8,9 @@ import { resetRepositoryForTests, setRepositoryForTests } from '../src/repositor
 import {
   flushAllDailyStatuses,
   flushRssDailyStatus,
+  recordStatusEvent,
   _resetDailyStatusFlushStateForTests,
+  _resetLocalStatusLogForTests,
   _resetTelemetryMetricsForTests,
   getTelemetryMetrics
 } from '../src/telemetry/index.js';
@@ -35,6 +37,7 @@ function resetTelemetryConfig() {
   config.telemetrySlackTimeoutMs = ORIGINALS.telemetrySlackTimeoutMs;
   _resetDailyStatusFlushStateForTests();
   _resetTelemetryMetricsForTests();
+  _resetLocalStatusLogForTests();
 }
 
 async function withServer(fn) {
@@ -76,7 +79,7 @@ async function seedFailedYesterday(repository, date) {
     active: true
   });
 
-  await repository.createRun({
+  const run = await repository.createRun({
     card_id: card.id,
     owner_id: OWNER,
     status: RUN_STATUS.FAILED,
@@ -88,6 +91,15 @@ async function seedFailedYesterday(repository, date) {
     error_payload: { name: 'Error', message: 'run timed out after 30000ms' },
     logs: [],
     created_at: `${date}T12:00:00.000Z`
+  });
+  recordStatusEvent({
+    runId: run.id,
+    cardId: card.id,
+    sourceType: card.source_type,
+    sourceInput: card.source_input,
+    status: RUN_STATUS.FAILED,
+    endedAt: run.ended_at,
+    error: run.error
   });
 
   return card;

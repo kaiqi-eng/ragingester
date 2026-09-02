@@ -8,7 +8,9 @@ import {
   buildDailyRunId,
   buildDailyStatus,
   buildRssDailyStatus,
-  validateRssDailyStatus
+  recordStatusEvent,
+  validateRssDailyStatus,
+  _resetLocalStatusLogForTests
 } from '../src/telemetry/index.js';
 
 
@@ -76,7 +78,21 @@ async function seedRun(repository, card, {
   });
 }
 
+function recordTerminal(card, run, metrics = {}) {
+  recordStatusEvent({
+    runId: run.id,
+    cardId: card.id,
+    sourceType: card.source_type,
+    sourceInput: card.source_input,
+    status: run.status,
+    endedAt: run.ended_at,
+    metrics,
+    error: run.error
+  });
+}
+
 test('buildRssDailyStatus: classifies ok, degraded, failed; ignores running; groups failures', async () => {
+  _resetLocalStatusLogForTests();
   const repository = createMemoryRepository();
 
   const okCard = await seedCard(repository, { source_input: 'https://ok.example/feed.xml' });
@@ -101,6 +117,7 @@ test('buildRssDailyStatus: classifies ok, degraded, failed; ignores running; gro
       source_type: 'rss_feed'
     }
   });
+  recordTerminal(okCard, okRun, { fetched: 5, selected: 4, ingested: 4, failed: 0 });
 
   const degradedRun = await seedRun(repository, degradedCard, {
     status: RUN_STATUS.SUCCESS,
@@ -116,17 +133,20 @@ test('buildRssDailyStatus: classifies ok, degraded, failed; ignores running; gro
       source_type: 'rss_feed'
     }
   });
+  recordTerminal(degradedCard, degradedRun, { fetched: 5, selected: 4, ingested: 2, failed: 2 });
 
-  await seedRun(repository, failedCard, {
+  const failedRunOne = await seedRun(repository, failedCard, {
     status: RUN_STATUS.FAILED,
     ended_at: '2026-07-26T08:00:00.000Z',
     error: 'run timed out after 30000ms'
   });
-  await seedRun(repository, failedCard, {
+  recordTerminal(failedCard, failedRunOne);
+  const failedRunTwo = await seedRun(repository, failedCard, {
     status: RUN_STATUS.FAILED,
     ended_at: '2026-07-26T09:00:00.000Z',
     error: 'run timed out after 30000ms'
   });
+  recordTerminal(failedCard, failedRunTwo);
 
   await seedRun(repository, okCard, {
     status: RUN_STATUS.RUNNING,
@@ -134,13 +154,14 @@ test('buildRssDailyStatus: classifies ok, degraded, failed; ignores running; gro
   });
 
   // Outside window — ignored
-  await seedRun(repository, okCard, {
+  const earlyRun = await seedRun(repository, okCard, {
     status: RUN_STATUS.FAILED,
     ended_at: '2026-07-25T23:59:59.000Z',
     error: 'too early'
   });
+  recordTerminal(okCard, earlyRun);
 
-  // Inactive card run would not be included (card not in active list)
+  // Unrecorded inactive-card run is ignored by the local status log
   await seedRun(repository, inactiveCard, {
     status: RUN_STATUS.FAILED,
     ended_at: '2026-07-26T15:00:00.000Z',
@@ -168,6 +189,7 @@ test('buildRssDailyStatus: classifies ok, degraded, failed; ignores running; gro
 });
 
 test('buildRssDailyStatus: empty day still validates', async () => {
+  _resetLocalStatusLogForTests();
   const repository = createMemoryRepository();
   await seedCard(repository, { source_input: 'https://idle.example/feed.xml' });
 
@@ -181,13 +203,15 @@ test('buildRssDailyStatus: empty day still validates', async () => {
 });
 
 test('buildRssDailyStatus: idle active cards are excluded from feeds_active', async () => {
+  _resetLocalStatusLogForTests();
   const repository = createMemoryRepository();
   const ran = await seedCard(repository, { source_input: 'https://ran.example/feed.xml' });
   await seedCard(repository, { source_input: 'https://idle.example/feed.xml' });
-  await seedRun(repository, ran, {
+  const run = await seedRun(repository, ran, {
     status: RUN_STATUS.SUCCESS,
     ended_at: '2026-07-26T10:00:00.000Z'
   });
+  recordTerminal(ran, run);
 
   const status = await buildRssDailyStatus({ repository, date: DAY });
   assert.equal(status.feeds_active, 1);
@@ -195,15 +219,17 @@ test('buildRssDailyStatus: idle active cards are excluded from feeds_active', as
 });
 
 test('GET /telemetry/rss-daily-status returns schema-valid JSON', async () => {
+  _resetLocalStatusLogForTests();
   const repository = createMemoryRepository();
   setRepositoryForTests(repository);
 
   const card = await seedCard(repository, { source_input: 'https://http.example/feed.xml' });
-  await seedRun(repository, card, {
+  const run = await seedRun(repository, card, {
     status: RUN_STATUS.FAILED,
     ended_at: '2026-07-26T14:00:00.000Z',
     error: 'boom'
   });
+  recordTerminal(card, run);
 
   try {
     await withServer(async (baseUrl) => {
@@ -222,6 +248,7 @@ test('GET /telemetry/rss-daily-status returns schema-valid JSON', async () => {
 });
 
 test('GET /telemetry/rss-daily-status rejects bad date', async () => {
+  _resetLocalStatusLogForTests();
   setRepositoryForTests(createMemoryRepository());
 
   try {
@@ -239,6 +266,7 @@ test('GET /telemetry/rss-daily-status rejects bad date', async () => {
 });
 
 test('buildDailyStatus: youtube system classifies failures', async () => {
+  _resetLocalStatusLogForTests();
   const repository = createMemoryRepository();
   const card = await repository.createCard({
     owner_id: OWNER,
@@ -258,7 +286,7 @@ test('buildDailyStatus: youtube system classifies failures', async () => {
     status: RUN_STATUS.FAILED,
     ended_at: '2026-07-26T10:00:00.000Z',
     error: 'GENIE_RSS_API_KEY is required for youtube ingestion'
-  });
+  }).then((run) => recordTerminal(card, run));
 
   const status = await buildDailyStatus({
     repository,
@@ -274,6 +302,7 @@ test('buildDailyStatus: youtube system classifies failures', async () => {
 });
 
 test('buildDailyStatus: linkedin system empty day validates', async () => {
+  _resetLocalStatusLogForTests();
   const repository = createMemoryRepository();
   await repository.createCard({
     owner_id: OWNER,
@@ -302,6 +331,7 @@ test('buildDailyStatus: linkedin system empty day validates', async () => {
 });
 
 test('GET /telemetry/daily-status?system=genie_youtube returns youtube status', async () => {
+  _resetLocalStatusLogForTests();
   const repository = createMemoryRepository();
   setRepositoryForTests(repository);
   const card = await repository.createCard({
@@ -318,10 +348,11 @@ test('GET /telemetry/daily-status?system=genie_youtube returns youtube status', 
     run_max_retries: null,
     active: true
   });
-  await seedRun(repository, card, {
+  const run = await seedRun(repository, card, {
     status: RUN_STATUS.SUCCESS,
     ended_at: '2026-07-26T10:00:00.000Z'
   });
+  recordTerminal(card, run);
 
   try {
     await withServer(async (baseUrl) => {

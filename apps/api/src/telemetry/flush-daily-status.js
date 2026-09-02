@@ -1,6 +1,7 @@
 import { config } from '../config.js';
 import { buildDailyStatusBlocks } from './block-kit.js';
 import { buildDailyStatus, yesterdayUtcDate } from './build-daily-status.js';
+import { pruneStatusEvents } from './local-status-log.js';
 import {
   TELEMETRY_SYSTEM,
   TELEMETRY_SYSTEMS,
@@ -181,6 +182,7 @@ export async function flushAllDailyStatuses({
     // eslint-disable-next-line no-await-in-loop
     results.push(await flushDailyStatus({ repository, now, system }));
   }
+  pruneStatusEvents({ now });
   return { date, results };
 }
 

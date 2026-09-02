@@ -176,7 +176,7 @@ Relevant code today:
 ### Work
 
 1. Define the aggregation window (recommend **UTC day**, matching today’s digest day key).
-2. Query path over active `rss_feed` cards + that day’s `collection_runs` (+ `collected_data.metadata.metrics` when present).
+2. Query path over the local status log for that UTC day (RSS / YouTube / LinkedIn events recorded as runs finish; `collection_runs` remains persistent history).
 3. Implement mapper → `RssDailyStatus`:
    - `feeds_active` = count of active `rss_feed` cards
    - `ingest.*` via locked degraded rule

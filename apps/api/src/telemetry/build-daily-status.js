@@ -8,6 +8,7 @@ import {
 } from './constants.js';
 import { classifyRun } from './classify.js';
 import { groupFailures } from './group-failures.js';
+import { listStatusEvents } from './local-status-log.js';
 import { validateDailyStatus } from './validate.js';
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -49,13 +50,15 @@ function nonNegativeMetric(value) {
 }
 
 /**
- * Build DailyStatus for a UTC calendar day from repository data.
+ * Build DailyStatus for a UTC calendar day from the local status log.
  *
- * `feeds_active` counts distinct cards with at least one terminal run that day
- * (idle active cards are excluded).
+ * Run history remains in collection_runs. This rollup only uses terminal
+ * RSS / YouTube / LinkedIn events recorded as those runs finish.
+ *
+ * `feeds_active` counts distinct cards with at least one terminal run that day.
  *
  * @param {{
- *   repository: object,
+ *   repository?: object,
  *   date: string,
  *   sourceType?: string,
  *   system?: string
@@ -63,7 +66,6 @@ function nonNegativeMetric(value) {
  * @returns {Promise<import('./validate.js').DailyStatus>}
  */
 export async function buildDailyStatus({
-  repository,
   date,
   sourceType,
   system
@@ -73,25 +75,8 @@ export async function buildDailyStatus({
   const resolvedSourceType = sourceType
     || sourceTypeForSystem(resolvedSystem);
 
-  const { fromIso, toIso } = utcDayWindow(date);
-  const cards = await repository.listActiveCardsBySourceType(resolvedSourceType);
-  const cardIds = cards.map((card) => card.id);
-  const sourceByCardId = new Map(cards.map((card) => [card.id, card.source_input]));
-
-  const runs = await repository.listRunsForCardsInWindow({ cardIds, fromIso, toIso });
-  const runIds = runs.map((run) => run.id);
-  const collectedRows = await repository.listCollectedDataByRunIds(runIds);
-  /** @type {Map<string, { fetched: number, selected: number, ingested: number, failed: number }>} */
-  const metricsByRunId = new Map();
-  for (const row of collectedRows) {
-    const metrics = row?.metadata?.metrics || {};
-    metricsByRunId.set(row.run_id, {
-      fetched: nonNegativeMetric(metrics.fetched),
-      selected: nonNegativeMetric(metrics.selected),
-      ingested: nonNegativeMetric(metrics.ingested),
-      failed: nonNegativeMetric(metrics.failed)
-    });
-  }
+  const { fromIso } = utcDayWindow(date);
+  const events = listStatusEvents({ date, sourceType: resolvedSourceType });
 
   const ingest = { ok: 0, degraded: 0, failed: 0 };
   const items = { fetched: 0, selected: 0, ingested: 0, failed: 0 };
@@ -101,28 +86,28 @@ export async function buildDailyStatus({
   const failureEvents = [];
   let lastRunMs = null;
 
-  for (const run of runs) {
-    if (run.status !== RUN_STATUS.SUCCESS && run.status !== RUN_STATUS.FAILED) {
+  for (const event of events) {
+    if (event.status !== RUN_STATUS.SUCCESS && event.status !== RUN_STATUS.FAILED) {
       continue;
     }
 
-    cardsRan.add(run.card_id);
+    cardsRan.add(event.card_id || event.run_id);
 
-    const runMetrics = metricsByRunId.get(run.id) || {
-      fetched: 0,
-      selected: 0,
-      ingested: 0,
-      failed: 0
+    const runMetrics = {
+      fetched: nonNegativeMetric(event.metrics?.fetched),
+      selected: nonNegativeMetric(event.metrics?.selected),
+      ingested: nonNegativeMetric(event.metrics?.ingested),
+      failed: nonNegativeMetric(event.metrics?.failed)
     };
     items.fetched += runMetrics.fetched;
     items.selected += runMetrics.selected;
     items.ingested += runMetrics.ingested;
     items.failed += runMetrics.failed;
 
-    const bucket = classifyRun({ status: run.status, failedCount: runMetrics.failed });
+    const bucket = classifyRun({ status: event.status, failedCount: runMetrics.failed });
     ingest[bucket] += 1;
 
-    const endedAt = run.ended_at || run.created_at || null;
+    const endedAt = event.ended_at || null;
     if (endedAt) {
       const endedMs = Date.parse(endedAt);
       if (!Number.isNaN(endedMs) && (lastRunMs == null || endedMs > lastRunMs)) {
@@ -130,13 +115,10 @@ export async function buildDailyStatus({
       }
     }
 
-    if (run.status === RUN_STATUS.FAILED) {
-      const feed = sourceByCardId.get(run.card_id);
-      if (!feed) continue;
-      const code = resolveFailureCode(run);
+    if (event.status === RUN_STATUS.FAILED) {
       failureEvents.push({
-        feed: String(feed),
-        code,
+        feed: String(event.source_input || ''),
+        code: event.error || 'unknown error',
         timestamp: endedAt
       });
     }
@@ -162,7 +144,7 @@ export async function buildDailyStatus({
 /**
  * Build RssDailyStatus for a UTC calendar day (RSS-only wrapper).
  *
- * @param {{ repository: object, date: string }} input
+ * @param {{ repository?: object, date: string }} input
  * @returns {Promise<import('./validate.js').DailyStatus>}
  */
 export async function buildRssDailyStatus({ repository, date }) {
@@ -172,15 +154,4 @@ export async function buildRssDailyStatus({ repository, date }) {
     sourceType: 'rss_feed',
     system: SYSTEM_BY_SOURCE_TYPE.rss_feed
   });
-}
-
-/**
- * @param {{ error?: string | null, error_payload?: { message?: string } | null }} run
- * @returns {string}
- */
-function resolveFailureCode(run) {
-  const fromPayload = run?.error_payload?.message;
-  if (typeof fromPayload === 'string' && fromPayload.length > 0) return fromPayload;
-  if (typeof run?.error === 'string' && run.error.length > 0) return run.error;
-  return 'unknown error';
 }

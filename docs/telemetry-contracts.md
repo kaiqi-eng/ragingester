@@ -45,7 +45,7 @@ Helpers:
 | `groupFailures` | Aggregate by `(feed, code)` with earliest `first_seen` |
 | `validateDailyStatus` | Throw on invalid shape (`validateRssDailyStatus` alias) |
 | `buildDailyRunId(date, system?)` | `{system}:{date}` (default `genie_rss`) |
-| `buildDailyStatus` | DB rollup for a UTC day + system/sourceType |
+| `buildDailyStatus` | Local status-log rollup for a UTC day + system/sourceType |
 | `buildRssDailyStatus` | RSS-only wrapper |
 | `buildDailyStatusBlocks` | Slack Block Kit (truncates `code` to 120 chars for display only) |
 | `flushDailyStatus` / `flushAllDailyStatuses` | Build + post (feature-flagged); durable idempotency |
@@ -71,11 +71,11 @@ Golden fixtures: [`apps/api/test/fixtures/telemetry/`](../apps/api/test/fixtures
 |-------|------|
 | Window | UTC calendar day `[dateT00:00:00.000Z, nextDayT00:00:00.000Z)` |
 | Run timestamp | Prefer `ended_at`; fallback `created_at` |
-| Scope | Active cards for the chosen `source_type` (fleet-wide inventory for looking up `source_input`) |
-| `feeds_active` | Distinct cards with **≥1 terminal run** that UTC day (idle active cards excluded) |
+| Scope | Terminal RSS / YouTube / LinkedIn runs recorded locally as they finish (not a full `collection_runs` scan) |
+| `feeds_active` | Distinct cards with **≥1 terminal run** that UTC day (idle cards excluded because they never record an event) |
 | Ingest unit | Each terminal run in the window counts once |
-| `items` | Sum of collector `metadata.metrics` (`fetched` / `selected` / `ingested` / `failed`) across terminal runs with collected_data |
-| `failedCount` | `collected_data.metadata.metrics.failed`; missing → `0` |
+| `items` | Sum of locally recorded collector metrics (`fetched` / `selected` / `ingested` / `failed`) |
+| `failedCount` | Recorded item `failed`; missing → `0` |
 | `failures[]` | `status=failed` only; `feed=source_input`; `code=run.error` |
 | `last_run` | Max terminal `ended_at` in window; if none, day start ISO |
 

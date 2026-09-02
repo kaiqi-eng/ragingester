@@ -14,3 +14,4 @@ apps/api/node_modules/
 packages/shared/node_modules/
 .npm-cache-local/
 supabase/.temp/
+.telemetry/

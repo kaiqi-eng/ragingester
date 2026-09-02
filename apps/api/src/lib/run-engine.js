@@ -1,7 +1,7 @@
 import { RUN_STATUS, TRIGGER_MODE } from '@ragingester/shared';
 import { computeNextRun } from './cron.js';
 import { resolveCollector } from '../collectors/index.js';
-import { emitPipelineError } from '../telemetry/index.js';
+import { emitPipelineError, recordStatusEvent } from '../telemetry/index.js';
 
 async function withTimeout(promise, timeoutMs) {
   let timeoutHandle;
@@ -120,6 +120,24 @@ async function executeRunRecord({ repository, card, run, triggerMode, timeoutMs,
         )
       };
       await repository.updateRun(run.id, updates);
+      try {
+        recordStatusEvent({
+          runId: run.id,
+          cardId: card.id,
+          sourceType: card.source_type,
+          sourceInput: card.source_input,
+          status: RUN_STATUS.SUCCESS,
+          endedAt: updates.ended_at,
+          metrics: collected.metrics || {},
+          error: null
+        });
+      } catch (statusLogError) {
+        // eslint-disable-next-line no-console
+        console.warn('telemetry.status_event_record_failed', {
+          runId: run.id,
+          error: statusLogError?.message || String(statusLogError)
+        });
+      }
 
       const nextRunAt = card.schedule_enabled && card.cron_expression
         ? computeNextRun(card.cron_expression, card.timezone, new Date())
@@ -168,6 +186,25 @@ async function executeRunRecord({ repository, card, run, triggerMode, timeoutMs,
           next_run_at: nextRunAt,
           params: nextParams
         });
+
+        try {
+          recordStatusEvent({
+            runId: run.id,
+            cardId: card.id,
+            sourceType: card.source_type,
+            sourceInput: card.source_input,
+            status: RUN_STATUS.FAILED,
+            endedAt,
+            metrics: {},
+            error: errorPayload.message
+          });
+        } catch (statusLogError) {
+          // eslint-disable-next-line no-console
+          console.warn('telemetry.status_event_record_failed', {
+            runId: run.id,
+            error: statusLogError?.message || String(statusLogError)
+          });
+        }
 
         try {
           await emitPipelineError({

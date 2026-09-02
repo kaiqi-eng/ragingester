@@ -141,7 +141,7 @@ Ops Slack cards for fleet health live in [`apps/api/src/telemetry/`](../apps/api
 | YouTube | `genie_youtube` | `Genie_YouTube` |
 | LinkedIn | `genie_linkedin` | `Genie_LinkedIn` |
 
-Daily status posts are idempotent per `(system, date)` via `telemetry_daily_status_posts`. Pipeline-error Slack posts on terminal failures for those three source types (and via `POST /telemetry/pipeline-error/emit` for smoke).
+Daily status posts are idempotent per `(system, date)` via `telemetry_daily_status_posts`. Status/alert rollups are recorded locally as runs finish and flushed to Slack; `collection_runs` remains the persistent run history. Pipeline-error Slack posts on terminal failures for those three source types (and via `POST /telemetry/pipeline-error/emit` for smoke).
 
 ---
 

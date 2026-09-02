@@ -72,3 +72,9 @@ export {
   incrementTelemetryCounter,
   _resetTelemetryMetricsForTests
 } from './metrics.js';
+export {
+  recordStatusEvent,
+  listStatusEvents,
+  pruneStatusEvents,
+  _resetLocalStatusLogForTests
+} from './local-status-log.js';
